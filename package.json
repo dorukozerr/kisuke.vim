@@ -5,6 +5,14 @@
   "main": "src/index.ts",
   "repository": "git@github.com:dorukozerr/keta.git",
   "author": "Doruk Özer <dorukozer@protonmail.com>",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
   "license": "MIT",
-  "private": false
+  "private": false,
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.2"
+  }
 }
