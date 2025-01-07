@@ -7,12 +7,17 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "dev:server": "nodemon dist/index.js",
+    "dev": "concurrently \"npm run watch\" \"npm run dev:server\"",
+    "start": "node dist/index.js"
   },
   "license": "MIT",
   "private": false,
   "devDependencies": {
     "@types/node": "^22.10.5",
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.9",
     "typescript": "^5.7.2"
   }
 }
