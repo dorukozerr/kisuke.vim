@@ -3,111 +3,93 @@ if exists('g:loaded_keta')
 endif
 
 let g:loaded_keta = 1
-let s:job_id = v:null
-let s:keta_bufnr = -1
+
+let s:job = v:null
+let s:buf_name = 'KetaBuffer'
+let s:buf_nr = -1
 
 function! s:HandleMessage(channel, msg)
-  let l:data = json_decode(a:msg)
+  try
+    let l:data = json_decode(a:msg)
 
-  if l:data.type == 'response'
-    call setbufline(s:keta_bufnr, 1, l:data.content)
-  endif
-endfunction
-
-function! s:IsJobRunning()
-  if has('nvim')
-    return s:job_id != v:null && jobwait([s:job_id], 0)[0] == -1
-  else
-    return s:job_id != v:null && job_status(s:job_id) == 'run'
-  endif
-endfunction
-
-function! s:StopTypeScriptProcess()
-  if s:job_id != v:null
-    if has('nvim')
-      try
-        call jobstop(s:job_id)
-      catch
-        " Handle potential errors silently
-      endtry
-    else
-      try
-        call job_stop(s:job_id)
-      catch
-        " Handle potential errors silently
-      endtry
+    if bufexists(s:buf_nr)
+      call setbufline(s:buf_nr, 1, l:data.content)
     endif
-    let s:job_id = v:null
-  endif
+  catch
+    if bufexists(s:buf_nr)
+      call setbufline(s:buf_nr, 1, a:msg)
+    endif
+  endtry
 endfunction
 
-function! s:StartTypeScriptProcess()
-  call s:StopTypeScriptProcess()
-
+function! s:StartServer()
   if has('nvim')
-    let s:job_id = jobstart(['node', 'dist/index.js'], {
-          \ 'on_stdout': {j,d,e -> s:HandleMessage(j, join(d))},
-          \ 'on_exit': {j,d,e -> s:StopTypeScriptProcess()},
+    let l:job = jobstart(['node', 'dist/index.js'], {
+          \ 'on_stdout': {_, data -> s:HandleMessage(_, join(data, "\n"))},
+          \ 'cwd': getcwd(),
           \ })
+
+    if type(l:job) == v:t_number && l:job <= 0
+      echoerr "Failed to start TypeScript server"
+
+      return v:null
+    endif
   else
-    let s:job_id = job_start(['node', 'dist/index.js'], {
+    let l:job = job_start(['node', 'dist/index.js'], {
           \ 'out_cb': function('s:HandleMessage'),
-          \ 'exit_cb': {j,s -> s:StopTypeScriptProcess()},
+          \ 'cwd': getcwd(),
           \ })
+
+    if type(l:job) != v:t_job
+      echoerr "Failed to start TypeScript server"
+
+      return v:null
+    endif
   endif
 
-  if s:job_id == 0 || s:job_id == -1
-    echoerr "Failed to start TypeScript process"
-
-    let s:job_id = v:null
-
-    return 0
-  endif
-
-  return 1
+  return l:job
 endfunction
 
-function! s:CleanupKeta()
-  call s:StopTypeScriptProcess()
+function! s:SendInitMessage()
+  if s:job != v:null
+    let l:msg = json_encode({'type': 'init'}) . "\n"
 
-  let s:keta_bufnr = -1
+    if has('nvim')
+      call chansend(s:job, l:msg)
+    else
+      call ch_sendraw(job_getchannel(s:job), l:msg)
+    endif
+  endif
 endfunction
 
 function! s:OpenKeta()
-  if bufexists(s:keta_bufnr)
-    execute 'buffer ' . s:keta_bufnr
+  if bufexists(s:buf_nr)
+    let l:winid = bufwinid(s:buf_nr)
 
-    return
+    if l:winid == -1
+      execute 'vsplit'
+      execute 'buffer ' . s:buf_nr
+    else
+      call win_gotoid(l:winid)
+    endif
+  else
+    execute 'vsplit ' . s:buf_name
+    let s:buf_nr = bufnr('%')
+
+    setlocal buftype=nofile
+    setlocal noswapfile
+    setlocal nobuflisted
   endif
 
-  vnew
+  if s:job == v:null
+    let s:job = s:StartServer()
 
-  let s:keta_bufnr = bufnr('%')
-
-  setlocal buftype=nofile
-  setlocal bufhidden=wipe
-  setlocal noswapfile
-  setlocal nobuflisted
-  execute 'file Keta-' . s:keta_bufnr
-
-  augroup KetaBuffer
-    autocmd! * <buffer>
-    autocmd BufWipeout <buffer> call s:CleanupKeta()
-  augroup END
-
-  if !s:IsJobRunning()
-    if !s:StartTypeScriptProcess()
+    if s:job == v:null
       return
     endif
   endif
 
-  let l:msg = json_encode({'type': 'init'})
-
-  if has('nvim')
-    call chansend(s:job_id, l:msg . "\n")
-  else
-    call ch_sendraw(job_getchannel(s:job_id), l:msg . "\n")
-  endif
+  call s:SendInitMessage()
 endfunction
 
 command! Keta call s:OpenKeta()
