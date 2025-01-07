@@ -5,14 +5,24 @@ stdin.resume();
 stdin.setEncoding('utf-8');
 
 stdin.on('data', (data: string) => {
-  const message = JSON.parse(data);
+  try {
+    const message = JSON.parse(data.trim());
 
-  if (message.type === 'init') {
-    stdout.write(
-      JSON.stringify({
-        type: 'response',
-        content: 'Hello from TypeScript!'
-      }) + '\n'
-    );
+    if (message.type === 'init') {
+      sendResponse('Connected to TypeScript server!');
+    } else if (message.type === 'message') {
+      sendResponse(`Received: ${message.content}`);
+    }
+  } catch (e) {
+    console.error('Error processing message:', e);
   }
 });
+
+const sendResponse = (content: string) => {
+  const response = {
+    type: 'response',
+    content: content
+  };
+
+  stdout.write(JSON.stringify(response) + '\n');
+};
