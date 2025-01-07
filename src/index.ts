@@ -1,3 +1,18 @@
-console.log('hello from keta');
+const stdin = process.stdin;
+const stdout = process.stdout;
 
-console.log('test');
+stdin.resume();
+stdin.setEncoding('utf-8');
+
+stdin.on('data', (data: string) => {
+  const message = JSON.parse(data);
+
+  if (message.type === 'init') {
+    stdout.write(
+      JSON.stringify({
+        type: 'response',
+        content: 'Hello from TypeScript!'
+      }) + '\n'
+    );
+  }
+});
