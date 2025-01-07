@@ -1,4 +1,3 @@
-// TypeScript server (src/index.ts)
 import { Anthropic } from '@anthropic-ai/sdk';
 import { TextDelta, InputJSONDelta } from '@anthropic-ai/sdk/resources';
 
@@ -57,7 +56,7 @@ stdin.on('data', async (data: string) => {
           if (chunk.type === 'content_block_delta') {
             sendResponse({
               type: 'stream_chunk',
-              content: chunk.delta
+              content: (chunk.delta as { text: string }).text
             });
           }
         }

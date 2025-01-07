@@ -123,6 +123,8 @@ function! s:HandleMessage(channel, msg)
   try
     let l:data = json_decode(a:msg)
 
+    echom 'HandleMessage => ' . a:msg
+
     " Handle different message types
     if l:data.type == 'stream_start'
       let s:is_streaming = 1
