@@ -2,16 +2,78 @@ if exists('g:loaded_keta')
   finish
 endif
 
+let s:config_dir = expand('~/.config/keta')
+let s:config_file = s:config_dir . '/config.json'
 let g:loaded_keta = 1
 let s:job = v:null
 let s:buf_name = 'KetaBuffer'
 let s:buf_nr = -1
 let s:input_start_line = 1
 let s:is_sending = 0
+let s:stream_buffer = ''
+let s:is_streaming = 0
+let s:stream_start_line = -1
+
+function! s:EnsureConfigDir()
+  if !isdirectory(s:config_dir)
+    call mkdir(s:config_dir, 'p')
+  endif
+endfunction
+
+function! s:SaveConfig(config)
+  call s:EnsureConfigDir()
+  call writefile([json_encode(a:config)], s:config_file)
+endfunction
+
+function! s:LoadConfig()
+  if filereadable(s:config_file)
+    let l:content = readfile(s:config_file)
+    if !empty(l:content)
+      return json_decode(l:content[0])
+    endif
+  endif
+  return {}
+endfunction
+
+function! s:SetupKeta()
+  let l:config = s:LoadConfig()
+
+  " Prompt for API key
+  let l:api_key = input('Enter your Claude API key: ')
+
+  " Save if not empty
+  if !empty(l:api_key)
+    let l:config['apiKey'] = l:api_key
+    call s:SaveConfig(l:config)
+    echo "\nAPI key saved successfully!"
+  else
+    echo "\nSetup cancelled - no API key provided"
+    return
+  endif
+
+  " If server is running, restart it with new config
+  if s:job != v:null
+    if has('nvim')
+      call jobstop(s:job)
+    else
+      call job_stop(s:job)
+    endif
+    let s:job = s:StartServer()
+    if s:job != v:null
+      call s:SendInitMessage()
+    endif
+  endif
+endfunction
 
 function! s:StartServer()
+  let l:config = s:LoadConfig()
+  if empty(l:config)
+    echoerr "Please run :KetaSetup first to configure the plugin"
+    return v:null
+  endif
+
   if has('nvim')
-    let l:job = jobstart(['node', 'dist/index.js'], {
+    let l:job = jobstart(['node', 'dist/index.js', json_encode(l:config)], {
           \ 'on_stdout': {_, data -> s:HandleMessage(_, join(data, "\n"))},
           \ 'cwd': getcwd(),
           \ })
@@ -20,7 +82,7 @@ function! s:StartServer()
       return v:null
     endif
   else
-    let l:job = job_start(['node', 'dist/index.js'], {
+    let l:job = job_start(['node', 'dist/index.js', json_encode(l:config)], {
           \ 'out_cb': function('s:HandleMessage'),
           \ 'cwd': getcwd(),
           \ })
@@ -60,22 +122,70 @@ endfunction
 function! s:HandleMessage(channel, msg)
   try
     let l:data = json_decode(a:msg)
-    if bufexists(s:buf_nr)
-      let l:lines = split(l:data.content, "\n")
+
+    " Handle different message types
+    if l:data.type == 'stream_start'
+      let s:is_streaming = 1
+      let s:stream_buffer = ''
+      " Add initial response line
       let l:cur_line = line('$')
+      call setline(l:cur_line, '> ')
+      let s:stream_start_line = l:cur_line
 
-      " Add the response lines
-      call setline(l:cur_line, '> ' . l:lines[0])
-      for l:line in l:lines[1:]
-        call append(l:cur_line, '  ' . l:line)
-        let l:cur_line += 1
-      endfor
+    elseif l:data.type == 'stream_chunk'
+      if s:is_streaming
+        " Append to buffer
+        let s:stream_buffer .= l:data.content
 
-      " Add new prompt and update input start line
-      call append(l:cur_line, '$ ')
-      let s:input_start_line = l:cur_line + 1
+        " Split into lines
+        let l:lines = split(s:stream_buffer, "\n")
+
+        " Update first line
+        call setline(s:stream_start_line, '> ' . l:lines[0])
+
+        " Update/append remaining lines
+        let l:line_num = s:stream_start_line
+        for l:idx in range(1, len(l:lines) - 1)
+          let l:line_num += 1
+          if l:line_num <= line('$')
+            call setline(l:line_num, '  ' . l:lines[l:idx])
+          else
+            call append(l:line_num - 1, '  ' . l:lines[l:idx])
+          endif
+        endfor
+
+        " If there are newlines, update buffer to just the partial last line
+        if len(l:lines) > 1
+          let s:stream_buffer = l:lines[-1]
+        endif
+
+        " Move cursor to end
+        call cursor(line('$'), col('$'))
+      endif
+
+    elseif l:data.type == 'stream_end'
+      let s:is_streaming = 0
+      " Add new prompt
+      call append(line('$'), '')
+      call append(line('$'), '$ ')
+      let s:input_start_line = line('$')
+      call cursor(line('$'), col('$'))
+
+    elseif l:data.type == 'error'
+      " Handle error messages
+      call append(line('$'), '> Error: ' . l:data.content)
+      call append(line('$'), '$ ')
+      let s:input_start_line = line('$')
+      call cursor(line('$'), col('$'))
+
+    elseif l:data.type == 'init'
+      " Handle init message
+      call append(line('$'), '> ' . l:data.content)
+      call append(line('$'), '$ ')
+      let s:input_start_line = line('$')
       call cursor(line('$'), col('$'))
     endif
+
   catch
     echom "Error handling message: " . v:exception
   endtry
@@ -175,4 +285,5 @@ function! s:OpenKeta()
   startinsert!
 endfunction
 
+command! KetaSetup call s:SetupKeta()
 command! Keta call s:OpenKeta()
