@@ -1,8 +1,8 @@
 {
-  "name": "keta",
+  "name": "keta.vim",
   "version": "1.0.0",
   "description": "Vim/Neovim plugin to bring the most loved features inside Cursor to your favorite text editor.",
-  "repository": "git@github.com:dorukozerr/keta.git",
+  "repository": "git@github.com:dorukozerr/keta.vim.git",
   "author": "Doruk Özer <dorukozer@protonmail.com>",
   "main": "src/index.ts",
   "scripts": {
