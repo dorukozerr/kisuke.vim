@@ -1,5 +1,5 @@
 {
-  "name": "keta.vim",
+  "name": "keta",
   "version": "1.0.0",
   "description": "Vim/Neovim plugin to bring the most loved features inside Cursor to your favorite text editor.",
   "repository": "git@github.com:dorukozerr/keta.vim.git",
