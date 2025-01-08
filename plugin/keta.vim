@@ -7,7 +7,11 @@ let g:keta_buf_name='Keta'
 let g:keta_buf_nr=-1
 
 func! PromptSubmit(prompt)
-  echom 'PromptSubmit -> ' . a:prompt
+  if a:prompt == ''
+    echom 'Prompt is empty'
+  else
+    echom 'PromptSubmit -> ' . a:prompt
+  endif
 endfunc
 
 func! KetaOpen()
@@ -17,8 +21,12 @@ func! KetaOpen()
     if l:wid == -1
       exe 'vsplit'
       exe 'buffer ' . g:keta_buf_nr
+
+      startinsert!
     else
       call win_gotoid(l:wid)
+
+      startinsert!
     endif
   else
     exe 'vsplit ' . g:keta_buf_name
