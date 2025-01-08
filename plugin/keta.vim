@@ -2,56 +2,12 @@ if exists('g:loaded_keta')
   finish
 endif
 
-let s:config_dir = expand('~/.config/keta')
-let s:config_file = s:config_dir . '/config.json'
 let g:loaded_keta = 1
 let s:job = v:null
 let s:buf_name = 'KetaBuffer'
-let s:buf_nr = -1
-let s:input_start_line = 1
-let s:is_sending = 0
-let s:stream_buffer = ''
-let s:is_streaming = 0
-let s:stream_start_line = -1
-
-function! s:EnsureConfigDir()
-  if !isdirectory(s:config_dir)
-    call mkdir(s:config_dir, 'p')
-  endif
-endfunction
-
-function! s:SaveConfig(config)
-  call s:EnsureConfigDir()
-  call writefile([json_encode(a:config)], s:config_file)
-endfunction
-
-function! s:LoadConfig()
-  if filereadable(s:config_file)
-    let l:content = readfile(s:config_file)
-    if !empty(l:content)
-      return json_decode(l:content[0])
-    endif
-  endif
-  return {}
-endfunction
 
 function! s:SetupKeta()
-  let l:config = s:LoadConfig()
-
-  " Prompt for API key
-  let l:api_key = input('Enter your Claude API key: ')
-
-  " Save if not empty
-  if !empty(l:api_key)
-    let l:config['apiKey'] = l:api_key
-    call s:SaveConfig(l:config)
-    echo "\nAPI key saved successfully!"
-  else
-    echo "\nSetup cancelled - no API key provided"
-    return
-  endif
-
-  " If server is running, restart it with new config
+  echom 'SetupKeta ' . s:job
   if s:job != v:null
     if has('nvim')
       call jobstop(s:job)
@@ -134,8 +90,8 @@ function! s:HandleMessage(channel, msg)
       call setline(l:cur_line, '> ')
       let s:stream_start_line = l:cur_line
 
-    elseif l:data.type == 'stream_chunk'
-      if s:is_streaming
+    elseif l:data.type == 'response'
+"      if s:is_streaming
         " Append to buffer
         let s:stream_buffer .= l:data.content
 
@@ -163,7 +119,7 @@ function! s:HandleMessage(channel, msg)
 
         " Move cursor to end
         call cursor(line('$'), col('$'))
-      endif
+ "     endif
 
     elseif l:data.type == 'stream_end'
       let s:is_streaming = 0
@@ -248,9 +204,6 @@ function! s:SetupBuffer()
   setlocal noswapfile
   setlocal nobuflisted
 
-  " Initialize with input line
-  call setline(1, '$ ')
-
   " Set up mappings
   " Enter for new line
   inoremap <buffer><expr> <CR> <SID>HandleEnter()
@@ -289,3 +242,4 @@ endfunction
 
 command! KetaSetup call s:SetupKeta()
 command! Keta call s:OpenKeta()
+command! KetaTest call keta#run()
