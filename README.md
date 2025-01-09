@@ -2,4 +2,4 @@
 
 (WIP) To be updated...
 
-I just wanna add some Cursor like AI features to my vim workflow. Don't know where this is gonna go also I'm really not sure can I build what I imagined.
+I'm gonna update the readme after I add some basic features. It's really early stage right now. I feel like I'm doing a mistake by not working on something like TS or Go lol :)
