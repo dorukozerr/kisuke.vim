@@ -17,7 +17,7 @@ func! s:OnSubmit(prompt)
     let s:is_pending=1
     call ch_sendraw(job_getchannel(s:job), json_encode({
           \ 'type': 'prompt',
-          \ 'input': a:prompt,
+          \ 'payload': a:prompt,
           \ }))
   else
     call append(line('$') - 1, 'Server is not running')
@@ -27,7 +27,18 @@ endfunc
 func! s:ParseReply(channel, reply)
   let s:is_pending=0
   let l:reply = json_decode(a:reply)
-  call append(line('$') - 1, l:reply.payload)
+  if l:reply.type==#'initialize'
+    call append(line('$') - 1, '> ' . 'Kisuke initialized')
+    call append(line('$') - 1, '> ' . 'Total sessions - ' . l:reply.totalSessions)
+    for entry in json_decode(l:reply.payload).messages
+      call append(line('$') - 1, '> ' . entry.message)
+    endfor
+  elseif l:reply.type==#'response'
+    call append(line('$') - 1, '> ' . l:reply.payload)
+  elseif l:reply.type==#'error'
+    call append(line('$') - 1, 'Server error > ' . l:reply.payload)
+  else
+  endif
 endfunc
 
 func! s:OpenKisuke()
