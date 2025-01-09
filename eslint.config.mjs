@@ -10,12 +10,7 @@ export default [
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    settings: {
-      react: {
-        version: 'detect'
-      }
-    },
-    ignores: ['./node_modules', './ios', './andorid', './.tamagui', './.expo'],
+    ignores: ['./node_modules', './dist'],
     plugins: {
       prettier: pluginPrettier
     },
