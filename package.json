@@ -6,10 +6,7 @@
   "author": "Doruk Özer <dorukozer@protonmail.com>",
   "main": "src/index.ts",
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
-    "dev:server": "nodemon dist/index.js",
-    "dev": "concurrently \"npm run watch\" \"npm run dev:server\"",
+    "build": "yarn && tsc",
     "start": "node dist/index.js",
     "format": "prettier ./src/**/* --check"
   },
