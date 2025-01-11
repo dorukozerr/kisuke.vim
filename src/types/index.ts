@@ -56,9 +56,20 @@ interface PromptOutput {
   payload: string;
 }
 
+interface NewSessionOutput {
+  type: 'newSession';
+  totalSessions: number;
+  sessionInfo: { id: string; name: string };
+  payload: Session;
+}
+
 interface ErrorOutput {
   type: 'error';
   payload: string;
 }
 
-export type Output = InitializeOutput | PromptOutput | ErrorOutput;
+export type Output =
+  | InitializeOutput
+  | PromptOutput
+  | NewSessionOutput
+  | ErrorOutput;

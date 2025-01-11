@@ -68,6 +68,7 @@ stdin.on('data', async (data: string) => {
 
     if (event.type === 'prompt') {
       const session = (await getSession(event.sessionId)) as Session;
+
       await writeFile(
         join(configDir, `${event.sessionId}.json`),
         JSON.stringify({
@@ -78,9 +79,46 @@ stdin.on('data', async (data: string) => {
           ]
         })
       );
+
       sendResponse({
         type: 'response',
         payload: `Received: ${event.payload}`
+      });
+    }
+
+    if (event.type === 'newSession') {
+      const sessionId = randomBytes(16).toString('hex');
+      const history = await getHistory();
+
+      history.sessions.push({ id: sessionId, name: sessionId });
+
+      await writeFile(join(configDir, 'history.json'), JSON.stringify(history));
+      await writeFile(
+        join(configDir, `${sessionId}.json`),
+        JSON.stringify({
+          messages: [
+            {
+              sender: 'Kisuke',
+              message:
+                'Welcome to Urahara candy shop, how can I help you today?'
+            }
+          ]
+        })
+      );
+
+      sendResponse({
+        type: 'newSession',
+        totalSessions: history.sessions.length,
+        sessionInfo: { id: sessionId, name: sessionId },
+        payload: {
+          messages: [
+            {
+              sender: 'Kisuke',
+              message:
+                'Welcome to Urahara candy shop, how can I help you today?'
+            }
+          ]
+        }
       });
     }
   } catch (error) {

@@ -39,9 +39,19 @@ func! s:ParseReply(channel, reply)
     endfor
   elseif l:reply.type==#'response'
     call append(line('$') - 1, '> ' . l:reply.payload)
+  elseif l:reply.type==#'newSession'
+    let s:sessionId=l:reply.sessionInfo.id
+    silent! %delete _
+    call append(0, '> ' . 'Kisuke initialized')
+    call append(1, '> ' . 'Session ' . l:reply.sessionInfo.name)
+    call append(2, '> ' . 'Total sessions - ' . l:reply.totalSessions)
+    let l:line_num = 3
+    for entry in l:reply.payload.messages
+      call append(l:line_num, '> ' . entry.message)
+      let l:line_num += 1
+    endfor
   elseif l:reply.type==#'error'
     call append(line('$') - 1, 'Server error > ' . l:reply.payload)
-  else
   endif
 endfunc
 
@@ -78,4 +88,13 @@ func! s:OpenKisuke()
   endif
 endfunc
 
+func! s:NewSession()
+  if s:job==v:null
+    echom "Please run :Kisuke first "
+  else
+    call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'newSession' }))
+  endif
+endfunc
+
 command! Kisuke call s:OpenKisuke()
+command! KisukeNewSession call s:NewSession()
