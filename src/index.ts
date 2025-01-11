@@ -63,7 +63,7 @@ const getHistory = async () => {
 };
 
 const getSession = async (sessionId: string) =>
-  await readFile(join(configDir, `${sessionId}.json`), 'utf-8');
+  JSON.parse(await readFile(join(configDir, `${sessionId}.json`), 'utf-8'));
 
 stdin.on('data', async (data: string) => {
   try {
