@@ -46,9 +46,9 @@ func! s:OpenKisuke()
     let s:job=job_start(['node', 'dist/index.js'], {
           \ 'out_cb': function('s:ParseReply'),
           \ })
-    call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
-    let s:is_pending=1
   endif
+  call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
+  let s:is_pending=1
   if bufexists(s:kisuke_buf_nr)
     let l:wid=bufwinid(s:kisuke_buf_nr)
     if l:wid==-1
