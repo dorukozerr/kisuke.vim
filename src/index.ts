@@ -5,6 +5,7 @@ import { homedir } from 'os';
 import { existsSync } from 'fs';
 
 import { History, Session, Event, Output } from './types';
+import { initialSessionData } from './utils/initials';
 
 const stdin = process.stdin;
 const stdout = process.stdout;
@@ -29,14 +30,7 @@ const getHistory = async () => {
     );
     await writeFile(
       join(configDir, `${sessionId}.json`),
-      JSON.stringify({
-        messages: [
-          {
-            sender: 'Kisuke',
-            message: 'Welcome to Urahara candy shop, how can I help you today?'
-          }
-        ]
-      })
+      JSON.stringify(initialSessionData)
     );
     return JSON.parse(
       await readFile(join(configDir, 'history.json'), 'utf-8')
@@ -67,7 +61,7 @@ stdin.on('data', async (data: string) => {
     }
 
     if (event.type === 'prompt') {
-      const session = (await getSession(event.sessionId)) as Session;
+      const session = await getSession(event.sessionId);
 
       await writeFile(
         join(configDir, `${event.sessionId}.json`),
@@ -95,30 +89,14 @@ stdin.on('data', async (data: string) => {
       await writeFile(join(configDir, 'history.json'), JSON.stringify(history));
       await writeFile(
         join(configDir, `${sessionId}.json`),
-        JSON.stringify({
-          messages: [
-            {
-              sender: 'Kisuke',
-              message:
-                'Welcome to Urahara candy shop, how can I help you today?'
-            }
-          ]
-        })
+        JSON.stringify(initialSessionData)
       );
 
       sendResponse({
         type: 'newSession',
         totalSessions: history.sessions.length,
         sessionInfo: { id: sessionId, name: sessionId },
-        payload: {
-          messages: [
-            {
-              sender: 'Kisuke',
-              message:
-                'Welcome to Urahara candy shop, how can I help you today?'
-            }
-          ]
-        }
+        payload: initialSessionData
       });
     }
   } catch (error) {
