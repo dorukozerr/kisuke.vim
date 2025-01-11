@@ -29,6 +29,7 @@ func! s:ParseReply(channel, reply)
   let l:reply = json_decode(a:reply)
   if l:reply.type==#'initialize'
     call append(line('$') - 1, '> ' . 'Kisuke initialized')
+    call append(line('$') - 1, '> ' . 'Session ' . json_decode(l:reply.payload).sessionName)
     call append(line('$') - 1, '> ' . 'Total sessions - ' . l:reply.totalSessions)
     for entry in json_decode(l:reply.payload).messages
       call append(line('$') - 1, '> ' . entry.message)
