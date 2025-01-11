@@ -7,6 +7,7 @@ let s:kisuke_buf_name='Kisuke'
 let s:kisuke_buf_nr=-1
 let s:job=v:null
 let s:is_pending=0
+let s:sessionId=v:null
 
 func! s:OnSubmit(prompt)
   if a:prompt==''
@@ -28,8 +29,8 @@ func! s:ParseReply(channel, reply)
   let s:is_pending=0
   let l:reply = json_decode(a:reply)
   if l:reply.type==#'initialize'
+    let s:sessionId=l:reply.sessionId
     call append(line('$') - 1, '> ' . 'Kisuke initialized')
-    " call append(line('$') - 1, '> ' . 'Session ' . json_decode(l:reply.payload).sessionName)
     call append(line('$') - 1, '> ' . 'Session ' . l:reply.payload.sessionName)
     call append(line('$') - 1, '> ' . 'Total sessions - ' . l:reply.totalSessions)
     for entry in l:reply.payload.messages

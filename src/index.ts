@@ -4,33 +4,13 @@ import { join } from 'path';
 import { homedir } from 'os';
 import { existsSync } from 'fs';
 
+import { History, Session, Event, Output } from './types';
+
 const stdin = process.stdin;
 const stdout = process.stdout;
 
 stdin.resume();
 stdin.setEncoding('utf-8');
-
-interface History {
-  sessions: string[];
-}
-
-interface Event {
-  type:
-    | 'initialize'
-    | 'prompt'
-    | 'createSession'
-    | 'switchSession'
-    | 'renameSession'
-    | 'deleteSession';
-  payload?: string;
-}
-
-interface Output {
-  type: 'initialize' | 'response' | 'error';
-  sessionId?: string;
-  totalSessions?: number;
-  payload: string;
-}
 
 const configDir = join(homedir(), '.config', 'kisuke');
 
@@ -45,14 +25,16 @@ const getHistory = async () => {
     const sessionId = randomBytes(16).toString('hex');
     await writeFile(
       join(configDir, 'history.json'),
-      JSON.stringify({ sessions: [sessionId] })
+      JSON.stringify({ sessions: [{ id: sessionId, name: sessionId }] })
     );
     await writeFile(
       join(configDir, `${sessionId}.json`),
       JSON.stringify({
-        sessionName: sessionId,
         messages: [
-          { sender: 'Kisuke', message: 'Welcome to Urahara candy shop' }
+          {
+            sender: 'Kisuke',
+            message: 'Welcome to Urahara candy shop, how can I help you today?'
+          }
         ]
       })
     );
@@ -63,15 +45,17 @@ const getHistory = async () => {
 };
 
 const getSession = async (sessionId: string) =>
-  JSON.parse(await readFile(join(configDir, `${sessionId}.json`), 'utf-8'));
+  JSON.parse(
+    await readFile(join(configDir, `${sessionId}.json`), 'utf-8')
+  ) as Session;
 
 stdin.on('data', async (data: string) => {
   try {
     const event = JSON.parse(data) as Event;
 
     if (event.type === 'initialize') {
-      const history: { sessions: string[] } = await getHistory();
-      const sessionId = history.sessions[history.sessions.length - 1];
+      const history = await getHistory();
+      const sessionId = history.sessions[history.sessions.length - 1].id;
       const session = await getSession(sessionId);
 
       sendResponse({
