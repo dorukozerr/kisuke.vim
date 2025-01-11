@@ -55,18 +55,29 @@ stdin.on('data', async (data: string) => {
 
     if (event.type === 'initialize') {
       const history = await getHistory();
-      const sessionId = history.sessions[history.sessions.length - 1].id;
-      const session = await getSession(sessionId);
+      const sessionInfo = history.sessions[history.sessions.length - 1];
+      const session = await getSession(sessionInfo.id);
 
       sendResponse({
         type: 'initialize',
-        sessionId,
         totalSessions: history.sessions.length,
+        sessionInfo,
         payload: session
       });
     }
 
     if (event.type === 'prompt') {
+      const session = (await getSession(event.sessionId)) as Session;
+      await writeFile(
+        join(configDir, `${event.sessionId}.json`),
+        JSON.stringify({
+          messages: [
+            ...session.messages,
+            { sender: 'User', message: event.payload },
+            { sender: 'Kisuke', message: `Received: ${event.payload}` }
+          ]
+        })
+      );
       sendResponse({
         type: 'response',
         payload: `Received: ${event.payload}`

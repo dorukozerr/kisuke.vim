@@ -3,7 +3,6 @@ export interface History {
 }
 
 export interface Session {
-  sessionName: string;
   messages: { sender: string; message: string }[];
 }
 
@@ -47,8 +46,8 @@ export type Event =
 
 interface InitializeOutput {
   type: 'initialize';
-  sessionId: string;
   totalSessions: number;
+  sessionInfo: { id: string; name: string };
   payload: Session;
 }
 

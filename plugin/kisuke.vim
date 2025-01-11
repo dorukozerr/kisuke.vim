@@ -18,6 +18,7 @@ func! s:OnSubmit(prompt)
     let s:is_pending=1
     call ch_sendraw(job_getchannel(s:job), json_encode({
           \ 'type': 'prompt',
+          \ 'sessionId': s:sessionId,
           \ 'payload': a:prompt,
           \ }))
   else
@@ -29,9 +30,9 @@ func! s:ParseReply(channel, reply)
   let s:is_pending=0
   let l:reply = json_decode(a:reply)
   if l:reply.type==#'initialize'
-    let s:sessionId=l:reply.sessionId
+    let s:sessionId=l:reply.sessionInfo.id
     call append(line('$') - 1, '> ' . 'Kisuke initialized')
-    call append(line('$') - 1, '> ' . 'Session ' . l:reply.payload.sessionName)
+    call append(line('$') - 1, '> ' . 'Session ' . l:reply.sessionInfo.name)
     call append(line('$') - 1, '> ' . 'Total sessions - ' . l:reply.totalSessions)
     for entry in l:reply.payload.messages
       call append(line('$') - 1, '> ' . entry.message)
