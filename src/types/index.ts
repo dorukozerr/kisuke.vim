@@ -21,8 +21,8 @@ interface NewSessionEvent {
 }
 
 interface SwitchSessionEvent {
-  type: 'switchSession';
-  payload: string;
+  type: 'nextSession' | 'prevSession';
+  paylod: string;
 }
 
 interface RenameSessionEvent {
