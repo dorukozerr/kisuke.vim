@@ -8,6 +8,7 @@ let s:kisuke_buf_nr         = -1
 let s:job                   = v:null
 let s:is_pending            = 0
 let s:sessionId             = v:null
+let s:totalSessions         = v:null
 
 func! s:OnSubmit(prompt)
   if a:prompt == ''
@@ -30,10 +31,11 @@ func! s:ParseReply(channel, reply)
   let s:is_pending = 0
   let l:reply = json_decode(a:reply)
   if l:reply.type ==# 'initialize'
+    echom a:reply
     let s:sessionId = l:reply.sessionInfo.id
+    let s:totalSessions = l:reply.totalSessions
     call append(line('$') - 1, '> ' . 'Kisuke initialized')
-    call append(line('$') - 1, '> ' . 'Session ' . l:reply.sessionInfo.name)
-    call append(line('$') - 1, '> ' . 'Total sessions - ' . l:reply.totalSessions)
+    call append(line('$') - 1, '> ' . 'Session ' . l:reply.currentSession . '/' . s:totalSessions)
     for entry in l:reply.payload.messages
       call append(line('$') - 1, '> ' . entry.message)
     endfor
@@ -41,11 +43,21 @@ func! s:ParseReply(channel, reply)
     call append(line('$') - 1, '> ' . l:reply.payload)
   elseif l:reply.type ==# 'newSession'
     let s:sessionId = l:reply.sessionInfo.id
+    let s:totalSessions = l:reply.totalSessions
     silent! %delete _
     call append(0, '> ' . 'Kisuke initialized')
-    call append(1, '> ' . 'Session ' . l:reply.sessionInfo.name)
-    call append(2, '> ' . 'Total sessions - ' . l:reply.totalSessions)
-    let l:line_num = 3
+    call append(1, '> ' . 'Session ' . l:reply.currentSession . '/' . s:totalSessions)
+    let l:line_num = 2
+    for entry in l:reply.payload.messages
+      call append(l:line_num, '> ' . entry.message)
+      let l:line_num += 1
+    endfor
+  elseif l:reply.type ==# 'switchSession'
+    let s:sessionId = l:reply.sessionInfo.id
+    silent! %delete _
+    call append(0, '> ' . 'Kisuke initialized')
+    call append(1, '> ' . 'Session ' . l:reply.currentSession . '/' . s:totalSessions)
+    let l:line_num = 2
     for entry in l:reply.payload.messages
       call append(l:line_num, '> ' . entry.message)
       let l:line_num += 1
@@ -104,7 +116,7 @@ func! s:SwitchToNextSession()
   if s:job == v:null
     echom "Please run :Kisuke first "
   else
-    call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'nextSession', 'payload': s:sessionId }))
+    call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'nextSession' }))
   endif
 endfunc
 
@@ -112,9 +124,11 @@ func! s:SwitchToPreviousSession()
   if s:job == v:null
     echom "Please run :Kisuke first "
   else
-    call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'prevSession', 'payload': s:sessionId }))
+    call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'prevSession' }))
   endif
 endfunc
 
 command! Kisuke call s:OpenKisuke()
 command! KisukeNewSession call s:NewSession()
+command! KisukeNextSession call s:SwitchToNextSession()
+command! KisukePreviousSession call s:SwitchToPreviousSession()

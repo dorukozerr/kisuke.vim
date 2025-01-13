@@ -17,6 +17,8 @@ const configDir = join(homedir(), '.config', 'kisuke');
 
 if (!existsSync(configDir)) mkdir(configDir, { recursive: true });
 
+let currentSessionIndex: number = 0;
+
 const getHistory = async () => {
   try {
     return JSON.parse(
@@ -49,12 +51,16 @@ stdin.on('data', async (data: string) => {
 
     if (event.type === 'initialize') {
       const history = await getHistory();
-      const sessionInfo = history.sessions[history.sessions.length - 1];
+      const latestSessionIndex = history.sessions.length - 1;
+      const sessionInfo = history.sessions[latestSessionIndex];
       const session = await getSession(sessionInfo.id);
+
+      currentSessionIndex = latestSessionIndex;
 
       sendResponse({
         type: 'initialize',
         totalSessions: history.sessions.length,
+        currentSession: currentSessionIndex + 1,
         sessionInfo,
         payload: session
       });
@@ -92,12 +98,71 @@ stdin.on('data', async (data: string) => {
         JSON.stringify(initialSessionData)
       );
 
+      currentSessionIndex = history.sessions.length - 1;
+
       sendResponse({
         type: 'newSession',
         totalSessions: history.sessions.length,
+        currentSession: history.sessions.length,
         sessionInfo: { id: sessionId, name: sessionId },
         payload: initialSessionData
       });
+    }
+
+    if (event.type === 'nextSession') {
+      const history = await getHistory();
+
+      if (currentSessionIndex === history.sessions.length - 1) {
+        currentSessionIndex = 0;
+        const sessionInfo = history.sessions[0];
+        const session = await getSession(sessionInfo.id);
+
+        sendResponse({
+          type: 'switchSession',
+          currentSession: currentSessionIndex + 1,
+          sessionInfo,
+          payload: session
+        });
+      } else {
+        currentSessionIndex++;
+        const sessionInfo = history.sessions[currentSessionIndex];
+        const session = await getSession(sessionInfo.id);
+
+        sendResponse({
+          type: 'switchSession',
+          currentSession: currentSessionIndex + 1,
+          sessionInfo,
+          payload: session
+        });
+      }
+    }
+
+    if (event.type === 'prevSession') {
+      const history = await getHistory();
+
+      if (currentSessionIndex === 0) {
+        currentSessionIndex = history.sessions.length - 1;
+        const sessionInfo = history.sessions[currentSessionIndex];
+        const session = await getSession(sessionInfo.id);
+
+        sendResponse({
+          type: 'switchSession',
+          currentSession: currentSessionIndex + 1,
+          sessionInfo,
+          payload: session
+        });
+      } else {
+        currentSessionIndex--;
+        const sessionInfo = history.sessions[currentSessionIndex];
+        const session = await getSession(sessionInfo.id);
+
+        sendResponse({
+          type: 'switchSession',
+          currentSession: currentSessionIndex + 1,
+          sessionInfo,
+          payload: session
+        });
+      }
     }
   } catch (error) {
     sendResponse({

@@ -47,6 +47,7 @@ export type Event =
 interface InitializeOutput {
   type: 'initialize';
   totalSessions: number;
+  currentSession: number;
   sessionInfo: { id: string; name: string };
   payload: Session;
 }
@@ -59,6 +60,14 @@ interface PromptOutput {
 interface NewSessionOutput {
   type: 'newSession';
   totalSessions: number;
+  currentSession: number;
+  sessionInfo: { id: string; name: string };
+  payload: Session;
+}
+
+interface SwitchSessionOuput {
+  type: 'switchSession';
+  currentSession: number;
   sessionInfo: { id: string; name: string };
   payload: Session;
 }
@@ -72,4 +81,5 @@ export type Output =
   | InitializeOutput
   | PromptOutput
   | NewSessionOutput
+  | SwitchSessionOuput
   | ErrorOutput;
