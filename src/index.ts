@@ -61,7 +61,7 @@ stdin.on('data', async (data: string) => {
     );
 
     if (!authFile.apiKey) {
-      throw new Error('Please run :KisukeAuth first');
+      throw new Error('Please run :KisukeAuth');
     }
 
     const event = JSON.parse(data) as Event;

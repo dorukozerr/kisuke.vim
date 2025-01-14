@@ -31,7 +31,6 @@ func! s:ParseReply(channel, reply)
   let s:is_pending = 0
   let l:reply = json_decode(a:reply)
   if l:reply.type ==# 'initialize'
-    echom a:reply
     let s:sessionId = l:reply.sessionInfo.id
     let s:totalSessions = l:reply.totalSessions
     call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> ' . 'Kisuke initialized')
@@ -126,7 +125,26 @@ func! s:SwitchToPreviousSession()
   endif
 endfunc
 
+func! s:KisukeAuth()
+  if s:job == v:null
+    echom "Please run :Kisuke first "
+  else
+    let l:api_key = input('Enter your Claude API key: ')
+
+    if empty(l:api_key)
+      echo 'Please provide a valid api key'
+    else
+      call writefile([json_encode({ 'apiKey': l:api_key })], expand('~/.config/kisuke/auth.json'))
+
+      echo '\n Api Key saved successfully.'
+
+      call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
+    endif
+  endif
+endfunc
+
 command! Kisuke call s:OpenKisuke()
 command! KisukeNewSession call s:NewSession()
 command! KisukeNextSession call s:SwitchToNextSession()
 command! KisukePreviousSession call s:SwitchToPreviousSession()
+command! KisukeAuth call s:KisukeAuth()
