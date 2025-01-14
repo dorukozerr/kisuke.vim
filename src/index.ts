@@ -19,24 +19,31 @@ if (!existsSync(configDir)) mkdir(configDir, { recursive: true });
 
 let currentSessionIndex: number = 0;
 
+const setupKisukeFiles = async () => {
+  const sessionId = randomBytes(16).toString('hex');
+
+  await writeFile(
+    join(configDir, 'history.json'),
+    JSON.stringify({ sessions: [{ id: sessionId, name: sessionId }] })
+  );
+  await writeFile(
+    join(configDir, `${sessionId}.json`),
+    JSON.stringify(initialSessionData)
+  );
+  await writeFile(join(configDir, 'auth.json'), JSON.stringify({ apiKey: '' }));
+
+  return JSON.parse(
+    await readFile(join(configDir, 'history.json'), 'utf-8')
+  ) as History;
+};
+
 const getHistory = async () => {
   try {
     return JSON.parse(
       await readFile(join(configDir, 'history.json'), 'utf-8')
     ) as History;
   } catch {
-    const sessionId = randomBytes(16).toString('hex');
-    await writeFile(
-      join(configDir, 'history.json'),
-      JSON.stringify({ sessions: [{ id: sessionId, name: sessionId }] })
-    );
-    await writeFile(
-      join(configDir, `${sessionId}.json`),
-      JSON.stringify(initialSessionData)
-    );
-    return JSON.parse(
-      await readFile(join(configDir, 'history.json'), 'utf-8')
-    ) as History;
+    return setupKisukeFiles();
   }
 };
 
@@ -47,10 +54,19 @@ const getSession = async (sessionId: string) =>
 
 stdin.on('data', async (data: string) => {
   try {
+    const history = await getHistory();
+
+    const authFile = JSON.parse(
+      await readFile(join(configDir, 'auth.json'), 'utf8')
+    );
+
+    if (!authFile.apiKey) {
+      throw new Error('Please run :KisukeAuth first');
+    }
+
     const event = JSON.parse(data) as Event;
 
     if (event.type === 'initialize') {
-      const history = await getHistory();
       const latestSessionIndex = history.sessions.length - 1;
       const sessionInfo = history.sessions[latestSessionIndex];
       const session = await getSession(sessionInfo.id);
@@ -88,7 +104,6 @@ stdin.on('data', async (data: string) => {
 
     if (event.type === 'newSession') {
       const sessionId = randomBytes(16).toString('hex');
-      const history = await getHistory();
 
       history.sessions.push({ id: sessionId, name: sessionId });
 
@@ -110,8 +125,6 @@ stdin.on('data', async (data: string) => {
     }
 
     if (event.type === 'nextSession') {
-      const history = await getHistory();
-
       if (currentSessionIndex === history.sessions.length - 1) {
         currentSessionIndex = 0;
 
@@ -140,8 +153,6 @@ stdin.on('data', async (data: string) => {
     }
 
     if (event.type === 'prevSession') {
-      const history = await getHistory();
-
       if (currentSessionIndex === 0) {
         currentSessionIndex = history.sessions.length - 1;
 
