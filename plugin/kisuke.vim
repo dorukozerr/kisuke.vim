@@ -45,7 +45,24 @@ func! s:ParseReply(channel, reply)
       call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> ' . entry.message)
     endfor
   elseif l:reply.type ==# 'response'
-    call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> ' . l:reply.payload)
+    echom 'Response => ' . a:reply
+    if l:reply.payload != 'stream_start' && l:reply.payload != 'stream_end'
+      for line in split(l:reply.payload, '\n')
+        if empty(line)
+          call appendbufline(s:kisuke_buf_nr, line('$'), '')
+
+          continue
+        endif
+
+        let current_line = getbufline(s:kisuke_buf_nr, line('$'))[0]
+
+        if empty(current_line)
+          call setbufline(s:kisuke_buf_nr, line('$'), line)
+        else
+          call setbufline(s:kisuke_buf_nr, line('$'), current_line . line)
+        endif
+      endfor
+    endif
   elseif l:reply.type ==# 'newSession'
     silent! %delete
 
@@ -111,6 +128,7 @@ func! s:OpenKisuke()
           \ buftype=prompt
           \ noswapfile
           \ nobuflisted
+          \ syntax=markdown
 
     call prompt_setprompt(s:kisuke_buf_nr, 'Prompt: ')
     call prompt_setcallback(s:kisuke_buf_nr, function('s:OnSubmit'))
@@ -157,7 +175,6 @@ func! s:KisukeAuth()
       echo 'Please provide a valid api key'
     else
       call writefile([json_encode({ 'apiKey': l:api_key })], expand('~/.config/kisuke/auth.json'))
-
       call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
     endif
   endif

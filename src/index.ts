@@ -3,6 +3,8 @@ import { mkdir, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { homedir } from 'os';
 import { existsSync } from 'fs';
+import { Anthropic } from '@anthropic-ai/sdk';
+import { TextDelta, InputJSONDelta } from '@anthropic-ai/sdk/resources';
 
 import { History, Session, Event, Output } from './types';
 import { initialSessionData } from './utils/initials';
@@ -17,6 +19,7 @@ const configDir = join(homedir(), '.config', 'kisuke');
 
 if (!existsSync(configDir)) mkdir(configDir, { recursive: true });
 
+let anthropicClient: Anthropic | null = null;
 let currentSessionIndex: number = 0;
 
 const setupKisukeFiles = async () => {
@@ -64,6 +67,12 @@ stdin.on('data', async (data: string) => {
       throw new Error('Please run :KisukeAuth');
     }
 
+    if (anthropicClient === null) {
+      anthropicClient = new Anthropic({
+        apiKey: authFile.apiKey
+      });
+    }
+
     const event = JSON.parse(data) as Event;
 
     if (event.type === 'initialize') {
@@ -85,21 +94,46 @@ stdin.on('data', async (data: string) => {
     if (event.type === 'prompt') {
       const session = await getSession(event.sessionId);
 
-      await writeFile(
-        join(configDir, `${event.sessionId}.json`),
-        JSON.stringify({
-          messages: [
-            ...session.messages,
-            { sender: 'User', message: event.payload },
-            { sender: 'Kisuke', message: `Received: ${event.payload}` }
-          ]
-        })
-      );
+      //  await writeFile(
+      //    join(configDir, `${event.sessionId}.json`),
+      //    JSON.stringify({
+      //      messages: [
+      //        ...session.messages,
+      //        { sender: 'User', message: event.payload },
+      //        { sender: 'Kisuke', message: `Received: ${event.payload}` }
+      //      ]
+      //    })
+      //  );
 
-      sendResponse({
-        type: 'response',
-        payload: `Received: ${event.payload}`
+      const stream = anthropicClient.messages.stream({
+        model: 'claude-3-5-sonnet-latest',
+        max_tokens: 1024,
+        messages: [
+          {
+            role: 'assistant',
+            content:
+              'You are a AI that will help programmers/developers to find and fix bugs, suggest new code blocks, generate solutions and assist them. This will work like normal LLM usage, I will also give you stringifyied version of your session history in this context. Do your best to assist us. And Your output must be in this format => paragraph1 \nparagraph2 \n```language\ncodeblock\n```. paragraph1 and paragraph2 is just a example you can add and remove as much paragraghps or code blocks you need just divide them with line breaks and give code in markdown codeblock format. Your name is Kisuke Urahara, do your best! Process what I wrote and iterate it at least 3 time to do what I want you to do, generate something better than my input and use the generated output. Also put only 1 line break \n between every section I will use that to render your output you will be used as vim plugin so its really important for me to put only one line break. You are doing good at normal text generation but be super strict on code block generation follow the my settings and preferences'
+          },
+          {
+            role: 'assistant',
+            content: `stringifyied session history => ${session.messages}`
+          },
+          { role: 'user', content: event.payload }
+        ]
       });
+
+      sendResponse({ type: 'response', payload: 'stream_start' });
+
+      for await (const chunk of stream) {
+        if (chunk.type === 'content_block_delta') {
+          sendResponse({
+            type: 'response',
+            payload: (chunk.delta as { text: string }).text
+          });
+        }
+      }
+
+      sendResponse({ type: 'response', payload: 'stream_end' });
     }
 
     if (event.type === 'newSession') {
