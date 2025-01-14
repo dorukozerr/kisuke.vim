@@ -114,6 +114,7 @@ stdin.on('data', async (data: string) => {
 
       if (currentSessionIndex === history.sessions.length - 1) {
         currentSessionIndex = 0;
+
         const sessionInfo = history.sessions[0];
         const session = await getSession(sessionInfo.id);
 
@@ -125,6 +126,7 @@ stdin.on('data', async (data: string) => {
         });
       } else {
         currentSessionIndex++;
+
         const sessionInfo = history.sessions[currentSessionIndex];
         const session = await getSession(sessionInfo.id);
 
@@ -142,6 +144,7 @@ stdin.on('data', async (data: string) => {
 
       if (currentSessionIndex === 0) {
         currentSessionIndex = history.sessions.length - 1;
+
         const sessionInfo = history.sessions[currentSessionIndex];
         const session = await getSession(sessionInfo.id);
 
@@ -153,6 +156,7 @@ stdin.on('data', async (data: string) => {
         });
       } else {
         currentSessionIndex--;
+
         const sessionInfo = history.sessions[currentSessionIndex];
         const session = await getSession(sessionInfo.id);
 
