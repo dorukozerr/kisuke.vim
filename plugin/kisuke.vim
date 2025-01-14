@@ -17,6 +17,7 @@ func! s:OnSubmit(prompt)
     call appendbufline(s:kisuke_buf_nr, line('$') - 1, 'Cannot enter new prompt untill server finishes the job')
   elseif s:job != v:null
     let s:is_pending = 1
+
     call ch_sendraw(job_getchannel(s:job), json_encode({
           \ 'type': 'prompt',
           \ 'sessionId': s:sessionId,
@@ -30,35 +31,48 @@ endfunc
 func! s:ParseReply(channel, reply)
   let s:is_pending = 0
   let l:reply = json_decode(a:reply)
+
   if l:reply.type ==# 'initialize'
+    silent! %delete
+
     let s:sessionId = l:reply.sessionInfo.id
     let s:totalSessions = l:reply.totalSessions
+
     call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> ' . 'Kisuke initialized')
     call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> ' . 'Session ' . l:reply.currentSession . '/' . s:totalSessions)
+
     for entry in l:reply.payload.messages
       call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> ' . entry.message)
     endfor
   elseif l:reply.type ==# 'response'
     call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> ' . l:reply.payload)
   elseif l:reply.type ==# 'newSession'
+    silent! %delete
+
     let s:sessionId = l:reply.sessionInfo.id
     let s:totalSessions = l:reply.totalSessions
-    silent! %delete _
+    let l:line_num = 2
+
     call appendbufline(s:kisuke_buf_nr, 0, '> ' . 'Kisuke initialized')
     call appendbufline(s:kisuke_buf_nr, 1, '> ' . 'Session ' . l:reply.currentSession . '/' . s:totalSessions)
-    let l:line_num = 2
+
     for entry in l:reply.payload.messages
       call appendbufline(s:kisuke_buf_nr, l:line_num, '> ' . entry.message)
+
       let l:line_num += 1
     endfor
   elseif l:reply.type ==# 'switchSession'
+    silent! %delete
+
     let s:sessionId = l:reply.sessionInfo.id
-    silent! %delete _
+    let l:line_num = 2
+
     call appendbufline(s:kisuke_buf_nr, 0, '> ' . 'Kisuke initialized')
     call appendbufline(s:kisuke_buf_nr, 1, '> ' . 'Session ' . l:reply.currentSession . '/' . s:totalSessions)
-    let l:line_num = 2
+
     for entry in l:reply.payload.messages
       call appendbufline(s:kisuke_buf_nr, l:line_num, '> ' . entry.message)
+
       let l:line_num += 1
     endfor
   elseif l:reply.type ==# 'error'
@@ -74,26 +88,34 @@ func! s:OpenKisuke()
   endif
   if bufexists(s:kisuke_buf_nr)
     let l:wid=bufwinid(s:kisuke_buf_nr)
+
     if l:wid == -1
       exe 'vsplit'
       exe 'buffer ' . s:kisuke_buf_nr
-      call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
+
       let s:is_pending = 1
+
+      call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
+
       startinsert!
     else
       call win_gotoid(l:wid)
     endif
   else
     exe 'vsplit ' . s:kisuke_buf_name
+
     let s:kisuke_buf_nr = bufnr('%')
+    let s:is_pending = 1
+
     setlocal
           \ buftype=prompt
           \ noswapfile
           \ nobuflisted
+
     call prompt_setprompt(s:kisuke_buf_nr, 'Prompt: ')
     call prompt_setcallback(s:kisuke_buf_nr, function('s:OnSubmit'))
     call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
-    let s:is_pending = 1
+
     augroup g:kisuke_buf_name
       autocmd!
       autocmd TextChanged,TextChangedI <buffer> setlocal nomodified
@@ -135,8 +157,6 @@ func! s:KisukeAuth()
       echo 'Please provide a valid api key'
     else
       call writefile([json_encode({ 'apiKey': l:api_key })], expand('~/.config/kisuke/auth.json'))
-
-      echo '\n Api Key saved successfully.'
 
       call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
     endif
