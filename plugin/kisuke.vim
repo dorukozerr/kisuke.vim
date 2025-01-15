@@ -297,7 +297,7 @@ func! s:KisukeAuth()
     let l:api_key = input('Enter your Claude API key: ')
 
     if empty(l:api_key)
-      echo 'Please provide a valid api key'
+      echoerr 'Please provide a valid api key'
     else
       let l:wid=bufwinid(s:kisuke_buf_nr)
 
@@ -347,3 +347,10 @@ command! KisukeNextSession call s:SwitchToNextSession()
 command! KisukePreviousSession call s:SwitchToPreviousSession()
 command! KisukeAuth call s:KisukeAuth()
 command! KisukeDeleteSession call s:KisukeDeleteSession()
+
+nnoremap <Leader>ko :Kisuke<CR>
+nnoremap <Leader>kc :KisukeNewSession<CR>
+nnoremap <Leader>kn :KisukeNextSession<CR>
+nnoremap <Leader>kp :KisukePreviousSession<CR>
+nnoremap <Leader>ka :KisukeAuth<CR>
+nnoremap <Leader>kd :KisukeDeleteSession<CR>
