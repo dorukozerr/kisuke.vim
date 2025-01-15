@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { mkdir, readFile, writeFile } from 'fs/promises';
+import { mkdir, readFile, writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { homedir } from 'os';
 import { existsSync } from 'fs';
@@ -213,6 +213,47 @@ stdin.on('data', async (data: string) => {
           payload: session
         });
       }
+    }
+
+    if (event.type === 'deleteSession') {
+      history.sessions = history.sessions.filter(
+        (session) => session.id !== event.payload
+      );
+
+      await unlink(join(configDir, `${event.payload}.json`));
+
+      if (history.sessions.length === 0) {
+        const sessionId = randomBytes(16).toString('hex');
+
+        history.sessions = [{ id: sessionId, name: sessionId }];
+
+        await writeFile(
+          join(configDir, 'history.json'),
+          JSON.stringify({ sessions: [{ id: sessionId, name: sessionId }] })
+        );
+        await writeFile(
+          join(configDir, `${sessionId}.json`),
+          JSON.stringify(initialSessionData)
+        );
+      } else {
+        await writeFile(
+          join(configDir, 'history.json'),
+          JSON.stringify(history)
+        );
+      }
+      const latestSessionIndex = history.sessions.length - 1;
+      const sessionInfo = history.sessions[latestSessionIndex];
+      const session = await getSession(sessionInfo.id);
+
+      currentSessionIndex = latestSessionIndex;
+
+      sendResponse({
+        type: 'initialize',
+        totalSessions: history.sessions.length,
+        currentSession: currentSessionIndex + 1,
+        sessionInfo,
+        payload: session
+      });
     }
   } catch (error) {
     sendResponse({

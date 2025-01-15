@@ -87,7 +87,7 @@ func! s:ParseReply(channel, reply)
     endfor
   elseif l:reply.type ==# 'response'
     if l:reply.payload ==# 'stream_start'
-      call setbufline(s:kisuke_buf_nr, line('$'), 'Generating response...')
+      call setbufline(s:kisuke_buf_nr, line('$'), ' ')
 
       let s:response_start_line = line('$') + 1
     elseif l:reply.payload ==# 'stream_end'
@@ -101,7 +101,11 @@ func! s:ParseReply(channel, reply)
       let l:index = 0
 
       for line in split(s:stream_response, '\n')
-        call setbufline(s:kisuke_buf_nr, s:response_start_line + l:index, line)
+        if l:index ==# 0
+          call setbufline(s:kisuke_buf_nr, s:response_start_line + l:index, 'Kisuke > ' . line)
+        else
+          call setbufline(s:kisuke_buf_nr, s:response_start_line + l:index, line)
+        endif
 
         normal! G
 
@@ -113,16 +117,16 @@ func! s:ParseReply(channel, reply)
 
     let s:sessionId = l:reply.sessionInfo.id
     let s:totalSessions = l:reply.totalSessions
-    let l:line_num = 2
 
-    call appendbufline(s:kisuke_buf_nr, 0, '> ' . 'Kisuke initialized')
-    call appendbufline(s:kisuke_buf_nr, 1, '> ' . 'Session ' . l:reply.currentSession . '/' . s:totalSessions)
+    call setbufline(s:kisuke_buf_nr, 1, '> ' . 'Kisuke initialized')
+    call setbufline(s:kisuke_buf_nr, 2, '> ' . 'Session ' . l:reply.currentSession . '/' . s:totalSessions)
 
     for entry in l:reply.payload.messages
-      call appendbufline(s:kisuke_buf_nr, l:line_num, '> ' . entry.message)
-
-      let l:line_num += 1
+      call setbufline(s:kisuke_buf_nr, 3, ' ')
+      call setbufline(s:kisuke_buf_nr, 4, 'Kisuke > ' . entry.message)
     endfor
+
+    call setbufline(s:kisuke_buf_nr, 5, ' ')
 
     let s:is_pending = 0
   elseif l:reply.type ==# 'switchSession'
@@ -315,8 +319,31 @@ func! s:KisukeAuth()
   endif
 endfunc
 
+func! s:KisukeDeleteSession()
+  if s:job == v:null
+    echoerr "Please run :Kisuke first "
+  else
+    let l:wid=bufwinid(s:kisuke_buf_nr)
+
+    if l:wid == -1
+      exe 'vsplit'
+      exe 'buffer ' . s:kisuke_buf_nr
+
+      let s:is_pending = 1
+
+      call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'deleteSession', 'payload': s:sessionId }))
+
+      startinsert!
+    else
+      call win_gotoid(l:wid)
+      call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'deleteSession', 'payload': s:sessionId }))
+    endif
+  endif
+endfunc
+
 command! Kisuke call s:OpenKisuke()
 command! KisukeNewSession call s:NewSession()
 command! KisukeNextSession call s:SwitchToNextSession()
 command! KisukePreviousSession call s:SwitchToPreviousSession()
 command! KisukeAuth call s:KisukeAuth()
+command! KisukeDeleteSession call s:KisukeDeleteSession()

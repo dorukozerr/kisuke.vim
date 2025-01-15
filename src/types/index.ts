@@ -31,12 +31,18 @@ interface RenameSessionEvent {
   sessionId: string;
 }
 
+interface DeleteSessionEvent {
+  type: 'deleteSession';
+  payload: string;
+}
+
 export type Event =
   | InitializeEvent
   | PromptEvent
   | NewSessionEvent
   | SwitchSessionEvent
-  | RenameSessionEvent;
+  | RenameSessionEvent
+  | DeleteSessionEvent;
 
 interface InitializeOutput {
   type: 'initialize';
