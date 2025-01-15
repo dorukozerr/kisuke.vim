@@ -12,13 +12,30 @@ let s:totalSessions         = v:null
 let s:stream_response       = ''
 let s:response_start_line   = v:null
 
-" TODO: Try to add syntax highlighting
+func! s:SetupKisukeSyntax()
+  syntax clear
+
+  syn match KisukePrompt /^Prompt >/
+  syn match KisukeResponse /^Kisuke >/
+  syn match KisukeSystem /^> .*$/
+
+  syn region KisukeCodeBlock matchgroup=KisukeCodeDelimiter
+        \ start=/^```.*$/
+        \ end=/^```$/
+        \ keepend
+
+  hi def link KisukePrompt Statement
+  hi def link KisukeResponse Identifier
+  hi def link KisukeSystem Special
+  hi def link KisukeCodeDelimiter Delimiter
+  hi def link KisukeCodeBlock String
+endfunc
 
 func! s:OnSubmit(prompt)
   if a:prompt == ''
-    call appendbufline(s:kisuke_buf_nr, line('$') - 1, 'Cannot submit empty prompt')
+    echoerr 'Cannot enter empty prompt, please write something'
   elseif s:is_pending
-    call appendbufline(s:kisuke_buf_nr, line('$') - 1, 'Cannot enter new prompt untill server finishes the job')
+    echoerr 'Cannot enter a new prompt while server generating a response to earlier prompt'
   elseif s:job != v:null
     let s:is_pending = 1
 
@@ -33,12 +50,12 @@ func! s:OnSubmit(prompt)
 endfunc
 
 func! s:ParseReply(channel, reply)
-  let s:is_pending = 0
   let l:reply = json_decode(a:reply)
 
   if l:reply.type ==# 'initialize'
     silent! %delete
 
+    let s:is_pending = 0
     let s:sessionId = l:reply.sessionInfo.id
     let s:totalSessions = l:reply.totalSessions
 
@@ -69,12 +86,12 @@ func! s:ParseReply(channel, reply)
       endif
     endfor
   elseif l:reply.type ==# 'response'
-    echom 'LOOKHERE ' . a:reply
     if l:reply.payload ==# 'stream_start'
       call setbufline(s:kisuke_buf_nr, line('$'), 'Generating response...')
 
       let s:response_start_line = line('$') + 1
     elseif l:reply.payload ==# 'stream_end'
+      let s:is_pending = 0
       let s:stream_response = ''
       let s:response_start_line = v:null
 
@@ -104,6 +121,8 @@ func! s:ParseReply(channel, reply)
 
       let l:line_num += 1
     endfor
+
+    let s:is_pending = 0
   elseif l:reply.type ==# 'switchSession'
     silent! %delete
 
@@ -136,7 +155,11 @@ func! s:ParseReply(channel, reply)
         call setbufline(s:kisuke_buf_nr, line('$') + 1, ' ')
       endif
     endfor
+
+    let s:is_pending = 0
   elseif l:reply.type ==# 'error'
+    let s:is_pending = 0
+
     call appendbufline(s:kisuke_buf_nr, line('$') - 1, 'Server error > ' . l:reply.payload)
   endif
 endfunc
@@ -147,6 +170,7 @@ func! s:OpenKisuke()
           \ 'out_cb': function('s:ParseReply'),
           \ })
   endif
+
   if bufexists(s:kisuke_buf_nr)
     let l:wid=bufwinid(s:kisuke_buf_nr)
 
@@ -173,8 +197,12 @@ func! s:OpenKisuke()
           \ noswapfile
           \ nobuflisted
           \ syntax=markdown
+          \ conceallevel=0
+          \ concealcursor=
 
-    call prompt_setprompt(s:kisuke_buf_nr, 'Prompt: ')
+    call s:SetupKisukeSyntax()
+
+    call prompt_setprompt(s:kisuke_buf_nr, 'Prompt > ')
     call prompt_setcallback(s:kisuke_buf_nr, function('s:OnSubmit'))
     call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
 
@@ -182,6 +210,11 @@ func! s:OpenKisuke()
       autocmd!
       autocmd TextChanged,TextChangedI <buffer> setlocal nomodified
     augroup END
+
+     augroup KisukeSyntax
+       autocmd!
+       autocmd TextChanged,TextChangedI,CursorMoved,CursorMovedI <buffer> call s:SetupKisukeSyntax()
+     augroup END
   endif
 endfunc
 
@@ -191,8 +224,19 @@ func! s:NewSession()
   else
     let l:wid=bufwinid(s:kisuke_buf_nr)
 
-    call win_gotoid(l:wid)
-    call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'newSession' }))
+    if l:wid == -1
+      exe 'vsplit'
+      exe 'buffer ' . s:kisuke_buf_nr
+
+      let s:is_pending = 1
+
+      call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'newSession' }))
+
+      startinsert!
+    else
+      call win_gotoid(l:wid)
+      call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'newSession' }))
+    endif
   endif
 endfunc
 
@@ -202,8 +246,19 @@ func! s:SwitchToNextSession()
   else
     let l:wid=bufwinid(s:kisuke_buf_nr)
 
-    call win_gotoid(l:wid)
-    call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'nextSession' }))
+    if l:wid == -1
+      exe 'vsplit'
+      exe 'buffer ' . s:kisuke_buf_nr
+
+      let s:is_pending = 1
+
+      call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'nextSession' }))
+
+      startinsert!
+    else
+      call win_gotoid(l:wid)
+      call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'nextSession' }))
+    endif
   endif
 endfunc
 
@@ -213,8 +268,19 @@ func! s:SwitchToPreviousSession()
   else
     let l:wid=bufwinid(s:kisuke_buf_nr)
 
-    call win_gotoid(l:wid)
-    call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'prevSession' }))
+    if l:wid == -1
+      exe 'vsplit'
+      exe 'buffer ' . s:kisuke_buf_nr
+
+      let s:is_pending = 1
+
+      call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'prevSession' }))
+
+      startinsert!
+    else
+      call win_gotoid(l:wid)
+      call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'prevSession' }))
+    endif
   endif
 endfunc
 
@@ -229,9 +295,20 @@ func! s:KisukeAuth()
     else
       let l:wid=bufwinid(s:kisuke_buf_nr)
 
-      call win_gotoid(l:wid)
+      if l:wid == -1
+        exe 'vsplit'
+        exe 'buffer ' . s:kisuke_buf_nr
+
+        let s:is_pending = 1
+
+        call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
+
+        startinsert!
+      else
+        call win_gotoid(l:wid)
+      endif
+
       call writefile([json_encode({ 'apiKey': l:api_key })], expand('~/.config/kisuke/auth.json'))
-      call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
     endif
   endif
 endfunc
