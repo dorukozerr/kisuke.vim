@@ -94,17 +94,6 @@ stdin.on('data', async (data: string) => {
     if (event.type === 'prompt') {
       const session = await getSession(event.sessionId);
 
-      //  await writeFile(
-      //    join(configDir, `${event.sessionId}.json`),
-      //    JSON.stringify({
-      //      messages: [
-      //        ...session.messages,
-      //        { sender: 'User', message: event.payload },
-      //        { sender: 'Kisuke', message: `Received: ${event.payload}` }
-      //      ]
-      //    })
-      //  );
-
       const stream = anthropicClient.messages.stream({
         model: 'claude-3-5-sonnet-latest',
         max_tokens: 1024,
@@ -112,7 +101,7 @@ stdin.on('data', async (data: string) => {
           { role: 'assistant', content: BaseAIInstruction },
           {
             role: 'assistant',
-            content: `stringified session history, please parse it accordingly before using it => ${session.messages}`
+            content: `stringified session history, please parse it accordingly before using it => ${JSON.stringify(session.messages)}`
           },
           { role: 'user', content: event.payload }
         ]
@@ -128,6 +117,22 @@ stdin.on('data', async (data: string) => {
           });
         }
       }
+
+      await writeFile(
+        join(configDir, `${event.sessionId}.json`),
+        JSON.stringify({
+          messages: [
+            ...session.messages,
+            { sender: 'User', message: event.payload },
+            {
+              sender: 'Kisuke',
+              message: (
+                stream.messages[3].content[0] as unknown as { text: string }
+              ).text
+            }
+          ]
+        })
+      );
 
       sendResponse({ type: 'response', payload: 'stream_end' });
     }

@@ -44,9 +44,30 @@ func! s:ParseReply(channel, reply)
     call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> ' . 'Session ' . l:reply.currentSession . '/' . s:totalSessions)
 
     for entry in l:reply.payload.messages
-      call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> ' . entry.message)
+      if entry.sender ==# 'Kisuke'
+        let s:response_start_line = line('$') + 1
+        let l:index = 0
+
+        for line in split(entry.message, '\n')
+          if l:index ==# 0
+            call setbufline(s:kisuke_buf_nr, s:response_start_line + l:index, 'Kisuke > ' . line)
+          else
+            call setbufline(s:kisuke_buf_nr, s:response_start_line + l:index, line)
+          endif
+
+          let l:index += 1
+        endfor
+
+        let s:response_start_line = v:null
+
+        call setbufline(s:kisuke_buf_nr, line('$') + 1, ' ')
+      elseif entry.sender ==# 'User'
+        call appendbufline(s:kisuke_buf_nr, line('$'), 'Prompt > ' . entry.message)
+        call setbufline(s:kisuke_buf_nr, line('$') + 1, ' ')
+      endif
     endfor
   elseif l:reply.type ==# 'response'
+    echom 'LOOKHERE ' . a:reply
     if l:reply.payload ==# 'stream_start'
       call setbufline(s:kisuke_buf_nr, line('$'), 'Generating response...')
 
