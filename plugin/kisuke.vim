@@ -222,7 +222,7 @@ endfunc
 
 func! s:NewSession()
   if s:job == v:null
-    echom "Please run :Kisuke first "
+    echoerr "Please run :Kisuke first "
   else
     let l:wid=bufwinid(s:kisuke_buf_nr)
 
@@ -244,7 +244,7 @@ endfunc
 
 func! s:SwitchToNextSession()
   if s:job == v:null
-    echom "Please run :Kisuke first "
+    echoerr "Please run :Kisuke first "
   else
     let l:wid=bufwinid(s:kisuke_buf_nr)
 
@@ -266,7 +266,7 @@ endfunc
 
 func! s:SwitchToPreviousSession()
   if s:job == v:null
-    echom "Please run :Kisuke first "
+    echoerr "Please run :Kisuke first "
   else
     let l:wid=bufwinid(s:kisuke_buf_nr)
 
@@ -288,7 +288,7 @@ endfunc
 
 func! s:KisukeAuth()
   if s:job == v:null
-    echom "Please run :Kisuke first "
+    echoerr "Please run :Kisuke first "
   else
     let l:api_key = input('Enter your Claude API key: ')
 
