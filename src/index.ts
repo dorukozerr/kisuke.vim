@@ -4,10 +4,10 @@ import { join } from 'path';
 import { homedir } from 'os';
 import { existsSync } from 'fs';
 import { Anthropic } from '@anthropic-ai/sdk';
-import { TextDelta, InputJSONDelta } from '@anthropic-ai/sdk/resources';
+import { TextDelta } from '@anthropic-ai/sdk/resources';
 
 import { History, Session, Event, Output } from './types';
-import { initialSessionData } from './utils/initials';
+import { initialSessionData, BaseAIInstruction } from './utils/initials';
 
 const stdin = process.stdin;
 const stdout = process.stdout;
@@ -109,14 +109,10 @@ stdin.on('data', async (data: string) => {
         model: 'claude-3-5-sonnet-latest',
         max_tokens: 1024,
         messages: [
+          { role: 'assistant', content: BaseAIInstruction },
           {
             role: 'assistant',
-            content:
-              'You are a AI that will help programmers/developers to find and fix bugs, suggest new code blocks, generate solutions and assist them. This will work like normal LLM usage, I will also give you stringifyied version of your session history in this context. Do your best to assist us. And Your output must be in this format => paragraph1 \nparagraph2 \n```language\ncodeblock\n```. paragraph1 and paragraph2 is just a example you can add and remove as much paragraghps or code blocks you need just divide them with line breaks and give code in markdown codeblock format. Your name is Kisuke Urahara, do your best! Process what I wrote and iterate it at least 3 time to do what I want you to do, generate something better than my input and use the generated output. Also put only 1 line break \n between every section I will use that to render your output you will be used as vim plugin so its really important for me to put only one line break. You are doing good at normal text generation but be super strict on code block generation follow the my settings and preferences'
-          },
-          {
-            role: 'assistant',
-            content: `stringifyied session history => ${session.messages}`
+            content: `stringified session history, please parse it accordingly before using it => ${session.messages}`
           },
           { role: 'user', content: event.payload }
         ]
@@ -128,7 +124,7 @@ stdin.on('data', async (data: string) => {
         if (chunk.type === 'content_block_delta') {
           sendResponse({
             type: 'response',
-            payload: (chunk.delta as { text: string }).text
+            payload: (chunk.delta as TextDelta).text
           });
         }
       }

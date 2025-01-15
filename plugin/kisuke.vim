@@ -9,6 +9,8 @@ let s:job                   = v:null
 let s:is_pending            = 0
 let s:sessionId             = v:null
 let s:totalSessions         = v:null
+let s:stream_response       = ''
+let s:response_start_line   = v:null
 
 func! s:OnSubmit(prompt)
   if a:prompt == ''
@@ -45,22 +47,19 @@ func! s:ParseReply(channel, reply)
       call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> ' . entry.message)
     endfor
   elseif l:reply.type ==# 'response'
-    echom 'Response => ' . a:reply
-    if l:reply.payload != 'stream_start' && l:reply.payload != 'stream_end'
-      for line in split(l:reply.payload, '\n')
-        if empty(line)
-          call appendbufline(s:kisuke_buf_nr, line('$'), '')
+    if l:reply.payload ==# 'stream_start'
+      let s:response_start_line = line('$')
+    elseif l:reply.payload ==# 'stream_end'
+      let s:stream_response = ''
+      let s:response_start_line = v:null
+    else
+      let s:stream_response = s:stream_response . l:reply.payload
+      let l:index = 0
 
-          continue
-        endif
+      for line in split(s:stream_response, '\n')
+        call setbufline(s:kisuke_buf_nr, s:response_start_line + l:index, line)
 
-        let current_line = getbufline(s:kisuke_buf_nr, line('$'))[0]
-
-        if empty(current_line)
-          call setbufline(s:kisuke_buf_nr, line('$'), line)
-        else
-          call setbufline(s:kisuke_buf_nr, line('$'), current_line . line)
-        endif
+        let l:index += 1
       endfor
     endif
   elseif l:reply.type ==# 'newSession'
