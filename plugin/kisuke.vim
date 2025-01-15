@@ -48,10 +48,14 @@ func! s:ParseReply(channel, reply)
     endfor
   elseif l:reply.type ==# 'response'
     if l:reply.payload ==# 'stream_start'
-      let s:response_start_line = line('$')
+      call setbufline(s:kisuke_buf_nr, line('$'), 'Generating response...')
+
+      let s:response_start_line = line('$') + 1
     elseif l:reply.payload ==# 'stream_end'
       let s:stream_response = ''
       let s:response_start_line = v:null
+
+      call setbufline(s:kisuke_buf_nr, line('$') + 1, ' ')
     else
       let s:stream_response = s:stream_response . l:reply.payload
       let l:index = 0
