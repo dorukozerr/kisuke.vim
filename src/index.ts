@@ -241,6 +241,7 @@ stdin.on('data', async (data: string) => {
           JSON.stringify(history)
         );
       }
+
       const latestSessionIndex = history.sessions.length - 1;
       const sessionInfo = history.sessions[latestSessionIndex];
       const session = await getSession(sessionInfo.id);

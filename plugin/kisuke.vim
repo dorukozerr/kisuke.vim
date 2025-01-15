@@ -11,6 +11,7 @@ let s:sessionId             = v:null
 let s:totalSessions         = v:null
 let s:stream_response       = ''
 let s:response_start_line   = v:null
+let s:marked_files          = []
 
 func! s:SetupKisukeSyntax()
   syntax clear
@@ -33,9 +34,9 @@ endfunc
 
 func! s:OnSubmit(prompt)
   if a:prompt == ''
-    echoerr 'Cannot enter empty prompt, please write something'
+    echoerr 'Cannot submit empty prompt, please write something'
   elseif s:is_pending
-    echoerr 'Cannot enter a new prompt while server generating a response to earlier prompt'
+    echoerr 'Cannot submit a new prompt while server generating a response to earlier prompt'
   elseif s:job != v:null
     let s:is_pending = 1
 
@@ -203,8 +204,9 @@ func! s:OpenKisuke()
           \ noswapfile
           \ nobuflisted
           \ syntax=markdown
-          \ conceallevel=0
-          \ concealcursor=
+
+    "         \ conceallevel=0
+    "         \ concealcursor=
 
     call s:SetupKisukeSyntax()
 
@@ -290,7 +292,7 @@ func! s:SwitchToPreviousSession()
   endif
 endfunc
 
-func! s:KisukeAuth()
+func! s:Auth()
   if s:job == v:null
     echoerr "Please run :Kisuke first "
   else
@@ -319,7 +321,7 @@ func! s:KisukeAuth()
   endif
 endfunc
 
-func! s:KisukeDeleteSession()
+func! s:DeleteSession()
   if s:job == v:null
     echoerr "Please run :Kisuke first "
   else
@@ -341,12 +343,68 @@ func! s:KisukeDeleteSession()
   endif
 endfunc
 
+func! s:MarkCurrentFile()
+  let l:wid=bufwinid(s:kisuke_buf_nr)
+  let l:current_file = expand('%:p')
+  let l:file_index = index(s:marked_files, l:current_file)
+  let l:index = 0
+  let l:marked_files_start_line_nr = v:null
+  let l:marked_files_end_line_nr = v:null
+
+  if l:wid == -1
+    exe 'vsplit'
+    exe 'buffer ' . s:kisuke_buf_nr
+  else
+    call win_gotoid(l:wid)
+  endif
+
+  echom 'CurrentFile ' . l:current_file
+
+  if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
+    let l:marked_files_start_line_nr = line('$') - len(s:marked_files)
+    let l:marked_files_end_line_nr = line('$')
+
+    if len(s:marked_files)
+      call deletebufline(s:kisuke_buf_nr, l:marked_files_start_line_nr, l:marked_files_end_line_nr)
+    endif
+  elseif split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
+    let l:marked_files_start_line_nr = line('$') - len(s:marked_files) - 1
+    let l:marked_files_end_line_nr = line('$') - 1
+
+    if len(s:marked_files)
+      call deletebufline(s:kisuke_buf_nr, l:marked_files_start_line_nr, l:marked_files_end_line_nr)
+    endif
+  endif
+
+  if l:file_index == -1
+    call add(s:marked_files, l:current_file)
+  else
+    call remove(s:marked_files, l:file_index)
+  endif
+
+  if len(s:marked_files)
+    for file_path in s:marked_files
+      echom 'FilePath ' . file_path
+      call appendbufline(s:kisuke_buf_nr, l:marked_files_start_line_nr + l:index, '> File reference ' . file_path)
+
+      let l:index += 1
+
+      if l:index ==# len(s:marked_files)
+        echom 'l:index ==# len s:marked_files'
+
+        call appendbufline(s:kisuke_buf_nr, l:marked_files_end_line_nr + l:index, ' ')
+      endif
+    endfor
+  endif
+endfunc
+
 command! Kisuke call s:OpenKisuke()
 command! KisukeNewSession call s:NewSession()
 command! KisukeNextSession call s:SwitchToNextSession()
 command! KisukePreviousSession call s:SwitchToPreviousSession()
-command! KisukeAuth call s:KisukeAuth()
-command! KisukeDeleteSession call s:KisukeDeleteSession()
+command! KisukeAuth call s:Auth()
+command! KisukeDeleteSession call s:DeleteSession()
+command! KisukeMarkCurrentFile call s:MarkCurrentFile()
 
 nnoremap <Leader>ko :Kisuke<CR>
 nnoremap <Leader>kc :KisukeNewSession<CR>
@@ -354,3 +412,4 @@ nnoremap <Leader>kn :KisukeNextSession<CR>
 nnoremap <Leader>kp :KisukePreviousSession<CR>
 nnoremap <Leader>ka :KisukeAuth<CR>
 nnoremap <Leader>kd :KisukeDeleteSession<CR>
+nnoremap <Leader>km :KisukeMarkCurrentFile<CR>
