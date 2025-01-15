@@ -103,6 +103,8 @@ func! s:ParseReply(channel, reply)
       for line in split(s:stream_response, '\n')
         call setbufline(s:kisuke_buf_nr, s:response_start_line + l:index, line)
 
+        normal! G
+
         let l:index += 1
       endfor
     endif
