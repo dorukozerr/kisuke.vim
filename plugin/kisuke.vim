@@ -12,6 +12,8 @@ let s:totalSessions         = v:null
 let s:stream_response       = ''
 let s:response_start_line   = v:null
 
+" TODO: Try to add syntax highlighting
+
 func! s:OnSubmit(prompt)
   if a:prompt == ''
     call appendbufline(s:kisuke_buf_nr, line('$') - 1, 'Cannot submit empty prompt')
@@ -112,9 +114,27 @@ func! s:ParseReply(channel, reply)
     call appendbufline(s:kisuke_buf_nr, 1, '> ' . 'Session ' . l:reply.currentSession . '/' . s:totalSessions)
 
     for entry in l:reply.payload.messages
-      call appendbufline(s:kisuke_buf_nr, l:line_num, '> ' . entry.message)
+      if entry.sender ==# 'Kisuke'
+        let s:response_start_line = line('$') + 1
+        let l:index = 0
 
-      let l:line_num += 1
+        for line in split(entry.message, '\n')
+          if l:index ==# 0
+            call setbufline(s:kisuke_buf_nr, s:response_start_line + l:index, 'Kisuke > ' . line)
+          else
+            call setbufline(s:kisuke_buf_nr, s:response_start_line + l:index, line)
+          endif
+
+          let l:index += 1
+        endfor
+
+        let s:response_start_line = v:null
+
+        call setbufline(s:kisuke_buf_nr, line('$') + 1, ' ')
+      elseif entry.sender ==# 'User'
+        call appendbufline(s:kisuke_buf_nr, line('$'), 'Prompt > ' . entry.message)
+        call setbufline(s:kisuke_buf_nr, line('$') + 1, ' ')
+      endif
     endfor
   elseif l:reply.type ==# 'error'
     call appendbufline(s:kisuke_buf_nr, line('$') - 1, 'Server error > ' . l:reply.payload)
@@ -169,6 +189,9 @@ func! s:NewSession()
   if s:job == v:null
     echom "Please run :Kisuke first "
   else
+    let l:wid=bufwinid(s:kisuke_buf_nr)
+
+    call win_gotoid(l:wid)
     call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'newSession' }))
   endif
 endfunc
@@ -177,6 +200,9 @@ func! s:SwitchToNextSession()
   if s:job == v:null
     echom "Please run :Kisuke first "
   else
+    let l:wid=bufwinid(s:kisuke_buf_nr)
+
+    call win_gotoid(l:wid)
     call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'nextSession' }))
   endif
 endfunc
@@ -185,6 +211,9 @@ func! s:SwitchToPreviousSession()
   if s:job == v:null
     echom "Please run :Kisuke first "
   else
+    let l:wid=bufwinid(s:kisuke_buf_nr)
+
+    call win_gotoid(l:wid)
     call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'prevSession' }))
   endif
 endfunc
@@ -198,6 +227,9 @@ func! s:KisukeAuth()
     if empty(l:api_key)
       echo 'Please provide a valid api key'
     else
+      let l:wid=bufwinid(s:kisuke_buf_nr)
+
+      call win_gotoid(l:wid)
       call writefile([json_encode({ 'apiKey': l:api_key })], expand('~/.config/kisuke/auth.json'))
       call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
     endif
