@@ -358,8 +358,6 @@ func! s:MarkCurrentFile()
     call win_gotoid(l:wid)
   endif
 
-  echom 'CurrentFile ' . l:current_file
-
   if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
     let l:marked_files_start_line_nr = line('$') - len(s:marked_files)
     let l:marked_files_end_line_nr = line('$')
@@ -376,6 +374,8 @@ func! s:MarkCurrentFile()
     endif
   endif
 
+  echom 'Line nrs -> start, end ' . l:marked_files_start_line_nr . ' ' . l:marked_files_end_line_nr
+
   if l:file_index == -1
     call add(s:marked_files, l:current_file)
   else
@@ -384,7 +384,6 @@ func! s:MarkCurrentFile()
 
   if len(s:marked_files)
     for file_path in s:marked_files
-      echom 'FilePath ' . file_path
       call appendbufline(s:kisuke_buf_nr, l:marked_files_start_line_nr + l:index, '> File reference ' . file_path)
 
       let l:index += 1
