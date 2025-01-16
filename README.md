@@ -25,11 +25,11 @@ npm i -g yarn@latest
 #### Install commands
 
 ```bash
-mkdir -p ~/.vim/pack/plugins/start
-cd ~/.vim/pack/plugins/start
-git clone https://github.com/dorukozerr/kisuke.vim.git
-cd kisuke.vim
-yarn build
+mkdir -p ~/.vim/pack/plugins/start &&
+cd ~/.vim/pack/plugins/start &&
+git clone https://github.com/dorukozerr/kisuke.vim.git &&
+cd kisuke.vim &&
+yarn build &&
 cd ~
 ```
 
