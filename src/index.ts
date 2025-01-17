@@ -143,8 +143,7 @@ My prompt is => ${event.payload}`
             ...session.messages,
             {
               sender: 'User',
-              message: event.payload,
-              ...(markedFiles.length > 0 ? { context: markedFiles } : {})
+              message: event.payload
             },
             {
               sender: 'Kisuke',
