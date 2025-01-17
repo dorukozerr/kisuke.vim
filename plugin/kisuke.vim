@@ -219,10 +219,10 @@ func! s:OpenKisuke()
       autocmd TextChanged,TextChangedI <buffer> setlocal nomodified
     augroup END
 
-     augroup KisukeSyntax
-       autocmd!
-       autocmd TextChanged,TextChangedI,CursorMoved,CursorMovedI <buffer> call s:SetupKisukeSyntax()
-     augroup END
+    augroup KisukeSyntax
+      autocmd!
+      autocmd TextChanged,TextChangedI,CursorMoved,CursorMovedI <buffer> call s:SetupKisukeSyntax()
+    augroup END
   endif
 endfunc
 
@@ -344,56 +344,77 @@ func! s:DeleteSession()
 endfunc
 
 func! s:MarkCurrentFile()
-  let l:wid=bufwinid(s:kisuke_buf_nr)
-  let l:current_file = expand('%:p')
-  let l:file_index = index(s:marked_files, l:current_file)
-  let l:index = 0
-  let l:marked_files_start_line_nr = v:null
-  let l:marked_files_end_line_nr = v:null
-
-  if l:wid == -1
-    exe 'vsplit'
-    exe 'buffer ' . s:kisuke_buf_nr
+  if s:job == v:null
+    echoerr "Please run :Kisuke first "
   else
-    call win_gotoid(l:wid)
-  endif
+    if bufnr('%') == s:kisuke_buf_nr
+      echoerr 'Cannot mark Kisuke chat buffer'
 
-  if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
-    let l:marked_files_start_line_nr = line('$') - len(s:marked_files)
-    let l:marked_files_end_line_nr = line('$')
-
-    if len(s:marked_files)
-      call deletebufline(s:kisuke_buf_nr, l:marked_files_start_line_nr, l:marked_files_end_line_nr)
+      return
     endif
-  elseif split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
-    let l:marked_files_start_line_nr = line('$') - len(s:marked_files) - 1
-    let l:marked_files_end_line_nr = line('$') - 1
 
-    if len(s:marked_files)
-      call deletebufline(s:kisuke_buf_nr, l:marked_files_start_line_nr, l:marked_files_end_line_nr)
+    let l:wid=bufwinid(s:kisuke_buf_nr)
+    let l:current_file = expand('%:p')
+    let l:file_index = index(s:marked_files, l:current_file)
+    let l:index = 0
+    let l:marked_files_start_line_nr = v:null
+    let l:marked_files_end_line_nr = v:null
+
+    if l:wid == -1
+      exe 'vsplit'
+      exe 'buffer ' . s:kisuke_buf_nr
+    else
+      call win_gotoid(l:wid)
     endif
-  endif
 
-  echom 'Line nrs -> start, end ' . l:marked_files_start_line_nr . ' ' . l:marked_files_end_line_nr
+    if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
+      let l:marked_files_start_line_nr = line('$') - len(s:marked_files)
+      let l:marked_files_end_line_nr = line('$')
 
-  if l:file_index == -1
-    call add(s:marked_files, l:current_file)
-  else
-    call remove(s:marked_files, l:file_index)
-  endif
-
-  if len(s:marked_files)
-    for file_path in s:marked_files
-      call appendbufline(s:kisuke_buf_nr, l:marked_files_start_line_nr + l:index, '> File reference ' . file_path)
-
-      let l:index += 1
-
-      if l:index ==# len(s:marked_files)
-        echom 'l:index ==# len s:marked_files'
-
-        call appendbufline(s:kisuke_buf_nr, l:marked_files_end_line_nr + l:index, ' ')
+      if len(s:marked_files)
+        call deletebufline(s:kisuke_buf_nr, l:marked_files_start_line_nr, l:marked_files_end_line_nr)
       endif
-    endfor
+    elseif split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
+      let l:marked_files_start_line_nr = line('$') - len(s:marked_files) - 1
+      let l:marked_files_end_line_nr = line('$') - 1
+
+      if len(s:marked_files)
+        call deletebufline(s:kisuke_buf_nr, l:marked_files_start_line_nr, l:marked_files_end_line_nr)
+      endif
+    endif
+
+    echom 's:kisuke_buf_nr ' . s:kisuke_buf_nr
+    echom 'start, end ' . l:marked_files_start_line_nr . ' ' . l:marked_files_end_line_nr
+
+    if l:file_index == -1
+      call add(s:marked_files, l:current_file)
+    else
+      call remove(s:marked_files, l:file_index)
+    endif
+
+    echom 'marked_files ' . json_encode(s:marked_files)
+
+    if len(s:marked_files) > 0
+      for file_path in s:marked_files
+        if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
+          call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . file_path)
+        elseif split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
+          call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> Marked File - ' . file_path)
+        else
+          call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . file_path)
+        endif
+
+        let l:index += 1
+
+        if l:index ==# len(s:marked_files)
+          if split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
+            call appendbufline(s:kisuke_buf_nr, line('$') - 1, ' ')
+          else
+            call appendbufline(s:kisuke_buf_nr, line('$'), ' ')
+          endif
+        endif
+      endfor
+    endif
   endif
 endfunc
 
