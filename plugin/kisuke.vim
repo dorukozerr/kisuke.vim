@@ -107,13 +107,19 @@ func! s:ParseReply(channel, reply)
         if len(s:marked_files) > 0
           let l:marked_files_index = 0
 
+          if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
+            call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File Count - ' . len(s:marked_files))
+          else
+            call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> Marked File Count - ' . len(s:marked_files))
+          endif
+
           for entry in s:marked_files
             if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
-              call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . entry.file_path)
+              call appendbufline(s:kisuke_buf_nr, line('$'), '> File Path - ' . entry.file_path)
             elseif split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
-              call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> Marked File - ' . entry.file_path)
+              call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> File Path - ' . entry.file_path)
             else
-              call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . entry.file_path)
+              call appendbufline(s:kisuke_buf_nr, line('$'), '> File Path - ' . entry.file_path)
             endif
 
             let l:marked_files_index += 1
@@ -416,7 +422,7 @@ func! s:MarkCurrentFile()
   let l:marked_files_end_line_nr = v:null
 
   for i in range(len(s:marked_files))
-    if s:marked_files[i].filePath == l:current_file
+    if s:marked_files[i].file_path == l:current_file
       let l:file_index = i
 
       break
@@ -435,14 +441,14 @@ func! s:MarkCurrentFile()
   endif
 
   if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
-    let l:marked_files_start_line_nr = line('$') - len(s:marked_files)
+    let l:marked_files_start_line_nr = line('$') - len(s:marked_files) - 1
     let l:marked_files_end_line_nr = line('$')
 
     if len(s:marked_files)
       call deletebufline(s:kisuke_buf_nr, l:marked_files_start_line_nr, l:marked_files_end_line_nr)
     endif
   elseif split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
-    let l:marked_files_start_line_nr = line('$') - len(s:marked_files) - 1
+    let l:marked_files_start_line_nr = line('$') - len(s:marked_files) - 2
     let l:marked_files_end_line_nr = line('$') - 1
 
     if len(s:marked_files)
@@ -456,14 +462,20 @@ func! s:MarkCurrentFile()
     call remove(s:marked_files, l:file_index)
   endif
 
-  if len(s:marked_files) > 0
+  if len(s:marked_files)
+    if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
+      call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File Count - ' . len(s:marked_files))
+    else
+      call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> Marked File Count - ' . len(s:marked_files))
+    endif
+
     for entry in s:marked_files
       if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
-        call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . entry.file_path)
+        call appendbufline(s:kisuke_buf_nr, line('$'), '> File Path - ' . entry.file_path)
       elseif split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
-        call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> Marked File - ' . entry.file_path)
+        call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> File Path - ' . entry.file_path)
       else
-        call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . entry.file_path)
+        call appendbufline(s:kisuke_buf_nr, line('$'), '> File Path - ' . entry.file_path)
       endif
 
       let l:index += 1
