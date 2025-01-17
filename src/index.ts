@@ -117,8 +117,7 @@ stdin.on('data', async (data: string) => {
           {
             role: 'user',
             content: event.context
-              ? `
- Here are the files you should look into it, answer to my prompt after digesting those files, here is the stringified files array with their names and contents => ${JSON.stringify(markedFiles)}
+              ? `Here are the files you should look into it, answer to my prompt after digesting those files, here is the stringified files array with their names and contents => ${JSON.stringify(markedFiles)}
 
 My prompt is => ${event.payload}`
               : event.payload
@@ -142,7 +141,11 @@ My prompt is => ${event.payload}`
         JSON.stringify({
           messages: [
             ...session.messages,
-            { sender: 'User', message: event.payload },
+            {
+              sender: 'User',
+              message: event.payload,
+              ...(markedFiles.length > 0 ? { context: markedFiles } : {})
+            },
             {
               sender: 'Kisuke',
               message: (

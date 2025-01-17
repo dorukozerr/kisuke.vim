@@ -145,6 +145,7 @@ func! s:ParseReply(channel, reply)
       let s:is_pending = 0
       let s:stream_response = ''
       let s:response_start_line = v:null
+      let s:marked_files = []
 
       call setbufline(s:kisuke_buf_nr, line('$') + 1, ' ')
     else
