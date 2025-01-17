@@ -40,7 +40,7 @@ func! kisuke#buffer#create()
   augroup END
 endfunc
 
-func! kisuke#buffer#focus(message = v:null)
+func! kisuke#buffer#focus(payload = v:null)
   let l:wid = bufwinid(g:kisuke.state.buf_nr)
 
   if l:wid == -1
@@ -51,7 +51,82 @@ func! kisuke#buffer#focus(message = v:null)
   endif
 
   if a:message != v:null
-    call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(a:message))
+    call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(a:payload))
+  endif
+endfunc
+
+func! kisuke#buffer#mark_focused_file()
+  let l:checks = [
+        \ {'condition': g:kisuke.state.job == v:null, 'message': 'Please run :Kisuke first '},
+        \ {'condition': g:kisuke.state.g:kisuke.state.is_pending, 'message': 'Cannot mark a file while server generating response'},
+        \ {'condition': bufnr('%') == g:kisuke.state.buf_nr, 'message': 'Cannot mark Kisuke chat buffer'},
+        \ ]
+
+  if !kisuke#utils#validate(l:checks)
+    return
+  endif
+
+  call kisuke#buffer#clear_marked_content()
+
+  let l:current_file = expand('%:p')
+  let l:file_index = -1
+
+  if l:file_index == -1
+    call add(g:kisuke.state.marked_files, {'file_path': l:current_file, 'scope': 'all'})
+  else
+    call remove(g:kisuke.state.marked_files, l:file_index)
+  endif
+
+  if len(g:kisuke.state.marked_files)
+    call kisuke#buffer#render_marked_content()
+  endif
+endfunc
+
+func! kisuke#buffer#mark_highlighted_code() range
+  let l:checks = [
+        \ {'condition': g:kisuke.state.job == v:null, 'message': 'Please run :KisukeOpen first'},
+        \ {'condition': g:kisuke.state.is_pending, 'message': 'Cannot mark code while server generating response'},
+        \ {'condition': bufnr('%') == g:kisuke.state.g:kisuke.state.buf_nr, 'message': 'Cannot mark Kisuke chat buffer'},
+        \ ]
+
+  if !kisuke#utils#validate(l:checks)
+    return
+  endif
+
+  let l:highlighted = getline(a:firstline, a:lastline)
+  let l:current_file = expand('%:p')
+
+  echom 'l:highlighted ' . json_encode(l:highlighted)
+endfunc
+
+func! kisuke#buffer#clear_marked_content()
+  let l:marked_files_start_line_nr = v:null
+  let l:marked_files_end_line_nr = v:null
+
+  for i in range(len(g:kisuke.state.marked_files))
+    if g:kisuke.state.marked_files[i].file_path == l:current_file
+      let l:file_index = i
+
+      break
+    endif
+  endfor
+
+  call kisuke#buffer#focus({ 'type': 'initialize' })
+
+  if empty(split(getbufoneline(g:kisuke.state.buf_nr, line('$'))))
+    let l:marked_files_start_line_nr = line('$') - len(g:kisuke.state.marked_files) - 1
+    let l:marked_files_end_line_nr = line('$')
+
+    if len(g:kisuke.state.marked_files)
+      call deletebufline(g:kisuke.state.buf_nr, l:marked_files_start_line_nr, l:marked_files_end_line_nr)
+    endif
+  elseif split(getbufoneline(g:kisuke.state.buf_nr, line('$')), ' ')[0] ==# 'Prompt'
+    let l:marked_files_start_line_nr = line('$') - len(g:kisuke.state.marked_files) - 2
+    let l:marked_files_end_line_nr = line('$') - 1
+
+    if len(g:kisuke.state.marked_files)
+      call deletebufline(g:kisuke.state.buf_nr, l:marked_files_start_line_nr, l:marked_files_end_line_nr)
+    endif
   endif
 endfunc
 
@@ -85,104 +160,6 @@ func! kisuke#buffer#render_marked_content()
   endfor
 endfunc
 
-func! s:MarkCurrentFile()
-  if s:job == v:null
-    echoerr 'Please run :Kisuke first '
-
-    return
-  endif
-
-  if bufnr('%') == s:kisuke_buf_nr
-    echoerr 'Cannot mark Kisuke chat buffer'
-
-    return
-  endif
-
-  if s:is_pending
-    echoerr 'Cannot mark a file while server generating response'
-
-    return
-  endif
-
-  let l:wid=bufwinid(s:kisuke_buf_nr)
-  let l:current_file = expand('%:p')
-  let l:file_index = -1
-  let l:index = 0
-  let l:marked_files_start_line_nr = v:null
-  let l:marked_files_end_line_nr = v:null
-
-  for i in range(len(s:marked_files))
-    if s:marked_files[i].file_path == l:current_file
-      let l:file_index = i
-
-      break
-    endif
-  endfor
-
-  if l:wid == -1
-    exe 'vsplit'
-    exe 'buffer ' . s:kisuke_buf_nr
-
-    let s:is_pending = 1
-
-    call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
-  else
-    call win_gotoid(l:wid)
-  endif
-
-  if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
-    let l:marked_files_start_line_nr = line('$') - len(s:marked_files) - 1
-    let l:marked_files_end_line_nr = line('$')
-
-    if len(s:marked_files)
-      call deletebufline(s:kisuke_buf_nr, l:marked_files_start_line_nr, l:marked_files_end_line_nr)
-    endif
-  elseif split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
-    let l:marked_files_start_line_nr = line('$') - len(s:marked_files) - 2
-    let l:marked_files_end_line_nr = line('$') - 1
-
-    if len(s:marked_files)
-      call deletebufline(s:kisuke_buf_nr, l:marked_files_start_line_nr, l:marked_files_end_line_nr)
-    endif
-  endif
-
-  if l:file_index == -1
-    call add(s:marked_files, {'file_path': l:current_file, 'scope': 'all'})
-  else
-    call remove(s:marked_files, l:file_index)
-  endif
-
-  if len(s:marked_files)
-    call s:DisplayMarkedContent()
-  endif
-endfunc
-
-
-func! s:MarkHighlightedCode() range
-  if s:job == v:null
-    echoerr 'Please run :Kisuke first'
-
-    return
-  endif
-
-  if bufnr('%') == s:kisuke_buf_nr
-    echoerr 'Cannot mark Kisuke chat buffer'
-
-    return
-  endif
-
-  if s:is_pending
-    echoerr 'Cannot mark code while server generating response'
-
-    return
-  endif
-
-  let l:highlighted = getline(a:firstline, a:lastline)
-  let l:current_file = expand('%:p')
-
-  echom 'l:highlighted ' . json_encode(l:highlighted)
-endfunc
-
 func! kisuke#buffer#on_submit(prompt)
   let l:checks = [
         \ {'condition': a:prompt == '', 'message': 'Cannot submit empty prompt, please write something'},
@@ -208,4 +185,3 @@ func! kisuke#buffer#on_submit(prompt)
 
   call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(l:payload))
 endfunc
-
