@@ -56,7 +56,6 @@ func! s:ParseReply(channel, reply)
   if l:reply.type ==# 'initialize'
     silent! %delete
 
-    let s:is_pending = 0
     let s:sessionId = l:reply.sessionInfo.id
     let s:totalSessions = l:reply.totalSessions
 
@@ -81,11 +80,37 @@ func! s:ParseReply(channel, reply)
         let s:response_start_line = v:null
 
         call setbufline(s:kisuke_buf_nr, line('$') + 1, ' ')
+
+        if len(s:marked_files) > 0
+          let l:marked_files_index = 0
+
+          for file_path in s:marked_files
+            if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
+              call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . file_path)
+            elseif split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
+             call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> Marked File - ' . file_path)
+            else
+              call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . file_path)
+            endif
+
+            let l:marked_files_index += 1
+
+            if l:marked_files_index ==# len(s:marked_files)
+              if split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
+                call appendbufline(s:kisuke_buf_nr, line('$') - 1, ' ')
+              else
+                call appendbufline(s:kisuke_buf_nr, line('$'), ' ')
+              endif
+            endif
+          endfor
+        endif
       elseif entry.sender ==# 'User'
         call appendbufline(s:kisuke_buf_nr, line('$'), 'Prompt > ' . entry.message)
         call setbufline(s:kisuke_buf_nr, line('$') + 1, ' ')
       endif
     endfor
+
+    let s:is_pending = 0
   elseif l:reply.type ==# 'response'
     if l:reply.payload ==# 'stream_start'
       call setbufline(s:kisuke_buf_nr, line('$'), ' ')
@@ -178,6 +203,8 @@ func! s:OpenKisuke()
           \ })
   endif
 
+  let s:is_pending = 1
+
   if bufexists(s:kisuke_buf_nr)
     let l:wid=bufwinid(s:kisuke_buf_nr)
 
@@ -185,11 +212,7 @@ func! s:OpenKisuke()
       exe 'vsplit'
       exe 'buffer ' . s:kisuke_buf_nr
 
-      let s:is_pending = 1
-
       call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
-
-      startinsert!
     else
       call win_gotoid(l:wid)
     endif
@@ -197,7 +220,6 @@ func! s:OpenKisuke()
     exe 'vsplit ' . s:kisuke_buf_name
 
     let s:kisuke_buf_nr = bufnr('%')
-    let s:is_pending = 1
 
     setlocal
           \ buftype=prompt
@@ -205,11 +227,7 @@ func! s:OpenKisuke()
           \ nobuflisted
           \ syntax=markdown
 
-    "         \ conceallevel=0
-    "         \ concealcursor=
-
     call s:SetupKisukeSyntax()
-
     call prompt_setprompt(s:kisuke_buf_nr, 'Prompt > ')
     call prompt_setcallback(s:kisuke_buf_nr, function('s:OnSubmit'))
     call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
@@ -221,22 +239,22 @@ func! s:OpenKisuke()
 
     augroup KisukeSyntax
       autocmd!
-      autocmd TextChanged,TextChangedI,CursorMoved,CursorMovedI <buffer> call s:SetupKisukeSyntax()
+      autocmd TextChanged,TextChangedI,CursorMoved,CursorMovedI <buffer> setlocal call s:SetupKisukeSyntax()
     augroup END
   endif
 endfunc
 
 func! s:NewSession()
   if s:job == v:null
-    echoerr "Please run :Kisuke first "
+    echoerr 'Please run :Kisuke first '
   else
     let l:wid=bufwinid(s:kisuke_buf_nr)
+    let s:marked_files = []
+    let s:is_pending = 1
 
     if l:wid == -1
       exe 'vsplit'
       exe 'buffer ' . s:kisuke_buf_nr
-
-      let s:is_pending = 1
 
       call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'newSession' }))
 
@@ -250,15 +268,15 @@ endfunc
 
 func! s:SwitchToNextSession()
   if s:job == v:null
-    echoerr "Please run :Kisuke first "
+    echoerr 'Please run :Kisuke first '
   else
     let l:wid=bufwinid(s:kisuke_buf_nr)
+    let s:marked_files = []
+    let s:is_pending = 1
 
     if l:wid == -1
       exe 'vsplit'
       exe 'buffer ' . s:kisuke_buf_nr
-
-      let s:is_pending = 1
 
       call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'nextSession' }))
 
@@ -272,15 +290,15 @@ endfunc
 
 func! s:SwitchToPreviousSession()
   if s:job == v:null
-    echoerr "Please run :Kisuke first "
+    echoerr 'Please run :Kisuke first '
   else
     let l:wid=bufwinid(s:kisuke_buf_nr)
+    let s:marked_files = []
+    let s:is_pending = 1
 
     if l:wid == -1
       exe 'vsplit'
       exe 'buffer ' . s:kisuke_buf_nr
-
-      let s:is_pending = 1
 
       call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'prevSession' }))
 
@@ -294,7 +312,7 @@ endfunc
 
 func! s:Auth()
   if s:job == v:null
-    echoerr "Please run :Kisuke first "
+    echoerr 'Please run :Kisuke first '
   else
     let l:api_key = input('Enter your Claude API key: ')
 
@@ -323,9 +341,11 @@ endfunc
 
 func! s:DeleteSession()
   if s:job == v:null
-    echoerr "Please run :Kisuke first "
+    echoerr 'Please run :Kisuke first '
   else
     let l:wid=bufwinid(s:kisuke_buf_nr)
+    let s:marked_files = []
+    let s:is_pending = 1
 
     if l:wid == -1
       exe 'vsplit'
@@ -345,12 +365,16 @@ endfunc
 
 func! s:MarkCurrentFile()
   if s:job == v:null
-    echoerr "Please run :Kisuke first "
+    echoerr 'Please run :Kisuke first '
   else
     if bufnr('%') == s:kisuke_buf_nr
       echoerr 'Cannot mark Kisuke chat buffer'
 
       return
+    endif
+
+    if s:is_pending
+      echoerr 'Cannot mark a file while server generating response'
     endif
 
     let l:wid=bufwinid(s:kisuke_buf_nr)
@@ -363,6 +387,10 @@ func! s:MarkCurrentFile()
     if l:wid == -1
       exe 'vsplit'
       exe 'buffer ' . s:kisuke_buf_nr
+
+      let s:is_pending = 1
+
+      call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
     else
       call win_gotoid(l:wid)
     endif
@@ -383,16 +411,11 @@ func! s:MarkCurrentFile()
       endif
     endif
 
-    echom 's:kisuke_buf_nr ' . s:kisuke_buf_nr
-    echom 'start, end ' . l:marked_files_start_line_nr . ' ' . l:marked_files_end_line_nr
-
     if l:file_index == -1
       call add(s:marked_files, l:current_file)
     else
       call remove(s:marked_files, l:file_index)
     endif
-
-    echom 'marked_files ' . json_encode(s:marked_files)
 
     if len(s:marked_files) > 0
       for file_path in s:marked_files
