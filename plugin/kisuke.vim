@@ -262,7 +262,26 @@ endfunc
 
 func! s:OpenKisuke()
   if s:job == v:null
-    let s:job=job_start(['node', 'dist/index.js'], {
+    let paths = split(&runtimepath, ',')
+    let plugin_root = ''
+
+    for path in paths
+      if path =~ 'kisuke\.vim$'
+        let plugin_root = path
+
+        break
+      endif
+    endfor
+
+    if empty(plugin_root)
+      echoerr "Could not find kisuke.vim in runtimepath"
+
+      return
+    endif
+
+    let node_script = plugin_root . '/dist/index.js'
+
+    let s:job = job_start(['node', node_script], {
           \ 'out_cb': function('s:ParseReply'),
           \ })
   endif
