@@ -4,7 +4,12 @@
 "
 " License - MIT
 "
-" Note - I'll refactor this, later on
+" TODO - Refactor the project later on, Trying to setup core functionalities
+" properly first. There is a lot duplicate code that can be refactored to
+" their own functions.
+" TODO - Syntax highlighting doesn't work properly, when code start delimeter
+" is out of screen highlighting breaks. Also I want to find a way to highlight
+" based on language not just 1 color for the code blocks.
 
 if exists('g:is_kisuke_initialized')
   finish
@@ -386,87 +391,141 @@ endfunc
 func! s:MarkCurrentFile()
   if s:job == v:null
     echoerr 'Please run :Kisuke first '
+
+    return
+  endif
+
+  if bufnr('%') == s:kisuke_buf_nr
+    echoerr 'Cannot mark Kisuke chat buffer'
+
+    return
+  endif
+
+  if s:is_pending
+    echoerr 'Cannot mark a file while server generating response'
+
+    return
+  endif
+
+  let l:wid=bufwinid(s:kisuke_buf_nr)
+  let l:current_file = expand('%:p')
+  let l:file_index = -1
+  let l:index = 0
+  let l:marked_files_start_line_nr = v:null
+  let l:marked_files_end_line_nr = v:null
+
+  for i in range(len(s:marked_files))
+    if s:marked_files[i].filePath == l:current_file
+      let l:file_index = i
+
+      break
+    endif
+  endfor
+
+  if l:wid == -1
+    exe 'vsplit'
+    exe 'buffer ' . s:kisuke_buf_nr
+
+    let s:is_pending = 1
+
+    call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
   else
-    if bufnr('%') == s:kisuke_buf_nr
-      echoerr 'Cannot mark Kisuke chat buffer'
+    call win_gotoid(l:wid)
+  endif
 
-      return
+  if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
+    let l:marked_files_start_line_nr = line('$') - len(s:marked_files)
+    let l:marked_files_end_line_nr = line('$')
+
+    if len(s:marked_files)
+      call deletebufline(s:kisuke_buf_nr, l:marked_files_start_line_nr, l:marked_files_end_line_nr)
     endif
+  elseif split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
+    let l:marked_files_start_line_nr = line('$') - len(s:marked_files) - 1
+    let l:marked_files_end_line_nr = line('$') - 1
 
-    if s:is_pending
-      echoerr 'Cannot mark a file while server generating response'
-    endif
-
-    let l:wid=bufwinid(s:kisuke_buf_nr)
-    let l:current_file = expand('%:p')
-    let l:file_index = -1
-    let l:index = 0
-    let l:marked_files_start_line_nr = v:null
-    let l:marked_files_end_line_nr = v:null
-
-    for i in range(len(s:marked_files))
-      if s:marked_files[i].filePath == l:current_file
-        let l:file_index = i
-
-        break
-      endif
-    endfor
-
-    if l:wid == -1
-      exe 'vsplit'
-      exe 'buffer ' . s:kisuke_buf_nr
-
-      let s:is_pending = 1
-
-      call ch_sendraw(job_getchannel(s:job), json_encode({ 'type': 'initialize' }))
-    else
-      call win_gotoid(l:wid)
-    endif
-
-    if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
-      let l:marked_files_start_line_nr = line('$') - len(s:marked_files)
-      let l:marked_files_end_line_nr = line('$')
-
-      if len(s:marked_files)
-        call deletebufline(s:kisuke_buf_nr, l:marked_files_start_line_nr, l:marked_files_end_line_nr)
-      endif
-    elseif split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
-      let l:marked_files_start_line_nr = line('$') - len(s:marked_files) - 1
-      let l:marked_files_end_line_nr = line('$') - 1
-
-      if len(s:marked_files)
-        call deletebufline(s:kisuke_buf_nr, l:marked_files_start_line_nr, l:marked_files_end_line_nr)
-      endif
-    endif
-
-    if l:file_index == -1
-      call add(s:marked_files, {'file_path': l:current_file, 'scope': 'all'})
-    else
-      call remove(s:marked_files, l:file_index)
-    endif
-
-    if len(s:marked_files) > 0
-      for entry in s:marked_files
-        if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
-          call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . entry.file_path)
-        elseif split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
-          call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> Marked File - ' . entry.file_path)
-        else
-          call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . entry.file_path)
-        endif
-
-        let l:index += 1
-
-        if l:index ==# len(s:marked_files)
-          if split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
-            call appendbufline(s:kisuke_buf_nr, line('$') - 1, ' ')
-          else
-            call appendbufline(s:kisuke_buf_nr, line('$'), ' ')
-          endif
-        endif
-      endfor
+    if len(s:marked_files)
+      call deletebufline(s:kisuke_buf_nr, l:marked_files_start_line_nr, l:marked_files_end_line_nr)
     endif
   endif
+
+  if l:file_index == -1
+    call add(s:marked_files, {'file_path': l:current_file, 'scope': 'all'})
+  else
+    call remove(s:marked_files, l:file_index)
+  endif
+
+  if len(s:marked_files) > 0
+    for entry in s:marked_files
+      if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
+        call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . entry.file_path)
+      elseif split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
+        call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> Marked File - ' . entry.file_path)
+      else
+        call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . entry.file_path)
+      endif
+
+      let l:index += 1
+
+      if l:index ==# len(s:marked_files)
+        if split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
+          call appendbufline(s:kisuke_buf_nr, line('$') - 1, ' ')
+        else
+          call appendbufline(s:kisuke_buf_nr, line('$'), ' ')
+        endif
+      endif
+    endfor
+  endif
+endfunc
+
+func! s:MarkHighlightedCode() range
+  if s:job == v:null
+    echoerr 'Please run :Kisuke first'
+
+    return
+  endif
+
+  if bufnr('%') == s:kisuke_buf_nr
+    echoerr 'Cannot mark Kisuke chat buffer'
+
+    return
+  endif
+
+  if s:is_pending
+    echoerr 'Cannot mark code while server generating response'
+
+    return
+  endif
+
+  let l:highlighted = getline(a:firstline, a:lastline)
+  let l:current_file = expand('%:p')
+
+  echom 'l:highlighted ' . json_encode(l:highlighted)
+
+  " call add(s:highlighted_code, {
+  "       \ 'file_path': l:current_file,
+  "       \ 'code': l:highlighted,
+  "       \ 'start_line': a:firstline,
+  "       \ 'end_line': a:lastline
+  "       \ })
+
+  " let l:wid = bufwinid(s:kisuke_buf_nr)
+
+  " if l:wid == -1
+  "   exe 'vsplit'
+  "   exe 'buffer ' . s:kisuke_buf_nr
+  " else
+  "   call win_gotoid(l:wid)
+  " endif
+
+  " " Add visual indicator
+  " if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
+  "   call appendbufline(s:kisuke_buf_nr, line('$'), '> Highlighted Code from ' . l:current_file . ' (Lines ' . a:firstline . '-' . a:lastline . ')')
+  "   call appendbufline(s:kisuke_buf_nr, line('$'), s:highlight_separator)
+  "   call appendbufline(s:kisuke_buf_nr, line('$'), l:highlighted)
+  "   call appendbufline(s:kisuke_buf_nr, line('$'), s:highlight_separator)
+  "   call appendbufline(s:kisuke_buf_nr, line('$'), ' ')
+  " endif
 endfunc
 
 command! Kisuke call s:OpenKisuke()
@@ -476,6 +535,7 @@ command! KisukePreviousSession call s:SwitchToPreviousSession()
 command! KisukeAuth call s:Auth()
 command! KisukeDeleteSession call s:DeleteSession()
 command! KisukeMarkCurrentFile call s:MarkCurrentFile()
+command! -range KisukeMarkHighlighted <line1>,<line2>call s:MarkHighlightedCode()
 
 nnoremap <Leader>ko :Kisuke<CR>
 nnoremap <Leader>kc :KisukeNewSession<CR>
@@ -484,3 +544,4 @@ nnoremap <Leader>kp :KisukePreviousSession<CR>
 nnoremap <Leader>ka :KisukeAuth<CR>
 nnoremap <Leader>kd :KisukeDeleteSession<CR>
 nnoremap <Leader>km :KisukeMarkCurrentFile<CR>
+vnoremap <Leader>kh :KisukeMarkHighlighted<CR>
