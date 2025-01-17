@@ -111,6 +111,8 @@ func! s:ParseReply(channel, reply)
     endfor
 
     let s:is_pending = 0
+
+    call s:SetupKisukeSyntax()
   elseif l:reply.type ==# 'response'
     if l:reply.payload ==# 'stream_start'
       call setbufline(s:kisuke_buf_nr, line('$'), ' ')
@@ -239,7 +241,7 @@ func! s:OpenKisuke()
 
     augroup KisukeSyntax
       autocmd!
-      autocmd TextChanged,TextChangedI,CursorMoved,CursorMovedI <buffer> setlocal call s:SetupKisukeSyntax()
+      autocmd TextChanged,TextChangedI,CursorMoved,CursorMovedI <buffer> call s:SetupKisukeSyntax()
     augroup END
   endif
 endfunc
