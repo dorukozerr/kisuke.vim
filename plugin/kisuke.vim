@@ -1,3 +1,12 @@
+" Author - Doruk Özer <dorukozer@protonmail.com>
+"
+" Kisuke, another AI plugin for vim
+"
+" License - MIT
+"
+" Note - I'll refactor this, later on
+
+
 if exists('g:is_kisuke_initialized')
   finish
 endif
