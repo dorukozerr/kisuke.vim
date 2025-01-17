@@ -134,6 +134,22 @@ func! s:ParseReply(channel, reply)
           endfor
         endif
       elseif entry.sender ==# 'User'
+        let l:index = 0
+
+        if len(entry.context)
+          call appendbufline(s:kisuke_buf_nr, line('$'), '> Reference Count ' . len(entry.context))
+
+          for context_record in entry.context
+            call appendbufline(s:kisuke_buf_nr, line('$'), '> Reference ' . context_record.fileName)
+
+            let l:index += 1
+
+            if l:index ==# len(entry.context)
+              call appendbufline(s:kisuke_buf_nr, line('$'), ' ')
+            endif
+          endfor
+        endif
+
         call appendbufline(s:kisuke_buf_nr, line('$'), 'Prompt > ' . entry.message)
         call setbufline(s:kisuke_buf_nr, line('$') + 1, ' ')
       endif
@@ -215,6 +231,22 @@ func! s:ParseReply(channel, reply)
 
         call setbufline(s:kisuke_buf_nr, line('$') + 1, ' ')
       elseif entry.sender ==# 'User'
+        let l:index = 0
+
+        if len(entry.context)
+          call appendbufline(s:kisuke_buf_nr, line('$'), '> Reference Count ' . len(entry.context))
+
+          for context_record in entry.context
+            call appendbufline(s:kisuke_buf_nr, line('$'), '> Reference ' . context_record.fileName)
+
+            let l:index += 1
+
+            if l:index ==# len(entry.context)
+              call appendbufline(s:kisuke_buf_nr, line('$'), ' ')
+            endif
+          endfor
+        endif
+
         call appendbufline(s:kisuke_buf_nr, line('$'), 'Prompt > ' . entry.message)
         call setbufline(s:kisuke_buf_nr, line('$') + 1, ' ')
       endif
