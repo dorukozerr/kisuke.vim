@@ -14,6 +14,7 @@ interface PromptEvent {
   type: 'prompt';
   payload: string;
   sessionId: string;
+  context?: { file_path: string; scope: string }[];
 }
 
 interface NewSessionEvent {

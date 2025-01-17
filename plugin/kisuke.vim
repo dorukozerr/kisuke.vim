@@ -6,7 +6,6 @@
 "
 " Note - I'll refactor this, later on
 
-
 if exists('g:is_kisuke_initialized')
   finish
 endif
@@ -49,11 +48,28 @@ func! s:OnSubmit(prompt)
   elseif s:job != v:null
     let s:is_pending = 1
 
-    call ch_sendraw(job_getchannel(s:job), json_encode({
+    echom 'testing ' . json_encode({
           \ 'type': 'prompt',
           \ 'sessionId': s:sessionId,
           \ 'payload': a:prompt,
-          \ }))
+          \ 'context': s:marked_files,
+          \ })
+
+    if len(s:marked_files) > 0
+      call ch_sendraw(job_getchannel(s:job), json_encode({
+            \ 'type': 'prompt',
+            \ 'sessionId': s:sessionId,
+            \ 'payload': a:prompt,
+            \ 'context': s:marked_files,
+            \ }))
+    else
+      call ch_sendraw(job_getchannel(s:job), json_encode({
+            \ 'type': 'prompt',
+            \ 'sessionId': s:sessionId,
+            \ 'payload': a:prompt,
+            \ }))
+    endif
+
   else
     call appendbufline(s:kisuke_buf_nr, line('$') - 1, 'Server is not running')
   endif
@@ -93,13 +109,13 @@ func! s:ParseReply(channel, reply)
         if len(s:marked_files) > 0
           let l:marked_files_index = 0
 
-          for file_path in s:marked_files
+          for entry in s:marked_files
             if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
-              call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . file_path)
+              call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . entry.file_path)
             elseif split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
-             call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> Marked File - ' . file_path)
+              call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> Marked File - ' . entry.file_path)
             else
-              call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . file_path)
+              call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . entry.file_path)
             endif
 
             let l:marked_files_index += 1
@@ -390,10 +406,18 @@ func! s:MarkCurrentFile()
 
     let l:wid=bufwinid(s:kisuke_buf_nr)
     let l:current_file = expand('%:p')
-    let l:file_index = index(s:marked_files, l:current_file)
+    let l:file_index = -1
     let l:index = 0
     let l:marked_files_start_line_nr = v:null
     let l:marked_files_end_line_nr = v:null
+
+    for i in range(len(s:marked_files))
+      if s:marked_files[i].filePath == l:current_file
+        let l:file_index = i
+
+        break
+      endif
+    endfor
 
     if l:wid == -1
       exe 'vsplit'
@@ -423,19 +447,19 @@ func! s:MarkCurrentFile()
     endif
 
     if l:file_index == -1
-      call add(s:marked_files, l:current_file)
+      call add(s:marked_files, {'file_path': l:current_file, 'scope': 'all'})
     else
       call remove(s:marked_files, l:file_index)
     endif
 
     if len(s:marked_files) > 0
-      for file_path in s:marked_files
+      for entry in s:marked_files
         if empty(split(getbufoneline(s:kisuke_buf_nr, line('$'))))
-          call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . file_path)
+          call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . entry.file_path)
         elseif split(getbufoneline(s:kisuke_buf_nr, line('$')), ' ')[0] ==# 'Prompt'
-          call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> Marked File - ' . file_path)
+          call appendbufline(s:kisuke_buf_nr, line('$') - 1, '> Marked File - ' . entry.file_path)
         else
-          call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . file_path)
+          call appendbufline(s:kisuke_buf_nr, line('$'), '> Marked File - ' . entry.file_path)
         endif
 
         let l:index += 1
