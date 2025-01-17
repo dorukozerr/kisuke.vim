@@ -48,14 +48,7 @@ func! s:OnSubmit(prompt)
   elseif s:job != v:null
     let s:is_pending = 1
 
-    echom 'testing ' . json_encode({
-          \ 'type': 'prompt',
-          \ 'sessionId': s:sessionId,
-          \ 'payload': a:prompt,
-          \ 'context': s:marked_files,
-          \ })
-
-    if len(s:marked_files) > 0
+    if len(s:marked_files)
       call ch_sendraw(job_getchannel(s:job), json_encode({
             \ 'type': 'prompt',
             \ 'sessionId': s:sessionId,
