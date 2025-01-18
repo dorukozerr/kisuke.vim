@@ -56,11 +56,14 @@ func! kisuke#buffer#focus(payload = v:null)
 endfunc
 
 func! kisuke#buffer#mark_focused_file()
+  let l:current_file = expand('%:p')
+
   let l:checks = [
         \ {'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
         \ {'condition': g:kisuke.state.is_pending, 'message': 'Cannot mark a file while server generating response'},
         \ {'condition': bufnr('%') ==# g:kisuke.state.buf_nr, 'message': 'Cannot mark Kisuke chat buffer'},
         \ {'condition': bufwinid(g:kisuke.state.buf_nr) ==# -1, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
+        \ {'condition': empty(l:current_file), 'message': 'This file cannot be marked'},
         \ ]
 
   if !kisuke#utils#validate(l:checks)
@@ -68,7 +71,6 @@ func! kisuke#buffer#mark_focused_file()
   endif
 
 
-  let l:current_file = expand('%:p')
   let l:file_index = -1
   let l:index = 0
 
