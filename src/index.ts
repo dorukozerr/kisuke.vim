@@ -93,14 +93,14 @@ stdin.on('data', async (data: string) => {
 
     if (event.type === 'prompt') {
       const session = await getSession(event.sessionId);
-      const markedFiles: { fileName: string; fileContent: string }[] = [];
+      const context: { fileName: string; fileContent: string }[] = [];
 
       if (event.context) {
         await Promise.all(
           event.context.map(async (entry) => {
             const fileContent = await readFile(entry.file_path, 'utf-8');
 
-            markedFiles.push({ fileName: entry.file_path, fileContent });
+            context.push({ fileName: entry.file_path, fileContent });
           })
         );
       }
@@ -117,7 +117,7 @@ stdin.on('data', async (data: string) => {
           {
             role: 'user',
             content: event.context
-              ? `Here are the files you should look into it, answer to my prompt after digesting those files, here is the stringified files array with their names and contents => ${JSON.stringify(markedFiles)}
+              ? `Here are the files you should look into it, answer to my prompt after digesting those files, here is the stringified files array with their names and contents => ${JSON.stringify(context)}
 
 My prompt is => ${event.payload}`
               : event.payload
@@ -143,7 +143,8 @@ My prompt is => ${event.payload}`
             ...session.messages,
             {
               sender: 'User',
-              message: event.payload
+              message: event.payload,
+              referenceCount: context.length
             },
             {
               sender: 'Kisuke',
