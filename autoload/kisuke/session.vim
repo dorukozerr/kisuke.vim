@@ -1,6 +1,6 @@
 func! kisuke#session#create_new_session()
   let l:checks = [
-        \ { 'condition': g:kisuke.state.job == v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko' },
+        \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko' },
         \ ]
 
   if !kisuke#utils#validate(l:checks)
@@ -15,7 +15,7 @@ endfunc
 
 func! kisuke#session#go_to_next_session()
   let l:checks = [
-        \ { 'condition': g:kisuke.state.job == v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko' },
+        \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko' },
         \ ]
 
   if !kisuke#utils#validate(l:checks)
@@ -30,7 +30,7 @@ endfunc
 
 func! kisuke#session#go_to_previous_session()
   let l:checks = [
-        \ { 'condition': g:kisuke.state.job == v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko' },
+        \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko' },
         \ ]
 
   if !kisuke#utils#validate(l:checks)
@@ -46,7 +46,7 @@ endfunc
 
 func! kisuke#session#delete_current_session()
   let l:checks = [
-        \ { 'condition': g:kisuke.state.job == v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko' },
+        \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko' },
         \ ]
 
   if !kisuke#utils#validate(l:checks)
