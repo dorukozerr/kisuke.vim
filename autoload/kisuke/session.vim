@@ -1,26 +1,26 @@
 func! kisuke#session#create_new_session()
-  return s:prepare_session_context() ?
-        \ kisuke#buffer#focus({ 'type': 'newSession' }) :
-        \ v:null
+  return s:prepare_session_context()
+        \ ? kisuke#buffer#focus({ 'type': 'newSession' })
+        \ : v:null
 endfunc
 
 func! kisuke#session#go_to_next_session()
-  return s:prepare_session_context() ?
-        \ kisuke#buffer#focus({ 'type': 'nextSession' }) :
-        \ v:null
+  return s:prepare_session_context()
+        \ ? kisuke#buffer#focus({ 'type': 'nextSession' })
+        \ : v:null
 endfunc
 
 func! kisuke#session#go_to_previous_session()
-  return s:prepare_session_context() ?
-        \ kisuke#buffer#focus({ 'type': 'prevSession' }) :
-        \ v:null
+  return s:prepare_session_context()
+        \ ? kisuke#buffer#focus({ 'type': 'prevSession' })
+        \ : v:null
 endfunc
 
 
 func! kisuke#session#delete_current_session()
-  return s:prepare_session_context() ?
-        \ kisuke#buffer#focus({ 'type': 'deleteSession', 'payload': g:kisuke.state.session_id }) :
-        \ v:null
+  return s:prepare_session_context()
+        \ ? kisuke#buffer#focus({ 'type': 'deleteSession', 'payload': g:kisuke.state.session_id })
+        \ : v:null
 endfunc
 
 func s:prepare_session_context()

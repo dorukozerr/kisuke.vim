@@ -3,9 +3,9 @@ func! kisuke#utils#validate(checks)
     if check.condition
       echoerr check.message
 
-      return v:false
+      return 0
     endif
   endfor
 
-  return v:true
+  return 1
 endfunc
