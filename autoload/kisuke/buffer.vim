@@ -43,11 +43,11 @@ func! kisuke#buffer#focus(payload = v:null)
 
   exe l:wid ==# -1
         \ ? 'vsplit | buffer ' . g:kisuke.state.buf_nr
-        \ : 'call win_gotoid(' . l:wid . ')'
+        \ : 'call win_gotoid(l:wid)'
 
-  return a:payload ==# v:null
+  exe a:payload ==# v:null
         \ ? ''
-        \ : ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(a:payload))
+        \ : 'call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(a:payload))'
 endfunc
 
 func! kisuke#buffer#mark_focused_file()
