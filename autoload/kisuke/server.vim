@@ -49,12 +49,16 @@ func! kisuke#server#parse_reply(channel, reply)
         \ 'response': function('kisuke#handlers#response'),
         \ 'newSession': function('kisuke#handlers#new_session'),
         \ 'switchSession': function('kisuke#handlers#switch_session'),
-        \ 'error': function('kisuke#handlers#error')
+        \ 'error': function('kisuke#handlers#error'),
         \ }
 
   if has_key(l:handlers, l:reply.type)
     call l:handlers[l:reply.type](l:reply)
+
+    let g:kisuke.state.is_pending = 0
   else
     echoerr 'Unknown message type: ' . l:reply.type
+
+    let g:kisuke.state.is_pending = 0
   endif
 endfunc
