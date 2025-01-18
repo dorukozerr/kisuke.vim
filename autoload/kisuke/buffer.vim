@@ -34,7 +34,8 @@ func! kisuke#buffer#create()
 
   augroup KisukeSyntax
     autocmd!
-    autocmd TextChanged,TextChangedI,CursorMoved,CursorMovedI <buffer> call kisuke#syntax#setup()
+    autocmd BufEnter,TextChanged <buffer>
+          \ let b:syntax_setup_done = 0 | call kisuke#syntax#setup()
   augroup END
 endfunc
 
