@@ -17,8 +17,6 @@ let g:kisuke.state = {
       \ 'is_pending': 0,
       \ 'session_id': v:null,
       \ 'total_sessions': v:null,
-      \ 'response_start_line': v:null,
-      \ 'stream_response': '',
       \ 'marked_files': [],
       \ }
 
