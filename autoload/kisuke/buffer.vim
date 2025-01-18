@@ -1,15 +1,13 @@
 func! kisuke#buffer#open()
-  if g:kisuke.state.job ==# v:null
-    call kisuke#server#start_process()
-  endif
+  exe g:kisuke.state.job ==# v:null
+        \ ? 'call kisuke#server#start_process()'
+        \ : ''
 
   let g:kisuke.state.is_pending = 1
 
-  if bufexists(g:kisuke.state.buf_nr)
-    call kisuke#buffer#focus({ 'type': 'initialize' })
-  else
-    call kisuke#buffer#create()
-  endif
+  exe bufexists(g:kisuke.state.buf_nr)
+        \ ? 'call kisuke#buffer#focus({ "type": "initialize" })'
+        \ : 'call kisuke#buffer#create()'
 endfunc
 
 func! kisuke#buffer#create()
@@ -43,16 +41,13 @@ endfunc
 func! kisuke#buffer#focus(payload = v:null)
   let l:wid = bufwinid(g:kisuke.state.buf_nr)
 
-  if l:wid ==# -1
-    exe 'vsplit'
-    exe 'buffer ' . g:kisuke.state.buf_nr
-  else
-    call win_gotoid(l:wid)
-  endif
+  exe l:wid ==# -1
+        \ ? 'vsplit | buffer ' . g:kisuke.state.buf_nr
+        \ : 'call win_gotoid(' . l:wid . ')'
 
-  if a:payload != v:null
-    call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(a:payload))
-  endif
+  return a:payload ==# v:null
+        \ ? ''
+        \ : ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(a:payload))
 endfunc
 
 func! kisuke#buffer#mark_focused_file()
@@ -66,10 +61,10 @@ func! kisuke#buffer#mark_focused_file()
         \ {'condition': empty(l:current_file), 'message': 'This file cannot be marked'},
         \ ]
 
-  if !kisuke#utils#validate(l:checks)
-    return
-  endif
 
+  exe kisuke#utils#validate(l:checks)
+        \ ? ''
+        \ : 'return'
 
   let l:file_index = -1
   let l:index = 0
@@ -78,24 +73,20 @@ func! kisuke#buffer#mark_focused_file()
   call kisuke#buffer#clear_marked_content()
 
   for entry in g:kisuke.state.marked_files
-    if entry.file_path ==# l:current_file
-      let l:file_index = l:index
-    endif
+    exe entry.file_path ==# l:current_file
+          \ ? 'let l:file_index = ' . l:index
+          \ : ''
 
     let l:index += 1
   endfor
 
-  if l:file_index ==# -1
-    " TODO - Change structure of marked_files entry, remove scope completely
-    " and only store paths maybe??
-    call add(g:kisuke.state.marked_files, {'file_path': l:current_file, 'scope': 'all'})
-  else
-    call remove(g:kisuke.state.marked_files, l:file_index)
-  endif
+  exe l:file_index ==# -1
+        \ ? 'call add(g:kisuke.state.marked_files, {"file_path": l:current_file, "scope": "all"})'
+        \ : 'call remove(g:kisuke.state.marked_files, l:file_index)'
 
-  if len(g:kisuke.state.marked_files)
-    call kisuke#buffer#render_marked_content()
-  endif
+  exe len(g:kisuke.state.marked_files)
+        \ ? 'call kisuke#buffer#render_marked_content()'
+        \ : ''
 endfunc
 
 func! kisuke#buffer#mark_highlighted_code() range
@@ -105,9 +96,9 @@ func! kisuke#buffer#mark_highlighted_code() range
         \ {'condition': bufnr('%') ==# g:kisuke.state.g:kisuke.state.buf_nr, 'message': 'Cannot mark Kisuke chat buffer'},
         \ ]
 
-  if !kisuke#utils#validate(l:checks)
-    return
-  endif
+  exe kisuke#utils#validate(l:checks)
+        \ ? ''
+        \ : 'return'
 
   let l:highlighted = getline(a:firstline, a:lastline)
   let l:current_file = expand('%:p')
@@ -116,49 +107,44 @@ func! kisuke#buffer#mark_highlighted_code() range
 endfunc
 
 func! kisuke#buffer#clear_marked_content()
-  let l:marked_files_start_line_nr = v:null
-  let l:marked_files_end_line_nr = v:null
+  let l:marked_files_start_line_nr = empty(split(getbufoneline(g:kisuke.state.buf_nr, line('$'))))
+        \ ? line('$') - len(g:kisuke.state.marked_files) - 1
+        \ : split(getbufoneline(g:kisuke.state.buf_nr, line('$')), ' ')[0] ==# 'Prompt'
+        \ ? line('$') - len(g:kisuke.state.marked_files) - 2
+        \ : v:null
 
-  if empty(split(getbufoneline(g:kisuke.state.buf_nr, line('$'))))
-    let l:marked_files_start_line_nr = line('$') - len(g:kisuke.state.marked_files) - 1
-    let l:marked_files_end_line_nr = line('$')
-  elseif split(getbufoneline(g:kisuke.state.buf_nr, line('$')), ' ')[0] ==# 'Prompt'
-    let l:marked_files_start_line_nr = line('$') - len(g:kisuke.state.marked_files) - 2
-    let l:marked_files_end_line_nr = line('$') - 1
-  endif
+  let l:marked_files_end_line_nr = empty(split(getbufoneline(g:kisuke.state.buf_nr, line('$'))))
+        \ ? line('$')
+        \ : split(getbufoneline(g:kisuke.state.buf_nr, line('$')), ' ')[0] ==# 'Prompt'
+        \ ? line('$') - 1
+        \ : v:null
 
-  if len(g:kisuke.state.marked_files)
-    call deletebufline(g:kisuke.state.buf_nr, l:marked_files_start_line_nr, l:marked_files_end_line_nr)
-  endif
+  exe len(g:kisuke.state.marked_files)
+        \ ? 'call deletebufline(g:kisuke.state.buf_nr, l:marked_files_start_line_nr, l:marked_files_end_line_nr)'
+        \ : ''
 endfunc
 
 func! kisuke#buffer#render_marked_content()
-  if empty(split(getbufoneline(g:kisuke.state.buf_nr, line('$'))))
-    call appendbufline(g:kisuke.state.buf_nr, line('$'), '> Marked File Count - ' . len(g:kisuke.state.marked_files))
-  else
-    call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> Marked File Count - ' . len(g:kisuke.state.marked_files))
-  endif
+  exe empty(split(getbufoneline(g:kisuke.state.buf_nr, line('$'))))
+        \ ? 'call appendbufline(g:kisuke.state.buf_nr, line(''$''), "> Marked File Count - " . len(g:kisuke.state.marked_files))'
+        \ : 'call appendbufline(g:kisuke.state.buf_nr, line(''$'') - 1, "> Marked File Count - " . len(g:kisuke.state.marked_files))'
 
   let l:index = 0
 
   for entry in g:kisuke.state.marked_files
-    if empty(split(getbufoneline(g:kisuke.state.buf_nr, line('$'))))
-      call appendbufline(g:kisuke.state.buf_nr, line('$'), '> File Path - ' . entry.file_path)
-    elseif split(getbufoneline(g:kisuke.state.buf_nr, line('$')), ' ')[0] ==# 'Prompt'
-      call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> File Path - ' . entry.file_path)
-    else
-      call appendbufline(g:kisuke.state.buf_nr, line('$'), '> File Path - ' . entry.file_path)
-    endif
+    exe empty(split(getbufoneline(g:kisuke.state.buf_nr, line('$'))))
+          \ ? 'call appendbufline(g:kisuke.state.buf_nr, line(''$''), "> File Path - " . entry.file_path)'
+          \ : split(getbufoneline(g:kisuke.state.buf_nr, line('$')), ' ')[0] ==# 'Prompt'
+          \ ? 'call appendbufline(g:kisuke.state.buf_nr, line(''$'') - 1, "> File Path - " . entry.file_path)'
+          \ : 'call appendbufline(g:kisuke.state.buf_nr, line(''$''), "> File Path - " . entry.file_path)'
 
     let l:index += 1
 
-    if l:index ==# len(g:kisuke.state.marked_files)
-      if split(getbufoneline(g:kisuke.state.buf_nr, line('$')), ' ')[0] ==# 'Prompt'
-        call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, ' ')
-      else
-        call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
-      endif
-    endif
+    exe l:index ==# len(g:kisuke.state.marked_files)
+          \ ? split(getbufoneline(g:kisuke.state.buf_nr, line('$')), ' ')[0] ==# 'Prompt'
+          \ ? 'call appendbufline(g:kisuke.state.buf_nr, line(''$'') - 1, " ")'
+          \ : 'call appendbufline(g:kisuke.state.buf_nr, line(''$''), " ")'
+          \ : ''
   endfor
 endfunc
 
@@ -169,9 +155,9 @@ func! kisuke#buffer#on_submit(prompt)
         \ {'condition': g:kisuke.state.job ==# v:null, 'message': 'Server is not running, try restarting vim'},
         \ ]
 
-  if !kisuke#utils#validate(l:checks)
-    return
-  endif
+  exe kisuke#utils#validate(l:checks)
+        \ ? ''
+        \ : 'return'
 
   let g:kisuke.state.is_pending = 1
 
