@@ -19,7 +19,6 @@ func! kisuke#buffer#create()
         \ buftype=prompt
         \ noswapfile
         \ nobuflisted
-        \ syntax=markdown
 
   call kisuke#syntax#setup()
 
