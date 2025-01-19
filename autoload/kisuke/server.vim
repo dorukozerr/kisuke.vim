@@ -3,7 +3,7 @@ func! kisuke#server#start_process()
   let plugin_root = ''
 
   for path in paths
-    if path =~ 'kisuke\.vim$'
+    if path =~'kisuke\.vim$'
       let plugin_root = path
 
       break
@@ -23,8 +23,6 @@ func! kisuke#server#start_process()
         \ })
 endfunc
 
-" TODO - update config file name to config.json instead of auth.json, also add
-" model selection logic to configure function steps
 func! kisuke#server#configure()
   let l:api_key = input('Enter your Claude API key: ')
 
@@ -33,12 +31,12 @@ func! kisuke#server#configure()
         \ {'condition': empty(l:api_key), 'message': 'Please provide a valid api key'},
         \ ]
 
-  if !kisuke#utils#validate(l:checks)
-    return
-  endif
-
-  call writefile([json_encode({ 'apiKey': l:api_key })], expand('~/.config/kisuke/auth.json'))
-  call kisuke#buffer#focus({ 'type': 'initialize' })
+  exe kisuke#utils#validate(l:checks)
+        \ ? 'call writefile([json_encode({ "apiKey": l:api_key })], expand("~/.config/kisuke/config.json"))'
+        \ . ' | call kisuke#buffer#focus({ "type": "initialize" })'
+        \ . ' | redraw!'
+        \ . ' | echom "Api key saved"'
+        \ : ''
 endfunc
 
 func! kisuke#server#parse_reply(channel, reply)
@@ -52,13 +50,9 @@ func! kisuke#server#parse_reply(channel, reply)
         \ 'error': function('kisuke#handlers#error'),
         \ }
 
-  if has_key(l:handlers, l:reply.type)
-    call l:handlers[l:reply.type](l:reply)
+  exe has_key(l:handlers, l:reply.type)
+        \ ? 'call l:handlers[l:reply.type](l:reply)'
+        \ : 'echoerr "Unknown message type"'
 
-    let g:kisuke.state.is_pending = 0
-  else
-    echoerr 'Unknown message type: ' . l:reply.type
-
-    let g:kisuke.state.is_pending = 0
-  endif
+  let g:kisuke.state.is_pending = 0
 endfunc

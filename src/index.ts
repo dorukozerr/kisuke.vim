@@ -33,7 +33,10 @@ const setupKisukeFiles = async () => {
     join(configDir, `${sessionId}.json`),
     JSON.stringify(initialSessionData)
   );
-  await writeFile(join(configDir, 'auth.json'), JSON.stringify({ apiKey: '' }));
+  await writeFile(
+    join(configDir, 'config.json'),
+    JSON.stringify({ apiKey: '' })
+  );
 
   return JSON.parse(
     await readFile(join(configDir, 'history.json'), 'utf-8')
@@ -59,17 +62,17 @@ stdin.on('data', async (data: string) => {
   try {
     const history = await getHistory();
 
-    const authFile = JSON.parse(
-      await readFile(join(configDir, 'auth.json'), 'utf8')
+    const configFile = JSON.parse(
+      await readFile(join(configDir, 'config.json'), 'utf8')
     );
 
-    if (!authFile.apiKey) {
+    if (!configFile.apiKey) {
       throw new Error('Please run :KisukeAuth');
     }
 
     if (anthropicClient === null) {
       anthropicClient = new Anthropic({
-        apiKey: authFile.apiKey
+        apiKey: configFile.apiKey
       });
     }
 
