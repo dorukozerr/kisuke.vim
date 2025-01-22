@@ -1,20 +1,17 @@
 func! kisuke#server#start_process()
-  let paths = split(&runtimepath, ',')
-  let plugin_root = ''
+  let l:paths = split(&runtimepath, ',')
+  let l:plugin_root = ''
 
-  for path in paths
-    if path =~'kisuke\.vim$'
-      let plugin_root = path
-
-      break
-    endif
+  for path in l:paths
+    exe path =~ 'kisuke\.vim$'
+          \ ? 'let l:plugin_root = path'
+          \ : ''
   endfor
 
-  if empty(plugin_root)
-    echoerr "Could not find kisuke.vim in runtimepath"
+  exe empty(l:plugin_root)
+        \ ? 'echoerr "could not find kisuke.vim in runtimepath" | return'
+        \ : ''
 
-    return
-  endif
 
   let node_script = plugin_root . '/dist/index.js'
 
