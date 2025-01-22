@@ -12,7 +12,6 @@ func! kisuke#server#start_process()
         \ ? 'echoerr "could not find kisuke.vim in runtimepath" | return'
         \ : ''
 
-
   let node_script = plugin_root . '/dist/index.js'
 
   let g:kisuke.state.job = job_start(['node', node_script], {
