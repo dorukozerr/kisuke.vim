@@ -50,15 +50,15 @@ Support for other plugin managers coming soon.
 
 ## Key Mappings
 
-| Default Mapping                           | Command                   | Description             | Mode |
-| ----------------------------------------- | ------------------------- | ----------------------- | ---- |
-| <kbd>leader</kbd><kbd>k</kbd><kbd>o</kbd> | `:KisukeOpen`             | Open Kisuke chat buffer | `n`  |
-| <kbd>leader</kbd><kbd>k</kbd><kbd>c</kbd> | `:KisukeCreateNewSession` | Create new session      | `n`  |
-| <kbd>leader</kbd><kbd>k</kbd><kbd>n</kbd> | `:KisukeNextSession`      | Next session            | `n`  |
-| <kbd>leader</kbd><kbd>k</kbd><kbd>p</kbd> | `:KisukePreviousSession`  | Previous session        | `n`  |
-| <kbd>leader</kbd><kbd>k</kbd><kbd>a</kbd> | `:KisukeConfiguration`    | Configure API key       | `n`  |
-| <kbd>leader</kbd><kbd>k</kbd><kbd>d</kbd> | `:KisukeDeleteSession`    | Delete current session  | `n`  |
-| <kbd>leader</kbd><kbd>k</kbd><kbd>m</kbd> | `:KisukeMarkFocusedFile`  | Mark file for context   | `n`  |
+| Default Mapping                                 | Command                   | Description             | Mode |
+| :---------------------------------------------- | :------------------------ | :---------------------- | :--- |
+| <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>o</kbd> | `:KisukeOpen`             | Open Kisuke chat buffer | `n`  |
+| <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>c</kbd> | `:KisukeCreateNewSession` | Create new session      | `n`  |
+| <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>n</kbd> | `:KisukeNextSession`      | Next session            | `n`  |
+| <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>p</kbd> | `:KisukePreviousSession`  | Previous session        | `n`  |
+| <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>a</kbd> | `:KisukeConfiguration`    | Configure API key       | `n`  |
+| <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>d</kbd> | `:KisukeDeleteSession`    | Delete current session  | `n`  |
+| <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>m</kbd> | `:KisukeMarkFocusedFile`  | Mark file for context   | `n`  |
 
 ## Current Status
 
