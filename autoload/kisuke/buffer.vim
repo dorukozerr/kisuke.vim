@@ -28,8 +28,7 @@ func! kisuke#buffer#create()
 
   augroup g:kisuke_buf_name
     autocmd!
-    autocmd TextChanged,TextChangedI <buffer> setlocal nomodified
-  augroup END
+    autocmd TextChanged,TextChangedI <buffer> setlocal nomodified augroup END
 
   augroup KisukeSyntax
     autocmd!
@@ -93,7 +92,9 @@ func! kisuke#buffer#mark_highlighted_code() range
   let l:checks = [
         \ {'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
         \ {'condition': g:kisuke.state.is_pending, 'message': 'Cannot mark code while server generating response'},
-        \ {'condition': bufnr('%') ==# g:kisuke.state.g:kisuke.state.buf_nr, 'message': 'Cannot mark Kisuke chat buffer'},
+        \ {'condition': bufnr('%') ==# g:kisuke.state.buf_nr, 'message': 'Cannot mark Kisuke chat buffer'},
+        \ {'condition': bufwinid(g:kisuke.state.buf_nr) ==# -1, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
+        \ {'condition': empty(l:current_file), 'message': 'This file cannot be marked'},
         \ ]
 
   exe kisuke#utils#validate(l:checks)
