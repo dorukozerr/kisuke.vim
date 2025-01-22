@@ -1,46 +1,73 @@
-![screenshot](ss-1.png)
-
 # kisuke.vim
 
-Another AI plugin for Vim.
+A minimal AI assistant integration for Vim, inspired by modern AI-powered IDEs.
 
-- Work in progess, to be updated...
+![screenshot](ss-1.png)
 
-## My Motivation
+## About
 
-When the this idea first came to me I thought there are no available plugin does this in vim lol. Then after little bit of googling I found out there is plugins does what I want to do in NeoVim but not in Vim. But after a while I found out a similliar plugin exists in Vim too. I just want to develop my own plugin just for sake of doing it, don't know where this going to end up but it's so fun.
+Kisuke.vim is my first Vim plugin, born from a desire to learn plugin development and bring simple AI capabilities to Vim. While there are sophisticated alternatives available, this plugin aims to provide a straightforward AI integration focusing on simplicity and usability.
 
-## To use it
+## Current Features
 
-- It's really early stage of this plugin but you can test out the available features.
-- Currently it's using claude only and you need a api key to use it.
-- I'll add how to use it with other plugin managers later on.
+- 📝 Multi-session chat interface within Vim
+- 📂 File context sharing (mark files to include in your prompts)
+- 🤖 Claude AI integration for intelligent responses
+- 💬 Simple buffer-based conversation UI
+- 🔄 Session management (create, switch, delete)
 
-#### Install yarn if you don't have it
+## Planned Features
+
+- ✨ Code snippet selection for context
+- 🔌 Multiple AI model support:
+  - OpenAI (ChatGPT)
+  - Local models via Ollama
+  - More to come
+- 🛠️ Enhanced file context handling
+- ⚙️ Configurable model settings
+- 📚 More IDE-like features
+
+## Installation
+
+### Prerequisites
 
 ```bash
 npm i -g yarn@latest
 ```
 
-#### Install commands
+### Using Vim packages
 
 ```bash
-mkdir -p ~/.vim/pack/plugins/start &&
-cd ~/.vim/pack/plugins/start &&
-git clone https://github.com/dorukozerr/kisuke.vim.git &&
-cd kisuke.vim &&
-yarn build &&
-cd ~
+mkdir -p ~/.vim/pack/plugins/start
+cd ~/.vim/pack/plugins/start
+git clone https://github.com/dorukozerr/kisuke.vim.git
+cd kisuke.vim
+yarn build
+cd ~
 ```
 
-## Mappings
+Support for other plugin managers coming soon.
 
-| Mapping                                     | Description                                                        | Mode |
-| :------------------------------------------ | :----------------------------------------------------------------- | :--- |
-| <kbd>leader</kbd> <kbd>k</kbd> <kbd>o</kbd> | Open Kisuke chat buffer                                            | `n`  |
-| <kbd>leader</kbd> <kbd>k</kbd> <kbd>c</kbd> | Create new Kisuke session                                          | `n`  |
-| <kbd>leader</kbd> <kbd>k</kbd> <kbd>n</kbd> | Switch to next Kisuke session                                      | `n`  |
-| <kbd>leader</kbd> <kbd>k</kbd> <kbd>p</kbd> | Switch to previous Kisuke session                                  | `n`  |
-| <kbd>leader</kbd> <kbd>k</kbd> <kbd>a</kbd> | Invoke Kisuke for saving API KEY                                   | `n`  |
-| <kbd>leader</kbd> <kbd>k</kbd> <kbd>d</kbd> | Delete current Kisuke session                                      | `n`  |
-| <kbd>leader</kbd> <kbd>k</kbd> <kbd>m</kbd> | Save/Remove the focused buffer/file to be used in your next prompt | `n`  |
+## Key Mappings
+
+| Mapping      | Description             | Mode |
+| ------------ | ----------------------- | ---- |
+| `<leader>ko` | Open Kisuke chat buffer | `n`  |
+| `<leader>kc` | Create new session      | `n`  |
+| `<leader>kn` | Next session            | `n`  |
+| `<leader>kp` | Previous session        | `n`  |
+| `<leader>ka` | Configure API key       | `n`  |
+| `<leader>kd` | Delete current session  | `n`  |
+| `<leader>km` | Mark file for context   | `n`  |
+
+## Current Status
+
+This plugin is in active development, with new features being added regularly. While functional, it's still in its early stages and welcomes community feedback and contributions.
+
+## Contributing
+
+As this is a learning project, I'm open to suggestions, feedback, and contributions. Feel free to open issues or submit pull requests.
+
+## License
+
+MIT
