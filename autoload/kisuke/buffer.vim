@@ -152,16 +152,14 @@ endfunc
 
 func! kisuke#buffer#on_submit(prompt)
   let l:checks = [
-        \ {'condition': a:prompt ==# '', 'message': 'Cannot submit empty prompt, please write something'},
-        \ {'condition': g:kisuke.state.is_pending, 'message': 'Cannot submit a new prompt while server generating a response'},
-        \ {'condition': g:kisuke.state.job ==# v:null, 'message': 'Server is not running, try restarting vim'},
+        \ { 'condition': a:prompt ==# '', 'message': 'Cannot submit empty prompt, please write something' },
+        \ { 'condition': g:kisuke.state.is_pending, 'message': 'Cannot submit a new prompt while server generating a response' },
+        \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Server is not running, try restarting vim' },
         \ ]
 
   exe kisuke#utils#validate(l:checks)
-        \ ? ''
+        \ ? 'let g:kisuke.state.is_pending = 1'
         \ : 'return'
-
-  let g:kisuke.state.is_pending = 1
 
   let l:payload = {
         \ 'type': 'prompt',
