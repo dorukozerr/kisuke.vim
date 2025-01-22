@@ -26,9 +26,10 @@ func! kisuke#buffer#create()
   call prompt_setcallback(g:kisuke.state.buf_nr, function('kisuke#buffer#on_submit'))
   call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode({ 'type': 'initialize' }))
 
-  augroup g:kisuke_buf_name
+  augroup g:kisuke.state.buf_name
     autocmd!
-    autocmd TextChanged,TextChangedI <buffer> setlocal nomodified augroup END
+    autocmd TextChanged,TextChangedI <buffer> setlocal nomodified
+  augroup END
 
   augroup KisukeSyntax
     autocmd!

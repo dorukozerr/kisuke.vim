@@ -1,36 +1,39 @@
 func! kisuke#session#create_new_session()
-  return s:prepare_session_context()
-        \ ? kisuke#buffer#focus({ 'type': 'newSession' })
-        \ : v:null
+  exe s:prepare_session_context()
+        \ ? 'call kisuke#buffer#focus({ "type": "newSession" })'
+        \ : ''
 endfunc
 
 func! kisuke#session#go_to_next_session()
-  return s:prepare_session_context()
-        \ ? kisuke#buffer#focus({ 'type': 'nextSession' })
-        \ : v:null
+  exe s:prepare_session_context()
+        \ ? 'call kisuke#buffer#focus({ "type": "nextSession" })'
+        \ : ''
 endfunc
 
 func! kisuke#session#go_to_previous_session()
-  return s:prepare_session_context()
-        \ ? kisuke#buffer#focus({ 'type': 'prevSession' })
-        \ : v:null
+  exe s:prepare_session_context()
+        \ ? 'call kisuke#buffer#focus({ "type": "prevSession" })'
+        \ : ''
 endfunc
 
 
 func! kisuke#session#delete_current_session()
-  return s:prepare_session_context()
-        \ ? kisuke#buffer#focus({ 'type': 'deleteSession', 'payload': g:kisuke.state.session_id })
-        \ : v:null
+  exe s:prepare_session_context()
+        \ ? 'call kisuke#buffer#focus({ "type": "deleteSession", "payload": g:kisuke.state.session_id })'
+        \ : ''
 endfunc
 
 func s:prepare_session_context()
   let l:checks = [
         \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko' },
+        \ { 'condition': g:kisuke.state.is_pending, 'message': 'Cannot mark a file while server generating response' },
+        \ { 'condition': bufwinid(g:kisuke.state.buf_nr) ==# -1, 'message': 'Please run :KisukeOpen first, or press <leader>ko' },
+        \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko' },
         \ ]
 
-  if !kisuke#utils#validate(l:checks)
-    return 0
-  endif
+  exe kisuke#utils#validate(l:checks)
+        \ ? ''
+        \ : 'return 0'
 
   let g:kisuke.state.marked_files = []
   let g:kisuke.state.is_pending = 1
