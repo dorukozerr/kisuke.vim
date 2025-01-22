@@ -1,10 +1,9 @@
 func! kisuke#utils#validate(checks)
   for check in a:checks
-    if check.condition
-      echom check.message
-
-      return 0
-    endif
+    exe check.condition
+          \ ? 'echom check.message'
+          \ . ' | return 0'
+          \ : ''
   endfor
 
   return 1
