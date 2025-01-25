@@ -110,7 +110,7 @@ stdin.on('data', async (data: string) => {
 
       const stream = anthropicClient.messages.stream({
         model: 'claude-3-5-sonnet-latest',
-        max_tokens: 1024,
+        max_tokens: 4096,
         messages: [
           { role: 'assistant', content: BaseAIInstruction },
           {
@@ -130,13 +130,22 @@ My prompt is => ${event.payload}`
 
       sendResponse({ type: 'response', payload: 'stream_start' });
 
-      for await (const chunk of stream) {
-        if (chunk.type === 'content_block_delta') {
-          sendResponse({
-            type: 'response',
-            payload: (chunk.delta as TextDelta).text
-          });
+      try {
+        for await (const chunk of stream) {
+          if (chunk.type === 'content_block_delta') {
+            sendResponse({
+              type: 'response',
+              payload: (chunk.delta as TextDelta).text
+            });
+          }
         }
+      } catch (streamError) {
+        sendResponse({
+          type: 'error',
+          payload: `Stream error: ${streamError}`
+        });
+      } finally {
+        sendResponse({ type: 'response', payload: 'stream_end' });
       }
 
       await writeFile(
@@ -158,8 +167,6 @@ My prompt is => ${event.payload}`
           ]
         })
       );
-
-      sendResponse({ type: 'response', payload: 'stream_end' });
     }
 
     if (event.type === 'newSession') {
