@@ -3,12 +3,11 @@ func! kisuke#syntax#setup()
     return
   endif
 
-  " Clear any existing syntax and state
   syntax clear
+
   unlet! b:current_syntax
   unlet! b:included_langs
 
-  " Basic syntax patterns
   syntax match KisukePrompt /^Prompt >/
   syntax match KisukeResponse /^Kisuke >/
   syntax match KisukeSystem /^> .*$/
@@ -21,6 +20,7 @@ func! kisuke#syntax#setup()
     let l:delimeter_count = 0
     let l:code_block_start_line_nr = v:null
     let l:code_blocks = []
+    let l:included_syntaxes = {}
 
     for line in l:lines
       let l:line_nr += 1
@@ -37,19 +37,17 @@ func! kisuke#syntax#setup()
     endfor
 
     if !empty(l:code_blocks)
-      " Process each code block
       for code_block in l:code_blocks
         let l:lang = matchstr(getbufline(g:kisuke.state.buf_nr, code_block.start_line_nr)[0], '^```\s*\(\w\+\)')
         let l:lang = substitute(l:lang, '^```\s*', '', '')
 
         if !empty(l:lang)
-          call s:SetupSyntaxForCodeBlock(l:lang, code_block.start_line_nr, code_block.end_line_nr)
+          call s:setup_syntax_for_code_block(l:lang, code_block.start_line_nr, code_block.end_line_nr, l:included_syntaxes)
         endif
       endfor
     endif
   endif
 
-  " Link highlight groups
   hi def link KisukePrompt Statement
   hi def link KisukeResponse Identifier
   hi def link KisukeSystem Special
@@ -58,8 +56,9 @@ func! kisuke#syntax#setup()
   let b:syntax_setup_done = 1
 endfunc
 
-func! s:SetupSyntaxForCodeBlock(lang, start_line, end_line)
-  let l:group_name = 'KisukeCode_' . a:lang . '_' . a:start_line . '_' . a:end_line
+func! s:setup_syntax_for_code_block(lang, start_line, end_line, included_syntaxes)
+  let l:block_id = a:start_line . '_' . a:end_line
+  let l:group_name = 'KisukeCode_' . l:block_id
 
   let l:syntax_file = 'syntax/' . a:lang . '.vim'
   let l:syntax_paths = split(globpath(&runtimepath, l:syntax_file), '\n')
@@ -69,18 +68,29 @@ func! s:SetupSyntaxForCodeBlock(lang, start_line, end_line)
   endif
 
   try
-    if exists('b:current_syntax')
-      unlet b:current_syntax
+    if !has_key(a:included_syntaxes, a:lang)
+      let l:had_syntax = exists('b:current_syntax')
+      let l:prev_syntax = l:had_syntax ? b:current_syntax : ''
+
+      if l:had_syntax
+        unlet b:current_syntax
+      endif
+
+      execute 'syntax include @Kisuke_' . a:lang . ' ' . l:syntax_file
+
+      let a:included_syntaxes[a:lang] = 1
+
+      if l:had_syntax
+        let b:current_syntax = l:prev_syntax
+      endif
     endif
 
-    execute 'syntax include @' . l:group_name . ' ' . l:syntax_file
-
-    execute printf('syntax region %s start=/\%%%dl/ end=/\%%%dl/ contains=@%s keepend',
+    execute printf('syntax region %s start=/\%%%dl/ end=/\%%%dl/ contains=@Kisuke_%s keepend',
           \ l:group_name,
           \ a:start_line + 1,
           \ a:end_line,
-          \ l:group_name)
-  catch /^Vim\%((\a\+)\)\=:E403/
+          \ a:lang)
+  catch /^Vim\%((\\a\+)\)\=:E403/
     if exists('b:current_syntax')
       unlet b:current_syntax
     endif
