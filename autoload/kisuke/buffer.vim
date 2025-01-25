@@ -90,6 +90,8 @@ func! kisuke#buffer#mark_focused_file()
 endfunc
 
 func! kisuke#buffer#mark_highlighted_code() range
+  let l:current_file = expand('%:p')
+
   let l:checks = [
         \ {'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
         \ {'condition': g:kisuke.state.is_pending, 'message': 'Cannot mark code while server generating response'},
@@ -103,7 +105,6 @@ func! kisuke#buffer#mark_highlighted_code() range
         \ : 'return'
 
   let l:highlighted = getline(a:firstline, a:lastline)
-  let l:current_file = expand('%:p')
 
   echom 'l:highlighted ' . json_encode(l:highlighted)
 endfunc
