@@ -39,12 +39,14 @@ let g:kisuke.state = {
       \ 'session_id': v:null,
       \ 'total_sessions': v:null,
       \ 'marked_files': [],
+      \ 'marked_code_blocks': [],
       \ }
 
 command! KisukeConfiguration call kisuke#server#configure()
 command! KisukeOpen call kisuke#buffer#open()
 command! KisukeMarkFocusedFile call kisuke#buffer#mark_focused_file()
 command! -range KisukeMarkHighlighted <line1>,<line2>call kisuke#buffer#mark_highlighted_code()
+command! KisukeRemoveLastMarkedCodeBlock call kisuke#buffer#remove_last_marked_code_block()
 command! KisukeCreateNewSession call kisuke#session#create_new_session()
 command! KisukeNextSession call kisuke#session#go_to_next_session()
 command! KisukePreviousSession call kisuke#session#go_to_previous_session()
@@ -54,6 +56,7 @@ nnoremap <Leader>ka :KisukeConfiguration<CR>
 nnoremap <Leader>ko :KisukeOpen<CR>
 nnoremap <Leader>km :KisukeMarkFocusedFile<CR>
 vnoremap <Leader>kh :KisukeMarkHighlighted<CR>
+nnoremap <leader>krc :KisukeRemoveLastMarkedCodeBlock<CR>
 nnoremap <Leader>kc :KisukeCreateNewSession<CR>
 nnoremap <Leader>kn :KisukeNextSession<CR>
 nnoremap <Leader>kp :KisukePreviousSession<CR>

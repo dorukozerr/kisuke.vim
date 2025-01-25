@@ -33,6 +33,7 @@ func s:prepare_session_context()
 
   exe kisuke#utils#validate(l:checks)
         \ ? 'let g:kisuke.state.marked_files = []'
+        \ . ' | let g:kisuke.state.marked_code_blocks = []'
         \ . ' | let g:kisuke.state.is_pending = 1'
         \ . ' | return 1'
         \ : 'return 0'
