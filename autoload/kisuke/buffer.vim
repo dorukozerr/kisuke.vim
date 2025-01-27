@@ -106,12 +106,14 @@ func! kisuke#buffer#mark_highlighted_code() range
 
 
   let l:highlighted = getline(a:firstline, a:lastline)
+  let l:file_type = &filetype
 
   call kisuke#buffer#focus()
   call kisuke#buffer#clear_marked_content()
 
   call add(g:kisuke.state.marked_code_blocks, {
         \ 'file_path': l:current_file,
+        \ 'file_type': l:file_type,
         \ 'start_line_nr': a:firstline,
         \ 'end_line_nr': a:lastline,
         \ 'highlighted_code': json_encode(l:highlighted),
@@ -152,8 +154,6 @@ func! kisuke#buffer#clear_marked_content()
     endfor
   endif
 
-  echom 'lookhere ' l:highlighted_code_count
-
   let l:marked_files_start_line_nr = v:null
   let l:marked_files_end_line_nr = v:null
 
@@ -170,8 +170,6 @@ func! kisuke#buffer#clear_marked_content()
       let l:marked_files_start_line_nr -= 2
     endif
   endif
-
-  echom 'l:marked_files_start_line_nr ' . l:marked_files_start_line_nr
 
   if empty(split(getbufoneline(g:kisuke.state.buf_nr, line('$'))))
     let l:marked_files_end_line_nr = line('$')
@@ -223,17 +221,17 @@ func! kisuke#buffer#render_marked_content()
     for code_block in g:kisuke.state.marked_code_blocks
       if empty(split(getbufoneline(g:kisuke.state.buf_nr, line('$'))))
         call appendbufline(g:kisuke.state.buf_nr, line('$'), '> From - ' . code_block.file_path)
-        call appendbufline(g:kisuke.state.buf_nr, line('$'), '```')
+        call appendbufline(g:kisuke.state.buf_nr, line('$'), '```' . code_block.file_type)
         call appendbufline(g:kisuke.state.buf_nr, line('$'), json_decode(code_block.highlighted_code))
         call appendbufline(g:kisuke.state.buf_nr, line('$'), '```')
       elseif split(getbufoneline(g:kisuke.state.buf_nr, line('$')), ' ')[0] ==# 'Prompt'
         call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> From - ' . code_block.file_path)
-        call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '```')
+        call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '```' . code_block.file_type)
         call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, json_decode(code_block.highlighted_code))
         call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '```')
       else
         call appendbufline(g:kisuke.state.buf_nr, line('$'), '> From - ' . code_block.file_path)
-        call appendbufline(g:kisuke.state.buf_nr, line('$'), '```')
+        call appendbufline(g:kisuke.state.buf_nr, line('$'), '```' . code_block.file_type)
         call appendbufline(g:kisuke.state.buf_nr, line('$'), json_decode(code_block.highlighted_code))
         call appendbufline(g:kisuke.state.buf_nr, line('$'), '```')
       endif
