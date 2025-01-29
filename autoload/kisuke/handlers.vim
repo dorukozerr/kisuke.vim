@@ -115,6 +115,8 @@ func! s:render_kisuke_response(entry)
   let s:kisuke.state.response_start_line = v:null
 
   call setbufline(g:kisuke.state.buf_nr, line('$') + 1, ' ')
+
+  call kisuke#syntax#setup()
 endfunc
 
 func! s:render_user_prompt(entry)
@@ -125,4 +127,6 @@ func! s:render_user_prompt(entry)
 
   call appendbufline(g:kisuke.state.buf_nr, line('$'), 'Prompt > ' . a:entry.message)
   call setbufline(g:kisuke.state.buf_nr, line('$') + 1, ' ')
+
+  call kisuke#syntax#setup()
 endfunc
