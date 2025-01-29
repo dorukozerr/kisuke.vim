@@ -39,6 +39,7 @@ endfunc
 
 func! s:handle_stream_end()
   let g:kisuke.state.marked_files = []
+  let g:kisuke.state.marked_code_blocks = []
   let s:kisuke.state.stream_response = ''
   let s:kisuke.state.response_start_line = v:null
 

@@ -96,14 +96,30 @@ stdin.on('data', async (data: string) => {
 
     if (event.type === 'prompt') {
       const session = await getSession(event.sessionId);
-      const context: { fileName: string; fileContent: string }[] = [];
+      const context: {
+        fileName: string;
+        content: string;
+        type: 'all' | 'block';
+      }[] = [];
 
       if (event.context) {
         await Promise.all(
           event.context.map(async (entry) => {
-            const fileContent = await readFile(entry.file_path, 'utf-8');
+            if (entry.scope === 'all') {
+              const fileContent = await readFile(entry.file_path, 'utf-8');
 
-            context.push({ fileName: entry.file_path, fileContent });
+              context.push({
+                fileName: entry.file_path,
+                content: fileContent,
+                type: 'all'
+              });
+            } else if (entry.scope === 'block') {
+              context.push({
+                fileName: entry.file_path,
+                content: entry.highlighted_code ?? '',
+                type: 'block'
+              });
+            }
           })
         );
       }
@@ -120,7 +136,7 @@ stdin.on('data', async (data: string) => {
           {
             role: 'user',
             content: event.context
-              ? `Here are the files you should look into it, answer to my prompt after digesting those files, here is the stringified files array with their names and contents => ${JSON.stringify(context)}
+              ? `Here is the context of this prompt, there can be full files or code blocks in context, their type tell you about this info. If its all then its full file, if its block its a code block as you can assume. Digest this stringified context data and use it generating your next response. Stringified Context => ${JSON.stringify(context)}
 
 My prompt is => ${event.payload}`
               : event.payload

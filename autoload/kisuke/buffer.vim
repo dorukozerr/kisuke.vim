@@ -115,6 +115,7 @@ func! kisuke#buffer#mark_highlighted_code() range
           \ 'file_type': l:file_type,
           \ 'start_line_nr': a:firstline,
           \ 'end_line_nr': a:lastline,
+          \ 'scope': 'block',
           \ 'highlighted_code': json_encode(l:highlighted),
           \ })
 
@@ -267,8 +268,8 @@ func! kisuke#buffer#on_submit(prompt)
           \ 'payload': a:prompt,
           \ }
 
-    let l:payload = len(g:kisuke.state.marked_files)
-          \ ? extend(l:payload, { 'context': g:kisuke.state.marked_files })
+    let l:payload = len(g:kisuke.state.marked_files) || len(g:kisuke.state.marked_code_blocks)
+          \ ? extend(l:payload, { 'context': g:kisuke.state.marked_files + g:kisuke.state.marked_code_blocks })
           \ : l:payload
 
     call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(l:payload))
