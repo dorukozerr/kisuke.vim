@@ -1,13 +1,15 @@
 func! kisuke#buffer#open()
-  exe g:kisuke.state.job ==# v:null
-        \ ? 'call kisuke#server#start_process()'
-        \ : ''
+  if g:kisuke.state.job ==# v:null
+    call kisuke#server#start_process()
+  endif
 
   let g:kisuke.state.is_pending = 1
 
-  exe bufexists(g:kisuke.state.buf_nr)
-        \ ? 'call kisuke#buffer#focus({ "type": "initialize" })'
-        \ : 'call kisuke#buffer#create()'
+  if bufexists(g:kisuke.state.buf_nr)
+    call kisuke#buffer#focus({ 'type': 'initialize' })
+  else
+    call kisuke#buffer#create()
+  endif
 endfunc
 
 func! kisuke#buffer#create()
@@ -41,13 +43,15 @@ endfunc
 func! kisuke#buffer#focus(payload = v:null)
   let l:wid = bufwinid(g:kisuke.state.buf_nr)
 
-  exe l:wid ==# -1
-        \ ? 'vsplit | buffer ' . g:kisuke.state.buf_nr
-        \ : 'call win_gotoid(l:wid)'
+  if l:wid ==# -1
+    exe 'vsplit | buffer ' . g:kisuke.state.buf_nr
+  else
+    call win_gotoid(l:wid)
+  endif
 
-  exe a:payload ==# v:null
-        \ ? ''
-        \ : 'call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(a:payload))'
+  if a:payload != v:null
+    call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(a:payload))
+  endif
 endfunc
 
 func! kisuke#buffer#mark_focused_file()
@@ -61,31 +65,30 @@ func! kisuke#buffer#mark_focused_file()
         \ {'condition': empty(l:current_file), 'message': 'This file cannot be marked'},
         \ ]
 
+  if kisuke#utils#validate(l:checks)
+    let l:file_index = -1
+    let l:index = 0
 
-  exe kisuke#utils#validate(l:checks)
-        \ ? ''
-        \ : 'return'
+    call kisuke#buffer#focus()
+    call kisuke#buffer#clear_marked_content()
 
-  let l:file_index = -1
-  let l:index = 0
+    for entry in g:kisuke.state.marked_files
+      if entry.file_path ==# l:current_file
+        let l:file_index = l:index
+      endif
 
-  call kisuke#buffer#focus()
-  call kisuke#buffer#clear_marked_content()
+      let l:index += 1
+    endfor
 
-  for entry in g:kisuke.state.marked_files
-    exe entry.file_path ==# l:current_file
-          \ ? 'let l:file_index = ' . l:index
-          \ : ''
+    if l:file_index ==# -1
+      call add(g:kisuke.state.marked_files, {'file_path': l:current_file, 'scope': 'all'})
+    else
+      call remove(g:kisuke.state.marked_files, l:file_index)
+    endif
 
-    let l:index += 1
-  endfor
-
-  exe l:file_index ==# -1
-        \ ? 'call add(g:kisuke.state.marked_files, {"file_path": l:current_file, "scope": "all"})'
-        \ : 'call remove(g:kisuke.state.marked_files, l:file_index)'
-
-  if len(g:kisuke.state.marked_files) || len(g:kisuke.state.marked_code_blocks)
-    call kisuke#buffer#render_marked_content()
+    if len(g:kisuke.state.marked_files) || len(g:kisuke.state.marked_code_blocks)
+      call kisuke#buffer#render_marked_content()
+    endif
   endif
 endfunc
 
@@ -100,26 +103,23 @@ func! kisuke#buffer#mark_highlighted_code() range
         \ {'condition': empty(l:current_file), 'message': 'This file cannot be marked'},
         \ ]
 
-  exe kisuke#utils#validate(l:checks)
-        \ ? ''
-        \ : 'return'
+  if kisuke#utils#validate(l:checks)
+    let l:highlighted = getline(a:firstline, a:lastline)
+    let l:file_type = &filetype
 
+    call kisuke#buffer#focus()
+    call kisuke#buffer#clear_marked_content()
 
-  let l:highlighted = getline(a:firstline, a:lastline)
-  let l:file_type = &filetype
+    call add(g:kisuke.state.marked_code_blocks, {
+          \ 'file_path': l:current_file,
+          \ 'file_type': l:file_type,
+          \ 'start_line_nr': a:firstline,
+          \ 'end_line_nr': a:lastline,
+          \ 'highlighted_code': json_encode(l:highlighted),
+          \ })
 
-  call kisuke#buffer#focus()
-  call kisuke#buffer#clear_marked_content()
-
-  call add(g:kisuke.state.marked_code_blocks, {
-        \ 'file_path': l:current_file,
-        \ 'file_type': l:file_type,
-        \ 'start_line_nr': a:firstline,
-        \ 'end_line_nr': a:lastline,
-        \ 'highlighted_code': json_encode(l:highlighted),
-        \ })
-
-  call kisuke#buffer#render_marked_content()
+    call kisuke#buffer#render_marked_content()
+  endif
 endfunc
 
 func! kisuke#buffer#remove_last_marked_code_block()
@@ -130,17 +130,15 @@ func! kisuke#buffer#remove_last_marked_code_block()
         \ {'condition': len(g:kisuke.state.marked_code_blocks) ==# 0, 'message': 'You have no marked code block'},
         \ ]
 
-  exe kisuke#utils#validate(l:checks)
-        \ ? ''
-        \ : 'return'
+  if kisuke#utils#validate(l:checks)
+    call kisuke#buffer#focus()
+    call kisuke#buffer#clear_marked_content()
 
-  call kisuke#buffer#focus()
-  call kisuke#buffer#clear_marked_content()
+    call remove(g:kisuke.state.marked_code_blocks, len(g:kisuke.state.marked_code_blocks) - 1)
 
-  call remove(g:kisuke.state.marked_code_blocks, len(g:kisuke.state.marked_code_blocks) - 1)
-
-  if len(g:kisuke.state.marked_files) || len(g:kisuke.state.marked_code_blocks)
-    call kisuke#buffer#render_marked_content()
+    if len(g:kisuke.state.marked_files) || len(g:kisuke.state.marked_code_blocks)
+      call kisuke#buffer#render_marked_content()
+    endif
   endif
 endfunc
 
@@ -193,19 +191,23 @@ func! kisuke#buffer#render_marked_content()
     let l:index = 0
 
     for entry in g:kisuke.state.marked_files
-      exe empty(split(getbufoneline(g:kisuke.state.buf_nr, line('$'))))
-            \ ? 'call appendbufline(g:kisuke.state.buf_nr, line(''$''), "> File Path - " . entry.file_path)'
-            \ : split(getbufoneline(g:kisuke.state.buf_nr, line('$')), ' ')[0] ==# 'Prompt'
-            \ ? 'call appendbufline(g:kisuke.state.buf_nr, line(''$'') - 1, "> File Path - " . entry.file_path)'
-            \ : 'call appendbufline(g:kisuke.state.buf_nr, line(''$''), "> File Path - " . entry.file_path)'
+      if empty(split(getbufoneline(g:kisuke.state.buf_nr, line('$'))))
+        call appendbufline(g:kisuke.state.buf_nr, line('$'), '> File Path - ' . entry.file_path)
+      elseif split(getbufoneline(g:kisuke.state.buf_nr, line('$')), ' ')[0] ==# 'Prompt'
+        call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> File Path - ' . entry.file_path)
+      else
+        call appendbufline(g:kisuke.state.buf_nr, line('$'), '> File Path - ' . entry.file_path)
+      endif
 
       let l:index += 1
 
-      exe l:index ==# len(g:kisuke.state.marked_files)
-            \ ? split(getbufoneline(g:kisuke.state.buf_nr, line('$')), ' ')[0] ==# 'Prompt'
-            \ ? 'call appendbufline(g:kisuke.state.buf_nr, line(''$'') - 1, " ")'
-            \ : 'call appendbufline(g:kisuke.state.buf_nr, line(''$''), " ")'
-            \ : ''
+      if l:index ==# len(g:kisuke.state.marked_files)
+        if split(getbufoneline(g:kisuke.state.buf_nr, line('$')), ' ')[0] ==# 'Prompt'
+          call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, ' ')
+        else
+          call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
+        endif
+      endif
     endfor
   endif
 
@@ -238,11 +240,13 @@ func! kisuke#buffer#render_marked_content()
 
       let l:index += 1
 
-      exe l:index ==# len(g:kisuke.state.marked_code_blocks)
-            \ ? split(getbufoneline(g:kisuke.state.buf_nr, line('$')), ' ')[0] ==# 'Prompt'
-            \ ? 'call appendbufline(g:kisuke.state.buf_nr, line(''$'') - 1, " ")'
-            \ : 'call appendbufline(g:kisuke.state.buf_nr, line(''$''), " ")'
-            \ : ''
+      if l:index ==# len(g:kisuke.state.marked_code_blocks)
+        if split(getbufoneline(g:kisuke.state.buf_nr, line('$')), ' ')[0] ==# 'Prompt'
+          call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, ' ')
+        else
+          call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
+        endif
+      endif
     endfor
   endif
 endfunc
@@ -254,19 +258,19 @@ func! kisuke#buffer#on_submit(prompt)
         \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Server is not running, try restarting vim' },
         \ ]
 
-  exe kisuke#utils#validate(l:checks)
-        \ ? 'let g:kisuke.state.is_pending = 1'
-        \ : 'return'
+  if kisuke#utils#validate(l:checks)
+    let g:kisuke.state.is_pending = 1
 
-  let l:payload = {
-        \ 'type': 'prompt',
-        \ 'sessionId': g:kisuke.state.session_id,
-        \ 'payload': a:prompt,
-        \ }
+    let l:payload = {
+          \ 'type': 'prompt',
+          \ 'sessionId': g:kisuke.state.session_id,
+          \ 'payload': a:prompt,
+          \ }
 
-  let l:payload = len(g:kisuke.state.marked_files)
-        \ ? extend(l:payload, { 'context': g:kisuke.state.marked_files })
-        \ : l:payload
+    let l:payload = len(g:kisuke.state.marked_files)
+          \ ? extend(l:payload, { 'context': g:kisuke.state.marked_files })
+          \ : l:payload
 
-  call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(l:payload))
+    call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(l:payload))
+  endif
 endfunc

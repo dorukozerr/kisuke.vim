@@ -3,14 +3,18 @@ func! kisuke#server#start_process()
   let l:plugin_root = ''
 
   for path in l:paths
-    exe path =~ 'kisuke\.vim$'
-          \ ? 'let l:plugin_root = path'
-          \ : ''
+    if path =~ 'kisuke\.vim$'
+      let l:plugin_root = path
+
+      break
+    endif
   endfor
 
-  exe empty(l:plugin_root)
-        \ ? 'echoerr "could not find kisuke.vim in runtimepath" | return'
-        \ : ''
+  if empty(l:plugin_root)
+    echoerr 'could not find kisuke.vim in runtimepath'
+
+    return
+  endif
 
   let node_script = plugin_root . '/dist/index.js'
 
@@ -27,12 +31,14 @@ func! kisuke#server#configure()
         \ {'condition': empty(l:api_key), 'message': 'Please provide a valid api key'},
         \ ]
 
-  exe kisuke#utils#validate(l:checks)
-        \ ? 'call writefile([json_encode({ "apiKey": l:api_key })], expand("~/.config/kisuke/config.json"))'
-        \ . ' | call kisuke#buffer#focus({ "type": "initialize" })'
-        \ . ' | redraw!'
-        \ . ' | echom "Api key saved"'
-        \ : ''
+  if kisuke#utils#validate(l:checks)
+    call writefile([json_encode({ 'apiKey': l:api_key })], expand('~/.config/kisuke/config.json'))
+    call kisuke#buffer#focus({ 'type': 'initialize' })
+
+    redraw!
+
+    echom 'Api key saved'
+  endif
 endfunc
 
 func! kisuke#server#parse_reply(channel, reply)
@@ -46,9 +52,11 @@ func! kisuke#server#parse_reply(channel, reply)
         \ 'error': function('kisuke#handlers#error'),
         \ }
 
-  exe has_key(l:handlers, l:reply.type)
-        \ ? 'call l:handlers[l:reply.type](l:reply)'
-        \ : 'echoerr "Unknown message type"'
+  if has_key(l:handlers, l:reply.type)
+    call l:handlers[l:reply.type](l:reply)
+  else
+    echoerr 'Unknown message type'
+  endif
 
   let g:kisuke.state.is_pending = 0
 endfunc

@@ -14,19 +14,21 @@ func! kisuke#handlers#initialize(reply)
   call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> ' . 'Session ' . a:reply.currentSession . '/' . g:kisuke.state.total_sessions)
   call s:process_session_history(a:reply.payload.messages)
 
-  exe len(g:kisuke.state.marked_files)
-        \ ? 'call kisuke#buffer#render_marked_content()'
-        \ : ''
+  if len(g:kisuke.state.marked_files)
+    call kisuke#buffer#render_marked_content()
+  endif
 
   call kisuke#syntax#setup()
 endfunc
 
 func! kisuke#handlers#response(reply)
-  exe a:reply.payload ==# 'stream_start'
-        \ ? 'call s:handle_stream_start()'
-        \ : a:reply.payload ==# 'stream_end'
-        \ ? 'call s:handle_stream_end()'
-        \ : 'call s:handle_stream(a:reply)'
+  if a:reply.payload ==# 'stream_start'
+    call s:handle_stream_start()
+  elseif a:reply.payload ==# 'stream_end'
+    call s:handle_stream_end()
+  else
+    call s:handle_stream(a:reply)
+  endif
 endfunc
 
 func! s:handle_stream_start()
@@ -48,9 +50,11 @@ func s:handle_stream(reply)
   let l:index = 0
 
   for line in split(s:kisuke.state.stream_response, '\n')
-    exe l:index ==# 0
-          \ ? 'call setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, "Kisuke > " . line)'
-          \ : 'call setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, line)'
+    if l:index ==# 0
+      call setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, 'Kisuke > ' . line)
+    else
+      call setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, line)
+    endif
 
     normal! G
 
@@ -92,11 +96,11 @@ endfunc
 
 func! s:process_session_history(messages)
   for entry in a:messages
-    exe entry.sender ==# 'Kisuke'
-          \ ? 'call s:render_kisuke_response(entry)'
-          \ : entry.sender ==# 'User'
-          \ ? 'call s:render_user_prompt(entry)'
-          \ : ''
+    if entry.sender ==# 'Kisuke'
+      call s:render_kisuke_response(entry)
+    elseif entry.sender ==# 'User'
+      call s:render_user_prompt(entry)
+    endif
   endfor
 endfunc
 
@@ -105,9 +109,11 @@ func! s:render_kisuke_response(entry)
   let l:index = 0
 
   for line in split(a:entry.message, '\n')
-    exe l:index ==# 0
-          \ ? 'call setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, "Kisuke > " . line)'
-          \ : 'call setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, line)'
+    if l:index ==# 0
+      call setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, 'Kisuke > ' . line)
+    else
+      call setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, line)
+    endif
 
     let l:index += 1
   endfor
@@ -120,10 +126,10 @@ func! s:render_kisuke_response(entry)
 endfunc
 
 func! s:render_user_prompt(entry)
-  exe a:entry.referenceCount > 0
-        \ ? 'call appendbufline(g:kisuke.state.buf_nr, line("$"), "> References Added - " . a:entry.referenceCount)'
-        \ . ' | call appendbufline(g:kisuke.state.buf_nr, line("$"), " ")'
-        \ : ''
+  if a:entry.referenceCount > 0
+    call appendbufline(g:kisuke.state.buf_nr, line('$'), '> References Added - ' . a:entry.referenceCount)
+    call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
+  endif
 
   call appendbufline(g:kisuke.state.buf_nr, line('$'), 'Prompt > ' . a:entry.message)
   call setbufline(g:kisuke.state.buf_nr, line('$') + 1, ' ')
