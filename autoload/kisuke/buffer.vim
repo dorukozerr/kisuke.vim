@@ -21,6 +21,8 @@ func! kisuke#buffer#create()
         \ buftype=prompt
         \ noswapfile
         \ nobuflisted
+        \ nonumber
+        \ norelativenumber
 
   call kisuke#syntax#setup()
 
