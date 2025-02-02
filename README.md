@@ -58,7 +58,7 @@ Support for other plugin managers coming soon.
 | <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>p</kbd>                | `:KisukePreviousSession`           | Previous session                          | `n`  |
 | <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>a</kbd>                | `:KisukeConfiguration`             | Configure API key                         | `n`  |
 | <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>d</kbd>                | `:KisukeDeleteSession`             | Delete current session                    | `n`  |
-| <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>m</kbd>                | `:KisukeMarkFocusedFile`           | Mark file for context                     | `n`  |
+| <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>m</kbd>                | `:KisukeMarkFocusedFile`           | Mark or unmark focused file for context   | `n`  |
 | <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>h</kbd>                | `:KisukeMarkHighlighted`           | Mark highlighted code block for context   | `v`  |
 | <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>r</kbd> + <kbd>c</kbd> | `:KisukeRemoveLastMarkedCodeBlock` | Remove last added code block from context | `n`  |
 
