@@ -50,7 +50,21 @@ Support for other plugin managers coming soon.
 
 ## Key Mappings
 
-| Default Mapping                                                | Command                            | Description                               | Mode |
+- Add these to .vimrc
+
+```vim
+nnoremap <Leader>ka :KisukeConfiguration<CR>
+nnoremap <Leader>ko :KisukeOpen<CR>
+nnoremap <Leader>km :KisukeMarkFocusedFile<CR>
+vnoremap <Leader>kh :KisukeMarkHighlighted<CR>
+nnoremap <leader>krc :KisukeRemoveLastMarkedCodeBlock<CR>
+nnoremap <Leader>kc :KisukeCreateNewSession<CR>
+nnoremap <Leader>kn :KisukeNextSession<CR>
+nnoremap <Leader>kp :KisukePreviousSession<CR>
+nnoremap <Leader>kd :KisukeDeleteSession<CR>
+```
+
+| Mapping                                                        | Command                            | Description                               | Mode |
 | :------------------------------------------------------------- | :--------------------------------- | :---------------------------------------- | :--- |
 | <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>o</kbd>                | `:KisukeOpen`                      | Open Kisuke chat buffer                   | `n`  |
 | <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>c</kbd>                | `:KisukeCreateNewSession`          | Create new session                        | `n`  |

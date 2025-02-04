@@ -51,13 +51,3 @@ command! KisukeCreateNewSession call kisuke#session#create_new_session()
 command! KisukeNextSession call kisuke#session#go_to_next_session()
 command! KisukePreviousSession call kisuke#session#go_to_previous_session()
 command! KisukeDeleteSession call kisuke#session#delete_current_session()
-
-nnoremap <Leader>ka :KisukeConfiguration<CR>
-nnoremap <Leader>ko :KisukeOpen<CR>
-nnoremap <Leader>km :KisukeMarkFocusedFile<CR>
-vnoremap <Leader>kh :KisukeMarkHighlighted<CR>
-nnoremap <leader>krc :KisukeRemoveLastMarkedCodeBlock<CR>
-nnoremap <Leader>kc :KisukeCreateNewSession<CR>
-nnoremap <Leader>kn :KisukeNextSession<CR>
-nnoremap <Leader>kp :KisukePreviousSession<CR>
-nnoremap <Leader>kd :KisukeDeleteSession<CR>
