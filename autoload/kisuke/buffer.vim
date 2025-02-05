@@ -18,28 +18,89 @@ func! kisuke#buffer#create()
   let g:kisuke.state.buf_nr = bufnr('%')
 
   setlocal
-        \ buftype=prompt
+        \ buftype=nofile
+        \ bufhidden=hide
         \ noswapfile
         \ nobuflisted
+        \ nowrap
         \ nonumber
         \ norelativenumber
+        \ filetype=kisuke_menu
 
-  call kisuke#syntax#setup()
+  call appendbufline(g:kisuke.state.buf_nr, 0, [
+        \ '================================================================',
+        \ '#                                                              #',
+        \ '#         ██╗  ██╗██╗███████╗██╗   ██╗██╗  ██╗███████╗         #',
+        \ '#         ██║ ██╔╝████╔════╝██║   ██║██║ ██╔╝██╔════╝         #',
+        \ '#         █████╔╝ ██║███████╗██║   ██║█████╔╝ █████╗           #',
+        \ '#         ██╔═██╗ ██║╚════██║██║   ██║██╔═██╗ ██╔══╝           #',
+        \ '#         ██║  ██╗██║███████║╚██████╔╝██║  ██╗███████╗         #',
+        \ '#         ╚═╝  ╚═╝╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝         #',
+        \ '#                                                              #',
+        \ '================================================================',
+        \ '',
+        \ '[1] Start new chat',
+        \ '[2] Load previous chat',
+        \ '[3] Change AI model',
+        \ '[4] Configure settings',
+        \ '[5] View help',
+        \ '',
+        \ 'Press Enter to select an option'
+        \])
 
-  call prompt_setprompt(g:kisuke.state.buf_nr, 'Prompt > ')
-  call prompt_setcallback(g:kisuke.state.buf_nr, function('kisuke#buffer#on_submit'))
-  call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode({ 'type': 'initialize' }))
+  syntax clear
 
-  augroup g:kisuke.state.buf_name
-    autocmd!
-    autocmd TextChanged,TextChangedI <buffer> setlocal nomodified
-  augroup END
+  syntax match KisukeHeaderBorder /^\s*=\+\s*$/
+  syntax match KisukeHeaderBorder /^\s*#.*#\s*$/
+  syntax match KisukeAsciiArt /^\s*#\s*\zs.*██╗.*██╗.*#$/
+  syntax match KisukeAsciiArt /^\s*#\s*\zs.*██║.*██╔╝.*#$/
+  syntax match KisukeAsciiArt /^\s*#\s*\zs.*█████╔╝.*#$/
+  syntax match KisukeAsciiArt /^\s*#\s*\zs.*██╔═██╗.*#$/
+  syntax match KisukeAsciiArt /^\s*#\s*\zs.*██║.*██╗.*#$/
+  syntax match KisukeAsciiArt /^\s*#\s*\zs.*╚═╝.*╚═╝.*#$/
+  syntax match KisukeMenuOption /^\[\d\]/
+  syntax match KisukeMenuNumber /\d\ze\]/ contained containedin=KisukeMenuOption
+  syntax match KisukeMenuText /\]\zs.*$/ contained containedin=KisukeMenuOption
+  syntax match KisukeInstruction /^Press Enter to select an option$/
 
-  augroup KisukeSyntax
-    autocmd!
-    autocmd BufEnter,TextChanged <buffer>
-          \ let b:syntax_setup_done = 0 | call kisuke#syntax#setup()
-  augroup END
+  highlight default KisukeHeaderBorder ctermfg=Blue guifg=#4444FF
+  highlight default KisukeAsciiArt ctermfg=Magenta guifg=#FF00FF
+  highlight default KisukeMenuOption ctermfg=Yellow guifg=#FFFF00
+  highlight default KisukeMenuNumber ctermfg=Green guifg=#00FF00
+  highlight default KisukeMenuText ctermfg=White guifg=#FFFFFF
+  highlight default KisukeInstruction ctermfg=Gray guifg=#888888
+
+  normal! gg3j
+  setlocal nomodifiable
+
+  nnoremap <buffer> <CR> :call kisuke#buffer#handle_menu_item_selection()<CR>
+  nnoremap <buffer> j j
+  nnoremap <buffer> k k
+
+
+  " setlocal
+  "       \ buftype=prompt
+  "       \ noswapfile
+  "       \ nobuflisted
+  "       \ nonumber
+  "       \ norelativenumber
+
+  " call kisuke#syntax#setup()
+
+  " call prompt_setprompt(g:kisuke.state.buf_nr, 'Prompt > ')
+  " call prompt_setcallback(g:kisuke.state.buf_nr, function('kisuke#buffer#on_submit'))
+  " call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode({ 'type': 'initialize' }))
+
+  " augroup g:kisuke.state.buf_name
+  "   autocmd!
+  "   autocmd TextChanged,TextChangedI <buffer> setlocal nomodified
+  " augroup END
+
+  " augroup KisukeSyntax
+  "   autocmd!
+  "   autocmd BufEnter,TextChanged <buffer>
+  "         \ let b:syntax_setup_done = 0 | call kisuke#syntax#setup()
+  " augroup END
 endfunc
 
 func! kisuke#buffer#focus(payload = v:null)
@@ -51,8 +112,34 @@ func! kisuke#buffer#focus(payload = v:null)
     call win_gotoid(l:wid)
   endif
 
-  if a:payload != v:null
-    call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(a:payload))
+  " if a:payload != v:null
+  "   call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(a:payload))
+  " endif
+endfunc
+
+func! kisuke#buffer#handle_menu_item_selection() abort
+  let line = getline('.')
+
+  let option = matchstr(line, '^\[\(\d\)\]')
+
+  if empty(option)
+    echo 'Invalid Option'
+
+    return
+  endif
+
+  let option_num = str2nr(option[1:-2])
+
+  if option_num == 1
+    echo 'selected 1'
+  elseif option_num == 2
+    echo 'selected 2'
+  elseif option_num == 3
+    echo 'selected 3'
+  elseif option_num == 4
+    echo 'selected 4'
+  elseif option_num == 5
+    echo 'selected 5'
   endif
 endfunc
 
