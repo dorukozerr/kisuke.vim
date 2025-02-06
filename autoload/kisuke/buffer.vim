@@ -28,47 +28,16 @@ func! kisuke#buffer#create()
         \ filetype=kisuke_menu
 
   call appendbufline(g:kisuke.state.buf_nr, 0, [
-        \ '================================================================',
-        \ '#                                                              #',
-        \ '#         ██╗  ██╗██╗███████╗██╗   ██╗██╗  ██╗███████╗         #',
-        \ '#         ██║ ██╔╝████╔════╝██║   ██║██║ ██╔╝██╔════╝         #',
-        \ '#         █████╔╝ ██║███████╗██║   ██║█████╔╝ █████╗           #',
-        \ '#         ██╔═██╗ ██║╚════██║██║   ██║██╔═██╗ ██╔══╝           #',
-        \ '#         ██║  ██╗██║███████║╚██████╔╝██║  ██╗███████╗         #',
-        \ '#         ╚═╝  ╚═╝╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝         #',
-        \ '#                                                              #',
-        \ '================================================================',
-        \ '',
-        \ '[1] Start new chat',
-        \ '[2] Load previous chat',
-        \ '[3] Change AI model',
-        \ '[4] Configure settings',
-        \ '[5] View help',
-        \ '',
+        \ '•• ━━━━━━━━━━ ⟡ KISUKE ⟡ ━━━━━━━━━━ ••',
+        \ ' ',
+        \ '➤ Start new chat',
+        \ '➤ Load previous chat',
+        \ '➤ Change AI model',
+        \ '➤ Configure settings',
+        \ '➤ View help',
+        \ ' ',
         \ 'Press Enter to select an option'
         \])
-
-  syntax clear
-
-  syntax match KisukeHeaderBorder /^\s*=\+\s*$/
-  syntax match KisukeHeaderBorder /^\s*#.*#\s*$/
-  syntax match KisukeAsciiArt /^\s*#\s*\zs.*██╗.*██╗.*#$/
-  syntax match KisukeAsciiArt /^\s*#\s*\zs.*██║.*██╔╝.*#$/
-  syntax match KisukeAsciiArt /^\s*#\s*\zs.*█████╔╝.*#$/
-  syntax match KisukeAsciiArt /^\s*#\s*\zs.*██╔═██╗.*#$/
-  syntax match KisukeAsciiArt /^\s*#\s*\zs.*██║.*██╗.*#$/
-  syntax match KisukeAsciiArt /^\s*#\s*\zs.*╚═╝.*╚═╝.*#$/
-  syntax match KisukeMenuOption /^\[\d\]/
-  syntax match KisukeMenuNumber /\d\ze\]/ contained containedin=KisukeMenuOption
-  syntax match KisukeMenuText /\]\zs.*$/ contained containedin=KisukeMenuOption
-  syntax match KisukeInstruction /^Press Enter to select an option$/
-
-  highlight default KisukeHeaderBorder ctermfg=Blue guifg=#4444FF
-  highlight default KisukeAsciiArt ctermfg=Magenta guifg=#FF00FF
-  highlight default KisukeMenuOption ctermfg=Yellow guifg=#FFFF00
-  highlight default KisukeMenuNumber ctermfg=Green guifg=#00FF00
-  highlight default KisukeMenuText ctermfg=White guifg=#FFFFFF
-  highlight default KisukeInstruction ctermfg=Gray guifg=#888888
 
   normal! gg3j
   setlocal nomodifiable
@@ -120,26 +89,25 @@ endfunc
 func! kisuke#buffer#handle_menu_item_selection() abort
   let line = getline('.')
 
-  let option = matchstr(line, '^\[\(\d\)\]')
-
-  if empty(option)
-    echo 'Invalid Option'
+  let menu_item = matchstr(line, '➤\s\zs.*$')
+  if empty(menu_item)
+    echo 'Not a valid menu option'
 
     return
   endif
 
-  let option_num = str2nr(option[1:-2])
-
-  if option_num == 1
-    echo 'selected 1'
-  elseif option_num == 2
-    echo 'selected 2'
-  elseif option_num == 3
-    echo 'selected 3'
-  elseif option_num == 4
-    echo 'selected 4'
-  elseif option_num == 5
-    echo 'selected 5'
+  if menu_item ==# 'Start new chat'
+    echo 'Selected: Start new chat'
+  elseif menu_item ==# 'Load previous chat'
+    echo 'Selected: Load previous chat'
+  elseif menu_item ==# 'Change AI model'
+    echo 'Selected: Change AI model'
+  elseif menu_item ==# 'Configure settings'
+    echo 'Selected: Configure settings'
+  elseif menu_item ==# 'View help'
+    echo 'Selected: View help'
+  else
+    echo 'Unhandled menu option: ' . menu_item
   endif
 endfunc
 

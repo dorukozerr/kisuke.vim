@@ -27,7 +27,7 @@ const setupKisukeFiles = async () => {
 
   await writeFile(
     join(configDir, 'history.json'),
-    JSON.stringify({ sessions: [{ id: sessionId, name: sessionId }] })
+    JSON.stringify({ sessions: [] })
   );
   await writeFile(
     join(configDir, `${sessionId}.json`),
@@ -35,7 +35,14 @@ const setupKisukeFiles = async () => {
   );
   await writeFile(
     join(configDir, 'config.json'),
-    JSON.stringify({ apiKey: '' })
+    JSON.stringify({
+      provider: '',
+      model: '',
+      apiKeys: {
+        anthropicApiKey: '',
+        openAiApiKey: ''
+      }
+    })
   );
 
   return JSON.parse(
@@ -49,7 +56,11 @@ const getHistory = async () => {
       await readFile(join(configDir, 'history.json'), 'utf-8')
     ) as History;
   } catch {
-    return setupKisukeFiles();
+    await setupKisukeFiles();
+
+    return JSON.parse(
+      await readFile(join(configDir, 'history.json'), 'utf-8')
+    ) as History;
   }
 };
 
@@ -66,10 +77,6 @@ stdin.on('data', async (data: string) => {
       await readFile(join(configDir, 'config.json'), 'utf8')
     );
 
-    if (!configFile.apiKey) {
-      throw new Error('Please run :KisukeAuth');
-    }
-
     if (anthropicClient === null) {
       anthropicClient = new Anthropic({
         apiKey: configFile.apiKey
@@ -79,19 +86,41 @@ stdin.on('data', async (data: string) => {
     const event = JSON.parse(data) as Event;
 
     if (event.type === 'initialize') {
-      const latestSessionIndex = history.sessions.length - 1;
-      const sessionInfo = history.sessions[latestSessionIndex];
-      const session = await getSession(sessionInfo.id);
+      // const latestSessionIndex = history.sessions.length - 1;
+      // const sessionInfo = history.sessions[latestSessionIndex];
+      // const session = await getSession(sessionInfo.id);
+      // currentSessionIndex = latestSessionIndex;
+      // sendResponse({
+      //   type: 'initialize',
+      //   totalSessions: history.sessions.length,
+      //   currentSession: currentSessionIndex + 1,
+      //   sessionInfo,
+      //   payload: session
+      // });
 
-      currentSessionIndex = latestSessionIndex;
-
-      sendResponse({
-        type: 'initialize',
-        totalSessions: history.sessions.length,
-        currentSession: currentSessionIndex + 1,
-        sessionInfo,
-        payload: session
-      });
+      if (!configFile.provider || !configFile.model) {
+        sendResponse({
+          type: 'initialize',
+          sessions: history.sessions,
+          payload: 'configurationNeeded'
+        });
+      } else if (
+        (configFile.provider === 'anthropic' &&
+          !configFile.apiKeys.anthropicApiKey) ||
+        (configFile.provider === 'openAi' && !configFile.apiKeys.openAiApiKey)
+      ) {
+        sendResponse({
+          type: 'initialize',
+          sessions: history.sessions,
+          payload: 'configurationNeeded'
+        });
+      } else {
+        sendResponse({
+          type: 'initialize',
+          sessions: history.sessions,
+          payload: 'readyToUse'
+        });
+      }
     }
 
     if (event.type === 'prompt') {
