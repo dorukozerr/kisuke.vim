@@ -51,10 +51,8 @@ export type Event =
 
 interface InitializeOutput {
   type: 'initialize';
-  totalSessions: number;
-  currentSession: number;
-  sessionInfo: { id: string; name: string };
-  payload: Session;
+  sessions: History['sessions'];
+  payload: 'configurationNeeded' | 'readyToUse';
 }
 
 interface PromptOutput {
