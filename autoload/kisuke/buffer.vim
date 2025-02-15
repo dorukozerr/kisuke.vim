@@ -17,59 +17,59 @@ func! kisuke#buffer#create()
 
   let g:kisuke.state.buf_nr = bufnr('%')
 
+  "  setlocal
+  "        \ buftype=nofile
+  "        \ bufhidden=hide
+  "        \ noswapfile
+  "        \ nobuflisted
+  "        \ nowrap
+  "        \ nonumber
+  "        \ norelativenumber
+  "        \ filetype=kisuke_menu
+  "
+  "  call appendbufline(g:kisuke.state.buf_nr, 0, [
+  "        \ '•• ━━━━━━━━━━ ⟡ KISUKE ⟡ ━━━━━━━━━━ ••',
+  "        \ ' ',
+  "        \ '➤ Start new chat',
+  "        \ '➤ Load previous chat',
+  "        \ '➤ Change AI model',
+  "        \ '➤ Configure settings',
+  "        \ '➤ View help',
+  "        \ ' ',
+  "        \ 'Press Enter to select an option'
+  "        \])
+  "
+  "  normal! gg3j
+  "  setlocal nomodifiable
+  "
+  "  nnoremap <buffer> <CR> :call kisuke#buffer#handle_menu_item_selection()<CR>
+  "  nnoremap <buffer> j j
+  "  nnoremap <buffer> k k
+
+
   setlocal
-        \ buftype=nofile
-        \ bufhidden=hide
+        \ buftype=prompt
         \ noswapfile
         \ nobuflisted
-        \ nowrap
         \ nonumber
         \ norelativenumber
-        \ filetype=kisuke_menu
 
-  call appendbufline(g:kisuke.state.buf_nr, 0, [
-        \ '•• ━━━━━━━━━━ ⟡ KISUKE ⟡ ━━━━━━━━━━ ••',
-        \ ' ',
-        \ '➤ Start new chat',
-        \ '➤ Load previous chat',
-        \ '➤ Change AI model',
-        \ '➤ Configure settings',
-        \ '➤ View help',
-        \ ' ',
-        \ 'Press Enter to select an option'
-        \])
+  call kisuke#syntax#setup()
 
-  normal! gg3j
-  setlocal nomodifiable
+  call prompt_setprompt(g:kisuke.state.buf_nr, 'Prompt > ')
+  call prompt_setcallback(g:kisuke.state.buf_nr, function('kisuke#buffer#on_submit'))
+  call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode({ 'type': 'initialize' }))
 
-  nnoremap <buffer> <CR> :call kisuke#buffer#handle_menu_item_selection()<CR>
-  nnoremap <buffer> j j
-  nnoremap <buffer> k k
+  augroup g:kisuke.state.buf_name
+    autocmd!
+    autocmd TextChanged,TextChangedI <buffer> setlocal nomodified
+  augroup END
 
-
-  " setlocal
-  "       \ buftype=prompt
-  "       \ noswapfile
-  "       \ nobuflisted
-  "       \ nonumber
-  "       \ norelativenumber
-
-  " call kisuke#syntax#setup()
-
-  " call prompt_setprompt(g:kisuke.state.buf_nr, 'Prompt > ')
-  " call prompt_setcallback(g:kisuke.state.buf_nr, function('kisuke#buffer#on_submit'))
-  " call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode({ 'type': 'initialize' }))
-
-  " augroup g:kisuke.state.buf_name
-  "   autocmd!
-  "   autocmd TextChanged,TextChangedI <buffer> setlocal nomodified
-  " augroup END
-
-  " augroup KisukeSyntax
-  "   autocmd!
-  "   autocmd BufEnter,TextChanged <buffer>
-  "         \ let b:syntax_setup_done = 0 | call kisuke#syntax#setup()
-  " augroup END
+  augroup KisukeSyntax
+    autocmd!
+    autocmd BufEnter,TextChanged <buffer>
+          \ let b:syntax_setup_done = 0 | call kisuke#syntax#setup()
+  augroup END
 endfunc
 
 func! kisuke#buffer#focus(payload = v:null)
@@ -81,9 +81,9 @@ func! kisuke#buffer#focus(payload = v:null)
     call win_gotoid(l:wid)
   endif
 
-  " if a:payload != v:null
-  "   call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(a:payload))
-  " endif
+  if a:payload != v:null
+    call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(a:payload))
+  endif
 endfunc
 
 func! kisuke#buffer#handle_menu_item_selection() abort
