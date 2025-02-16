@@ -23,16 +23,11 @@ let anthropicClient: Anthropic | null = null;
 let currentSessionIndex: number = 0;
 
 const setupKisukeFiles = async () => {
-  const sessionId = randomBytes(16).toString('hex');
-
   await writeFile(
     join(configDir, 'history.json'),
     JSON.stringify({ sessions: [] })
   );
-  await writeFile(
-    join(configDir, `${sessionId}.json`),
-    JSON.stringify(initialSessionData)
-  );
+
   await writeFile(
     join(configDir, 'config.json'),
     JSON.stringify({
@@ -77,12 +72,6 @@ stdin.on('data', async (data: string) => {
       await readFile(join(configDir, 'config.json'), 'utf8')
     ) as ConfigFile;
 
-    // if (anthropicClient === null) {
-    //   anthropicClient = new Anthropic({
-    //     apiKey: configFile.apiKey
-    //   });
-    // }
-
     const event = JSON.parse(data) as Event;
 
     if (event.type === 'initialize') {
@@ -93,57 +82,84 @@ stdin.on('data', async (data: string) => {
       ) {
         sendResponse({
           type: 'initialize',
-          payload: 'configurationNeeded'
+          payload: 'invalidConfig'
         });
 
         return;
       }
+
+      anthropicClient = new Anthropic({
+        apiKey: configFile.apiKeys.anthropicApiKey
+      });
 
       sendResponse({
         type: 'initialize',
         payload: 'readyToUse',
         totalSessions: history.sessions.length
       });
-
-      // const latestSessionIndex = history.sessions.length - 1;
-      // const sessionInfo = history.sessions[latestSessionIndex];
-      // const session = await getSession(sessionInfo.id);
-      //
-      // currentSessionIndex = latestSessionIndex;
-      //
-      // sendResponse({
-      //   type: 'initialize',
-      //   totalSessions: history.sessions.length,
-      //   currentSession: currentSessionIndex + 1,
-      //   sessionInfo,
-      //   payload: session
-      // });
-      //
-      //  if (!configFile.provider || !configFile.model) {
-      //    sendResponse({
-      //      type: 'initialize',
-      //      sessions: history.sessions,
-      //      payload: 'configurationNeeded'
-      //    });
-      //  } else if (
-      //    (configFile.provider === 'anthropic' &&
-      //      !configFile.apiKeys.anthropicApiKey) ||
-      //    (configFile.provider === 'openAi' && !configFile.apiKeys.openAiApiKey)
-      //  ) {
-      //    sendResponse({
-      //      type: 'initialize',
-      //      sessions: history.sessions,
-      //      payload: 'configurationNeeded'
-      //    });
-      //  } else {
-      //  }
     }
 
-    if(event.type === 'createNewSession' {}
+    if (event.type === 'createNewSession') {
+      const sessionId = randomBytes(16).toString('hex');
 
-    if(event.type === 'loadLastSession' {}
+      await writeFile(
+        join(configDir, 'history.json'),
+        JSON.stringify({
+          sessions: [{ id: sessionId, name: 'Blank session...' }]
+        })
+      );
 
-    if(event.type === 'listAllSessions' {}
+      await writeFile(
+        join(configDir, `${sessionId}.json`),
+        JSON.stringify(initialSessionData)
+      );
+
+      sendResponse({
+        type: 'createNewSession',
+        payload: initialSessionData,
+        sessionId
+      });
+    }
+
+    if (event.type === 'loadLastSession') {
+      const latestSessionIndex = history.sessions.length - 1;
+      const sessionInfo = history.sessions[latestSessionIndex];
+      const session = await getSession(sessionInfo.id);
+
+      currentSessionIndex = latestSessionIndex;
+
+      sendResponse({
+        type: 'loadLastSession',
+        payload: session,
+        sessionId: sessionInfo.id,
+        sessionIndex: latestSessionIndex
+      });
+    }
+
+    if (event.type === 'listAllSessions') {
+      sendResponse({
+        type: 'listAllSessions',
+        payload: history
+      });
+    }
+
+    if (event.type === 'loadSession') {
+      const sessionId = event.sessionId;
+      const session = await getSession(sessionId);
+
+      const sessionIndex = history.sessions.findIndex(
+        ({ id }) => id === sessionId
+      );
+
+      currentSessionIndex = sessionIndex;
+
+      sendResponse({
+        type: 'loadSession',
+        payload: session,
+        sessionIndex: sessionIndex,
+        sessionId
+      });
+    }
 
     if (event.type === 'prompt') {
       const session = await getSession(event.sessionId);
@@ -175,6 +191,25 @@ stdin.on('data', async (data: string) => {
         );
       }
 
+      if (!anthropicClient) {
+        sendResponse({
+          type: 'response',
+          payload: 'response_start'
+        });
+        sendResponse({
+          type: 'response',
+          payload: 'LLM Client is not set'
+        });
+        sendResponse({
+          type: 'response',
+          payload: 'stream_end'
+        });
+
+        return;
+      }
+
+      let sessionName = '';
+
       const stream = anthropicClient.messages.stream({
         model: 'claude-3-5-sonnet-latest',
         max_tokens: 4096,
@@ -199,11 +234,21 @@ My prompt is => ${event.payload}`
 
       try {
         for await (const chunk of stream) {
-          if (chunk.type === 'content_block_delta') {
-            sendResponse({
-              type: 'response',
-              payload: (chunk.delta as TextDelta).text
-            });
+          let temp = '';
+          temp += chunk;
+          if (
+            temp.split('\n').length === 3 &&
+            temp.split('\n')[0] === '$$$' &&
+            temp.split('\n')[2] === '$$$'
+          ) {
+            sessionName = temp.split('\n')[1];
+          } else {
+            if (chunk.type === 'content_block_delta') {
+              sendResponse({
+                type: 'response',
+                payload: (chunk.delta as TextDelta).text
+              });
+            }
           }
         }
       } catch (streamError) {
@@ -234,28 +279,21 @@ My prompt is => ${event.payload}`
           ]
         })
       );
-    }
 
-    if (event.type === 'newSession') {
-      const sessionId = randomBytes(16).toString('hex');
-
-      history.sessions.push({ id: sessionId, name: sessionId });
-
-      await writeFile(join(configDir, 'history.json'), JSON.stringify(history));
       await writeFile(
-        join(configDir, `${sessionId}.json`),
-        JSON.stringify(initialSessionData)
+        join(configDir, 'history.json'),
+        JSON.stringify({
+          sessions: [
+            {
+              sessions: history.sessions.map(({ id, name }) =>
+                id === event.sessionId
+                  ? { id, name: sessionName }
+                  : { id, name }
+              )
+            }
+          ]
+        })
       );
-
-      currentSessionIndex = history.sessions.length - 1;
-
-      sendResponse({
-        type: 'newSession',
-        totalSessions: history.sessions.length,
-        currentSession: history.sessions.length,
-        sessionInfo: { id: sessionId, name: sessionId },
-        payload: initialSessionData
-      });
     }
 
     if (event.type === 'nextSession') {
@@ -267,7 +305,7 @@ My prompt is => ${event.payload}`
 
         sendResponse({
           type: 'switchSession',
-          currentSession: currentSessionIndex + 1,
+          sessionIndex: currentSessionIndex + 1,
           sessionInfo,
           payload: session
         });
@@ -279,7 +317,7 @@ My prompt is => ${event.payload}`
 
         sendResponse({
           type: 'switchSession',
-          currentSession: currentSessionIndex + 1,
+          sessionIndex: currentSessionIndex + 1,
           sessionInfo,
           payload: session
         });
@@ -295,7 +333,7 @@ My prompt is => ${event.payload}`
 
         sendResponse({
           type: 'switchSession',
-          currentSession: currentSessionIndex + 1,
+          sessionIndex: currentSessionIndex + 1,
           sessionInfo,
           payload: session
         });
@@ -307,7 +345,7 @@ My prompt is => ${event.payload}`
 
         sendResponse({
           type: 'switchSession',
-          currentSession: currentSessionIndex + 1,
+          sessionIndex: currentSessionIndex + 1,
           sessionInfo,
           payload: session
         });
@@ -321,38 +359,10 @@ My prompt is => ${event.payload}`
 
       await unlink(join(configDir, `${event.payload}.json`));
 
-      if (history.sessions.length === 0) {
-        const sessionId = randomBytes(16).toString('hex');
-
-        history.sessions = [{ id: sessionId, name: sessionId }];
-
-        await writeFile(
-          join(configDir, 'history.json'),
-          JSON.stringify({ sessions: [{ id: sessionId, name: sessionId }] })
-        );
-        await writeFile(
-          join(configDir, `${sessionId}.json`),
-          JSON.stringify(initialSessionData)
-        );
-      } else {
-        await writeFile(
-          join(configDir, 'history.json'),
-          JSON.stringify(history)
-        );
-      }
-
-      const latestSessionIndex = history.sessions.length - 1;
-      const sessionInfo = history.sessions[latestSessionIndex];
-      const session = await getSession(sessionInfo.id);
-
-      currentSessionIndex = latestSessionIndex;
-
       sendResponse({
         type: 'initialize',
-        totalSessions: history.sessions.length,
-        currentSession: currentSessionIndex + 1,
-        sessionInfo,
-        payload: session
+        payload: 'readyToUse',
+        totalSessions: history.sessions.length
       });
     }
   } catch (error) {

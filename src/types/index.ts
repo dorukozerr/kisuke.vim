@@ -29,7 +29,7 @@ interface ListAllSessionsEvent {
 }
 
 interface LoadSessionEvent {
-  type: 'LoadSessionEvent';
+  type: 'loadSession';
   sessionId: string;
 }
 
@@ -42,10 +42,6 @@ interface PromptEvent {
     scope: 'all' | 'block';
     highlighted_code?: string;
   }[];
-}
-
-interface NewSessionEvent {
-  type: 'newSession';
 }
 
 interface SwitchSessionEvent {
@@ -71,14 +67,13 @@ export type Event =
   | ListAllSessionsEvent
   | LoadSessionEvent
   | PromptEvent
-  | NewSessionEvent
   | SwitchSessionEvent
   | RenameSessionEvent
   | DeleteSessionEvent;
 
 interface InitializeOutput {
   type: 'initialize';
-  payload: 'configurationNeeded' | 'readyToUse';
+  payload: 'invalidConfig' | 'readyToUse';
   totalSessions?: number;
 }
 
@@ -92,10 +87,11 @@ interface LoadLastSessionOutput {
   type: 'loadLastSession';
   payload: Session;
   sessionId: string;
+  sessionIndex: number;
 }
 
 interface ListAllSessionsOutput {
-  type: 'createNewSession';
+  type: 'listAllSessions';
   payload: History;
 }
 
@@ -103,6 +99,7 @@ interface LoadSessionOutput {
   type: 'loadSession';
   payload: Session;
   sessionId: string;
+  sessionIndex: number;
 }
 
 interface PromptOutput {
@@ -110,17 +107,9 @@ interface PromptOutput {
   payload: string;
 }
 
-interface NewSessionOutput {
-  type: 'newSession';
-  totalSessions: number;
-  currentSession: number;
-  sessionInfo: { id: string; name: string };
-  payload: Session;
-}
-
 interface SwitchSessionOuput {
   type: 'switchSession';
-  currentSession: number;
+  sessionIndex: number;
   sessionInfo: { id: string; name: string };
   payload: Session;
 }
@@ -138,6 +127,5 @@ export type Output =
   | LoadSessionOutput
   | LoadSessionOutput
   | PromptOutput
-  | NewSessionOutput
   | SwitchSessionOuput
   | ErrorOutput;
