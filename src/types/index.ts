@@ -1,6 +1,10 @@
 export interface ConfigFile {
-  provider: 'anthropic' | '';
-  model: 'sonnet' | '';
+  provider: 'Anthropic' | '';
+  model:
+    | 'claude-haiku-3-5-latest'
+    | 'claude-sonnet-3-5-latest'
+    | 'claude-3-opus-latest'
+    | '';
   apiKeys: { anthropicApiKey: string; openAiApiKey: string };
 }
 

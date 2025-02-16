@@ -5,20 +5,32 @@ let s:kisuke.state = {
       \ }
 
 func! kisuke#handlers#initialize(reply)
+  " silent! %delete
+
+  " let g:kisuke.state.session_id = a:reply.sessionInfo.id
+  " let g:kisuke.state.total_sessions = a:reply.totalSessions
+
+  " call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> ' . 'Kisuke initialized')
+  " call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> ' . 'Session ' . a:reply.currentSession . '/' . g:kisuke.state.total_sessions)
+  " call s:process_session_history(a:reply.payload.messages)
+
+  " if len(g:kisuke.state.marked_files)
+  "   call kisuke#buffer#render_marked_content()
+  " endif
+
+  " call kisuke#syntax#setup()
+
   silent! %delete
 
-  let g:kisuke.state.session_id = a:reply.sessionInfo.id
-  let g:kisuke.state.total_sessions = a:reply.totalSessions
+  echom a:reply
 
-  call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> ' . 'Kisuke initialized')
-  call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> ' . 'Session ' . a:reply.currentSession . '/' . g:kisuke.state.total_sessions)
-  call s:process_session_history(a:reply.payload.messages)
-
-  if len(g:kisuke.state.marked_files)
-    call kisuke#buffer#render_marked_content()
+  if a:reply.payload ==# 'invalidConfig'
+    call appendbufline(g:kisuke.state.buf_nr, 0, kisuke#menu#unconfigured_menu())
+  elseif a:reply.payload ==# 'readyToUse'
+    call appendbufline(g:kisuke.state.buf_nr, 0, kisuke#menu#main())
   endif
 
-  call kisuke#syntax#setup()
+  setlocal nomodifiable
 endfunc
 
 func! kisuke#handlers#response(reply)

@@ -76,8 +76,10 @@ stdin.on('data', async (data: string) => {
 
     if (event.type === 'initialize') {
       if (
-        configFile.provider !== 'anthropic' ||
-        configFile.model !== 'sonnet' ||
+        configFile.provider !== 'Anthropic' ||
+        (configFile.model !== 'claude-haiku-3-5-latest' &&
+          configFile.model !== 'claude-sonnet-3-5-latest' &&
+          configFile.model !== 'claude-3-opus-latest') ||
         configFile.apiKeys.anthropicApiKey === ''
       ) {
         sendResponse({
@@ -211,7 +213,7 @@ stdin.on('data', async (data: string) => {
       let sessionName = '';
 
       const stream = anthropicClient.messages.stream({
-        model: 'claude-3-5-sonnet-latest',
+        model: configFile.model,
         max_tokens: 4096,
         messages: [
           { role: 'assistant', content: BaseAIInstruction },

@@ -27,19 +27,7 @@ func! kisuke#buffer#create()
         \ norelativenumber
         \ filetype=kisuke_menu
 
-  call appendbufline(g:kisuke.state.buf_nr, 0, [
-        \ '> Welcome to Urahara candy shop',
-        \ ' ',
-        \ '➤ Create new session',
-        \ '➤ Load last session',
-        \ '➤ List all sessions',
-        \ '➤ Configure settings',
-        \ ' ',
-        \ 'Press Enter to select an option'
-        \])
-
-  normal! gg3j
-  setlocal nomodifiable
+  call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode({ 'type': 'initialize' }))
 
   nnoremap <buffer> <CR> :call kisuke#buffer#handle_menu_item_selection()<CR>
   nnoremap <buffer> j j
@@ -56,7 +44,6 @@ func! kisuke#buffer#create()
   "
   "  call prompt_setprompt(g:kisuke.state.buf_nr, 'Prompt > ')
   "  call prompt_setcallback(g:kisuke.state.buf_nr, function('kisuke#buffer#on_submit'))
-  "  call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode({ 'type': 'initialize' }))
 
   augroup g:kisuke.state.buf_name
     autocmd!
@@ -95,14 +82,68 @@ func! kisuke#buffer#handle_menu_item_selection() abort
     return
   endif
 
-  if menu_item ==# 'Create new session'
+  let l:prevMenuState = v:null
+  let l:config = {}
+
+  if menu_item ==# 'Select Provider'
+    setlocal modifiable
+    silent! %delete
+    call appendbufline(g:kisuke.state.buf_nr, 0, kisuke#menu#provider_selection())
+    setlocal nomodifiable
+  elseif menu_item ==# 'Anthropic'
+    setlocal modifiable
+    silent! %delete
+    let l:config.provider = 'Anthropic'
+    call appendbufline(g:kisuke.state.buf_nr, 0, kisuke#menu#model_selection())
+    setlocal nomodifiable
+  elseif menu_item ==# 'claude-haiku-3-5-latest'
+    setlocal modifiable
+    silent! %delete
+    let l:config.model = 'claude-haiku-3-5-latest'
+    call appendbufline(g:kisuke.state.buf_nr, 0, kisuke#menu#api_key_setup())
+    setlocal nomodifiable
+  elseif menu_item ==# 'claude-sonnet-3-5-latest'
+    setlocal modifiable
+    silent! %delete
+    let l:config.model = 'claude-sonnet-3-5-latest'
+    call appendbufline(g:kisuke.state.buf_nr, 0, kisuke#menu#api_key_setup())
+    setlocal nomodifiable
+  elseif menu_item ==# 'claude-opust-latest'
+    setlocal modifiable
+    silent! %delete
+    let l:config.model = 'claude-opust-latest'
+    call appendbufline(g:kisuke.state.buf_nr, 0, kisuke#menu#api_key_setup())
+    setlocal nomodifiable
+  elseif menu_item ==# 'Enter API Key'
+    setlocal modifiable
+    let l:api_key = input('Enter your Claude API key: ')
+
+    let l:checks = [
+          \ {'condition': g:kisuke.state.job == v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
+          \ {'condition': empty(l:api_key), 'message': 'Please provide a valid api key'},
+          \ ]
+
+    if kisuke#utils#validate(l:checks)
+      echom l:config
+      call kisuke#buffer#focus({ 'type': 'saveConfig', 'payload': json_encode(l:config) })
+
+      redraw!
+
+      echom 'Api key saved'
+    endif
+    setlocal nomodifiable
+  elseif menu_item ==# 'Create new session'
     echo 'Selected: Create new session'
   elseif menu_item ==# 'Load last session'
     echo 'Selected: Load last session'
   elseif menu_item ==# 'List all sessions'
     echo 'Selected: List all sessions'
   elseif menu_item ==# 'Configure settings'
-    echo 'Selected: Configure settings'
+    silent! %delete
+    call appendbufline(g:kisuke.state.buf_nr, 0, kisuke#menu#provider_selection())
+    setlocal nomodifiable
+  elseif menu_item ==# 'Back'
+    setlocal nomodifiable
   else
     echo 'Unhandled menu option: ' . menu_item
   endif
