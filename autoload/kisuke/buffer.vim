@@ -17,48 +17,46 @@ func! kisuke#buffer#create()
 
   let g:kisuke.state.buf_nr = bufnr('%')
 
-  "  setlocal
-  "        \ buftype=nofile
-  "        \ bufhidden=hide
-  "        \ noswapfile
-  "        \ nobuflisted
-  "        \ nowrap
-  "        \ nonumber
-  "        \ norelativenumber
-  "        \ filetype=kisuke_menu
-  "
-  "  call appendbufline(g:kisuke.state.buf_nr, 0, [
-  "        \ '•• ━━━━━━━━━━ ⟡ KISUKE ⟡ ━━━━━━━━━━ ••',
-  "        \ ' ',
-  "        \ '➤ Start new chat',
-  "        \ '➤ Load previous chat',
-  "        \ '➤ Change AI model',
-  "        \ '➤ Configure settings',
-  "        \ '➤ View help',
-  "        \ ' ',
-  "        \ 'Press Enter to select an option'
-  "        \])
-  "
-  "  normal! gg3j
-  "  setlocal nomodifiable
-  "
-  "  nnoremap <buffer> <CR> :call kisuke#buffer#handle_menu_item_selection()<CR>
-  "  nnoremap <buffer> j j
-  "  nnoremap <buffer> k k
-
-
   setlocal
-        \ buftype=prompt
+        \ buftype=nofile
+        \ bufhidden=hide
         \ noswapfile
         \ nobuflisted
+        \ nowrap
         \ nonumber
         \ norelativenumber
+        \ filetype=kisuke_menu
 
-  call kisuke#syntax#setup()
+  call appendbufline(g:kisuke.state.buf_nr, 0, [
+        \ '> Welcome to Urahara candy shop',
+        \ ' ',
+        \ '➤ Create new session',
+        \ '➤ Load last session',
+        \ '➤ List all sessions',
+        \ '➤ Configure settings',
+        \ ' ',
+        \ 'Press Enter to select an option'
+        \])
 
-  call prompt_setprompt(g:kisuke.state.buf_nr, 'Prompt > ')
-  call prompt_setcallback(g:kisuke.state.buf_nr, function('kisuke#buffer#on_submit'))
-  call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode({ 'type': 'initialize' }))
+  normal! gg3j
+  setlocal nomodifiable
+
+  nnoremap <buffer> <CR> :call kisuke#buffer#handle_menu_item_selection()<CR>
+  nnoremap <buffer> j j
+  nnoremap <buffer> k k
+
+  "  setlocal
+  "        \ buftype=prompt
+  "        \ noswapfile
+  "        \ nobuflisted
+  "        \ nonumber
+  "        \ norelativenumber
+  "
+  "  call kisuke#syntax#setup()
+  "
+  "  call prompt_setprompt(g:kisuke.state.buf_nr, 'Prompt > ')
+  "  call prompt_setcallback(g:kisuke.state.buf_nr, function('kisuke#buffer#on_submit'))
+  "  call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode({ 'type': 'initialize' }))
 
   augroup g:kisuke.state.buf_name
     autocmd!
@@ -90,22 +88,21 @@ func! kisuke#buffer#handle_menu_item_selection() abort
   let line = getline('.')
 
   let menu_item = matchstr(line, '➤\s\zs.*$')
+
   if empty(menu_item)
     echo 'Not a valid menu option'
 
     return
   endif
 
-  if menu_item ==# 'Start new chat'
-    echo 'Selected: Start new chat'
-  elseif menu_item ==# 'Load previous chat'
-    echo 'Selected: Load previous chat'
-  elseif menu_item ==# 'Change AI model'
-    echo 'Selected: Change AI model'
+  if menu_item ==# 'Create new session'
+    echo 'Selected: Create new session'
+  elseif menu_item ==# 'Load last session'
+    echo 'Selected: Load last session'
+  elseif menu_item ==# 'List all sessions'
+    echo 'Selected: List all sessions'
   elseif menu_item ==# 'Configure settings'
     echo 'Selected: Configure settings'
-  elseif menu_item ==# 'View help'
-    echo 'Selected: View help'
   else
     echo 'Unhandled menu option: ' . menu_item
   endif
@@ -117,7 +114,7 @@ func! kisuke#buffer#mark_focused_file()
   let l:checks = [
         \ {'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
         \ {'condition': g:kisuke.state.is_pending, 'message': 'Cannot mark a file while server generating response'},
-        \ {'condition': bufnr('%') ==# g:kisuke.state.buf_nr, 'message': 'Cannot mark Kisuke chat buffer'},
+        \ {'condition': bufnr('%') ==# g:kisuke.state.buf_nr, 'message': 'Cannot mark Kisuke session buffer'},
         \ {'condition': bufwinid(g:kisuke.state.buf_nr) ==# -1, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
         \ {'condition': empty(l:current_file), 'message': 'This file cannot be marked'},
         \ ]
@@ -155,7 +152,7 @@ func! kisuke#buffer#mark_highlighted_code() range
   let l:checks = [
         \ {'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
         \ {'condition': g:kisuke.state.is_pending, 'message': 'Cannot mark code while server generating response'},
-        \ {'condition': bufnr('%') ==# g:kisuke.state.buf_nr, 'message': 'Cannot mark Kisuke chat buffer'},
+        \ {'condition': bufnr('%') ==# g:kisuke.state.buf_nr, 'message': 'Cannot mark Kisuke session buffer'},
         \ {'condition': bufwinid(g:kisuke.state.buf_nr) ==# -1, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
         \ {'condition': empty(l:current_file), 'message': 'This file cannot be marked'},
         \ ]

@@ -6,7 +6,7 @@ import { existsSync } from 'fs';
 import { Anthropic } from '@anthropic-ai/sdk';
 import { TextDelta } from '@anthropic-ai/sdk/resources';
 
-import { History, Session, Event, Output } from './types';
+import { ConfigFile, History, Session, Event, Output } from './types';
 import { initialSessionData, BaseAIInstruction } from './utils/initials';
 
 const stdin = process.stdin;
@@ -75,31 +75,50 @@ stdin.on('data', async (data: string) => {
 
     const configFile = JSON.parse(
       await readFile(join(configDir, 'config.json'), 'utf8')
-    );
+    ) as ConfigFile;
 
-    if (anthropicClient === null) {
-      anthropicClient = new Anthropic({
-        apiKey: configFile.apiKey
-      });
-    }
+    // if (anthropicClient === null) {
+    //   anthropicClient = new Anthropic({
+    //     apiKey: configFile.apiKey
+    //   });
+    // }
 
     const event = JSON.parse(data) as Event;
 
     if (event.type === 'initialize') {
-      const latestSessionIndex = history.sessions.length - 1;
-      const sessionInfo = history.sessions[latestSessionIndex];
-      const session = await getSession(sessionInfo.id);
+      if (
+        configFile.provider !== 'anthropic' ||
+        configFile.model !== 'sonnet' ||
+        configFile.apiKeys.anthropicApiKey === ''
+      ) {
+        sendResponse({
+          type: 'initialize',
+          payload: 'configurationNeeded'
+        });
 
-      currentSessionIndex = latestSessionIndex;
+        return;
+      }
 
       sendResponse({
         type: 'initialize',
-        totalSessions: history.sessions.length,
-        currentSession: currentSessionIndex + 1,
-        sessionInfo,
-        payload: session
+        payload: 'readyToUse',
+        totalSessions: history.sessions.length
       });
 
+      // const latestSessionIndex = history.sessions.length - 1;
+      // const sessionInfo = history.sessions[latestSessionIndex];
+      // const session = await getSession(sessionInfo.id);
+      //
+      // currentSessionIndex = latestSessionIndex;
+      //
+      // sendResponse({
+      //   type: 'initialize',
+      //   totalSessions: history.sessions.length,
+      //   currentSession: currentSessionIndex + 1,
+      //   sessionInfo,
+      //   payload: session
+      // });
+      //
       //  if (!configFile.provider || !configFile.model) {
       //    sendResponse({
       //      type: 'initialize',
@@ -117,13 +136,14 @@ stdin.on('data', async (data: string) => {
       //      payload: 'configurationNeeded'
       //    });
       //  } else {
-      //    sendResponse({
-      //      type: 'initialize',
-      //      sessions: history.sessions,
-      //      payload: 'readyToUse'
-      //    });
       //  }
     }
+
+    if(event.type === 'createNewSession' {}
+
+    if(event.type === 'loadLastSession' {}
+
+    if(event.type === 'listAllSessions' {}
 
     if (event.type === 'prompt') {
       const session = await getSession(event.sessionId);
