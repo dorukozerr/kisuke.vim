@@ -49,10 +49,18 @@ export type Event =
   | RenameSessionEvent
   | DeleteSessionEvent;
 
+// interface InitializeOutput {
+//   type: 'initialize';
+//   sessions: History['sessions'];
+//   payload: 'configurationNeeded' | 'readyToUse';
+// }
+
 interface InitializeOutput {
   type: 'initialize';
-  sessions: History['sessions'];
-  payload: 'configurationNeeded' | 'readyToUse';
+  totalSessions: number;
+  currentSession: number;
+  sessionInfo: { id: string; name: string };
+  payload: Session;
 }
 
 interface PromptOutput {

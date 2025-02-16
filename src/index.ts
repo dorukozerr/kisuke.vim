@@ -86,41 +86,43 @@ stdin.on('data', async (data: string) => {
     const event = JSON.parse(data) as Event;
 
     if (event.type === 'initialize') {
-      // const latestSessionIndex = history.sessions.length - 1;
-      // const sessionInfo = history.sessions[latestSessionIndex];
-      // const session = await getSession(sessionInfo.id);
-      // currentSessionIndex = latestSessionIndex;
-      // sendResponse({
-      //   type: 'initialize',
-      //   totalSessions: history.sessions.length,
-      //   currentSession: currentSessionIndex + 1,
-      //   sessionInfo,
-      //   payload: session
-      // });
+      const latestSessionIndex = history.sessions.length - 1;
+      const sessionInfo = history.sessions[latestSessionIndex];
+      const session = await getSession(sessionInfo.id);
 
-      if (!configFile.provider || !configFile.model) {
-        sendResponse({
-          type: 'initialize',
-          sessions: history.sessions,
-          payload: 'configurationNeeded'
-        });
-      } else if (
-        (configFile.provider === 'anthropic' &&
-          !configFile.apiKeys.anthropicApiKey) ||
-        (configFile.provider === 'openAi' && !configFile.apiKeys.openAiApiKey)
-      ) {
-        sendResponse({
-          type: 'initialize',
-          sessions: history.sessions,
-          payload: 'configurationNeeded'
-        });
-      } else {
-        sendResponse({
-          type: 'initialize',
-          sessions: history.sessions,
-          payload: 'readyToUse'
-        });
-      }
+      currentSessionIndex = latestSessionIndex;
+
+      sendResponse({
+        type: 'initialize',
+        totalSessions: history.sessions.length,
+        currentSession: currentSessionIndex + 1,
+        sessionInfo,
+        payload: session
+      });
+
+      //  if (!configFile.provider || !configFile.model) {
+      //    sendResponse({
+      //      type: 'initialize',
+      //      sessions: history.sessions,
+      //      payload: 'configurationNeeded'
+      //    });
+      //  } else if (
+      //    (configFile.provider === 'anthropic' &&
+      //      !configFile.apiKeys.anthropicApiKey) ||
+      //    (configFile.provider === 'openAi' && !configFile.apiKeys.openAiApiKey)
+      //  ) {
+      //    sendResponse({
+      //      type: 'initialize',
+      //      sessions: history.sessions,
+      //      payload: 'configurationNeeded'
+      //    });
+      //  } else {
+      //    sendResponse({
+      //      type: 'initialize',
+      //      sessions: history.sessions,
+      //      payload: 'readyToUse'
+      //    });
+      //  }
     }
 
     if (event.type === 'prompt') {
