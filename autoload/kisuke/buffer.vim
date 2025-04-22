@@ -6,7 +6,7 @@ func! kisuke#buffer#open()
   let g:kisuke.state.is_pending = 1
 
   if bufexists(g:kisuke.state.buf_nr)
-    call kisuke#buffer#focus({ 'type': 'initialize' })
+    call kisuke#buffer#restore({ 'type': 'initialize' })
   else
     call kisuke#buffer#create()
   endif
@@ -30,7 +30,7 @@ func! kisuke#buffer#create()
   call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode({ 'type': 'initialize' }))
 endfunc
 
-func! kisuke#buffer#focus(payload = v:null)
+func! kisuke#buffer#restore(payload = v:null)
   let l:wid = bufwinid(g:kisuke.state.buf_nr)
 
   if l:wid ==# -1
@@ -59,7 +59,7 @@ func! kisuke#buffer#mark_focused_file()
     let l:file_index = -1
     let l:index = 0
 
-    call kisuke#buffer#focus()
+    call kisuke#buffer#restore()
     call kisuke#buffer#clear_marked_content()
 
     for entry in g:kisuke.state.marked_files
@@ -97,7 +97,7 @@ func! kisuke#buffer#mark_highlighted_code() range
     let l:highlighted = getline(a:firstline, a:lastline)
     let l:file_type = &filetype
 
-    call kisuke#buffer#focus()
+    call kisuke#buffer#restore()
     call kisuke#buffer#clear_marked_content()
 
     call add(g:kisuke.state.marked_code_blocks, {
@@ -122,7 +122,7 @@ func! kisuke#buffer#remove_last_marked_code_block()
         \ ]
 
   if kisuke#utils#validate(l:checks)
-    call kisuke#buffer#focus()
+    call kisuke#buffer#restore()
     call kisuke#buffer#clear_marked_content()
 
     call remove(g:kisuke.state.marked_code_blocks, len(g:kisuke.state.marked_code_blocks) - 1)
