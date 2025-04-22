@@ -20,7 +20,6 @@ func! kisuke#buffer#create()
   setlocal
         \ buftype=nofile
         \ bufhidden=hide
-        \ nomodifiable
         \ noswapfile
         \ nobuflisted
         \ nowrap
