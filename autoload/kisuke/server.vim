@@ -56,7 +56,7 @@ func! kisuke#server#configure(provider, model)
 
     redraw!
 
-    echom a:provider . ' ' . a:model . ' API key saved'
+    echom a:provider . ' API key saved'
   endif
 endfunc
 

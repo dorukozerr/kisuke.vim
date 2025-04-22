@@ -23,24 +23,20 @@ let anthropicClient: Anthropic | null = null;
 let currentSessionIndex: number = 0;
 
 const setupKisukeFiles = async () => {
-  const sessionId = randomBytes(16).toString('hex');
-
-  await writeFile(
-    join(configDir, 'history.json'),
-    JSON.stringify({ sessions: [] })
-  );
-  await writeFile(
-    join(configDir, `${sessionId}.json`),
-    JSON.stringify(initialSessionData)
-  );
-  await writeFile(
-    join(configDir, 'config.json'),
-    JSON.stringify({
-      provider: '',
-      model: '',
-      apiKeys: { anthropicApiKey: '' }
-    })
-  );
+  await Promise.all([
+    writeFile(
+      join(configDir, 'history.json'),
+      JSON.stringify({ sessions: [] })
+    ),
+    writeFile(
+      join(configDir, 'config.json'),
+      JSON.stringify({
+        provider: '',
+        model: '',
+        apiKeys: { anthropicApiKey: '' }
+      })
+    )
+  ]);
 
   return JSON.parse(
     await readFile(join(configDir, 'history.json'), 'utf-8')
@@ -68,8 +64,6 @@ const getSession = async (sessionId: string) =>
 
 stdin.on('data', async (data: string) => {
   try {
-    const history = await getHistory();
-
     const configFile = JSON.parse(
       await readFile(join(configDir, 'config.json'), 'utf8')
     );
@@ -214,16 +208,19 @@ My prompt is => ${event.payload}`
     }
 
     if (event.type === 'new_session') {
+      const history = await getHistory();
+
       const sessionId = randomBytes(16).toString('hex');
 
       history.sessions.push({ id: sessionId, name: sessionId });
 
-      await writeFile(join(configDir, 'history.json'), JSON.stringify(history));
-      await writeFile(
-        join(configDir, `${sessionId}.json`),
-        JSON.stringify(initialSessionData)
-      );
-
+      await Promise.all([
+        writeFile(join(configDir, 'history.json'), JSON.stringify(history)),
+        writeFile(
+          join(configDir, `${sessionId}.json`),
+          JSON.stringify(initialSessionData)
+        )
+      ]);
       currentSessionIndex = history.sessions.length - 1;
 
       sendResponse({
@@ -236,6 +233,8 @@ My prompt is => ${event.payload}`
     }
 
     if (event.type === 'next_session') {
+      const history = await getHistory();
+
       if (currentSessionIndex === history.sessions.length - 1) {
         currentSessionIndex = 0;
 
@@ -264,6 +263,8 @@ My prompt is => ${event.payload}`
     }
 
     if (event.type === 'prev_session') {
+      const history = await getHistory();
+
       if (currentSessionIndex === 0) {
         currentSessionIndex = history.sessions.length - 1;
 
@@ -292,6 +293,8 @@ My prompt is => ${event.payload}`
     }
 
     if (event.type === 'delete_session') {
+      const history = await getHistory();
+
       history.sessions = history.sessions.filter(
         (session) => session.id !== event.payload
       );
@@ -303,14 +306,16 @@ My prompt is => ${event.payload}`
 
         history.sessions = [{ id: sessionId, name: sessionId }];
 
-        await writeFile(
-          join(configDir, 'history.json'),
-          JSON.stringify({ sessions: [{ id: sessionId, name: sessionId }] })
-        );
-        await writeFile(
-          join(configDir, `${sessionId}.json`),
-          JSON.stringify(initialSessionData)
-        );
+        await Promise.all([
+          writeFile(
+            join(configDir, 'history.json'),
+            JSON.stringify({ sessions: [{ id: sessionId, name: sessionId }] })
+          ),
+          writeFile(
+            join(configDir, `${sessionId}.json`),
+            JSON.stringify(initialSessionData)
+          )
+        ]);
       } else {
         await writeFile(
           join(configDir, 'history.json'),
