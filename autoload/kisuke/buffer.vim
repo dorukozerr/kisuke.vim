@@ -17,15 +17,7 @@ func! kisuke#buffer#create()
 
   let g:kisuke.state.buf_nr = bufnr('%')
 
-  setlocal
-        \ buftype=nofile
-        \ bufhidden=hide
-        \ noswapfile
-        \ nobuflisted
-        \ nowrap
-        \ nonumber
-        \ norelativenumber
-        \ filetype=kisuke_menu
+  call kisuke#buffer#prepare_menu_buffer()
 
   call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode({ 'type': 'initialize' }))
 endfunc
@@ -264,4 +256,43 @@ func! kisuke#buffer#on_submit(prompt)
 
     call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(l:payload))
   endif
+endfunc
+
+func! kisuke#buffer#prepare_chat_buffer()
+  setlocal
+        \ buftype=prompt
+        \ noswapfile
+        \ modifiable
+        \ nobuflisted
+        \ nonumber
+        \ norelativenumber
+
+  call kisuke#syntax#setup()
+
+  call prompt_setprompt(g:kisuke.state.buf_nr, 'Prompt > ')
+  call prompt_setcallback(g:kisuke.state.buf_nr, function('kisuke#buffer#on_submit'))
+
+  augroup g:kisuke.state.buf_name
+    autocmd!
+    autocmd TextChanged,TextChangedI <buffer> setlocal nomodified
+  augroup END
+
+  augroup KisukeSyntax
+    autocmd!
+    autocmd BufEnter,TextChanged <buffer>
+          \ let b:syntax_setup_done = 0 | call kisuke#syntax#setup()
+  augroup END
+endfunc
+
+func! kisuke#buffer#prepare_menu_buffer()
+  setlocal
+        \ buftype=nofile
+        \ bufhidden=hide
+        \ noswapfile
+        \ modifiable
+        \ nobuflisted
+        \ nowrap
+        \ nonumber
+        \ norelativenumber
+        \ filetype=kisuke_menu
 endfunc

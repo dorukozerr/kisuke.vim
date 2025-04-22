@@ -11,11 +11,12 @@ let s:kisuke.state = {
       \ 'menu_actions': {},
       \ 'current_provider': '',
       \ 'current_model': '',
+      \ 'session_count': 0,
       \ 'previous_chats': []
       \}
 
 func! kisuke#ui#render_buffer_menu(state, ...) abort
-  setlocal modifiable
+  call kisuke#buffer#prepare_menu_buffer()
 
   silent! %delete
 
@@ -42,6 +43,7 @@ func! kisuke#ui#render_buffer_menu(state, ...) abort
   elseif a:state ==# "eligible"
     let s:kisuke.state.current_provider = a:1
     let s:kisuke.state.current_model = a:2
+    let s:kisuke.state.session_count = a:3
 
     call appendbufline(g:kisuke.state.buf_nr, line('$'), [
           \ 'Selected Provider - ' . s:kisuke.state.current_provider,
@@ -49,8 +51,12 @@ func! kisuke#ui#render_buffer_menu(state, ...) abort
           \ ' '
           \ ])
 
-    call s:add_menu_item('Start new chat', 'kisuke#ui#create_new_session')
-    call s:add_menu_item('Load previous chats', 'kisuke#ui#load_previous_sessions')
+    call s:add_menu_item('Start new chat', 'kisuke#buffer#restore', { 'type': 'new_session' })
+
+    if s:kisuke.state.session_count > 0
+      call s:add_menu_item('Load previous chats', 'kisuke#ui#load_previous_sessions')
+    endif
+
     call s:add_menu_item('Reconfigure provider or model', 'kisuke#ui#show_provider_selection')
   elseif a:state ==# 'configure_plugin'
     call appendbufline(g:kisuke.state.buf_nr, line('$'), 'Select AI Provider:')
@@ -139,14 +145,9 @@ endfunc
 
 func! kisuke#ui#select_model(model) abort
   let s:kisuke.state.current_model = a:model
-
   let has_api_key = kisuke#server#check_api_key(s:kisuke.state.current_provider)
 
-  if has_api_key
-    call kisuke#buffer#restore({ 'type': 'initialize' })
-  else
-    call kisuke#server#configure(s:kisuke.state.current_provider, s:kisuke.state.current_model)
-  endif
+  call kisuke#server#configure(s:kisuke.state.current_provider, s:kisuke.state.current_model)
 endfunc
 
 func! kisuke#ui#show_provider_selection() abort

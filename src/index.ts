@@ -43,6 +43,16 @@ const setupKisukeFiles = async () => {
   ) as History;
 };
 
+const getConfig = async () => {
+  try {
+    return JSON.parse(await readFile(join(configDir, 'config.json'), 'utf-8'));
+  } catch {
+    await setupKisukeFiles();
+
+    return JSON.parse(await readFile(join(configDir, 'config.json'), 'utf-8'));
+  }
+};
+
 const getHistory = async () => {
   try {
     return JSON.parse(
@@ -64,19 +74,19 @@ const getSession = async (sessionId: string) =>
 
 stdin.on('data', async (data: string) => {
   try {
-    const configFile = JSON.parse(
-      await readFile(join(configDir, 'config.json'), 'utf8')
-    );
+    const configFile = await getConfig();
 
     if (anthropicClient === null) {
       anthropicClient = new Anthropic({
-        apiKey: configFile.apiKey
+        apiKey: configFile.apiKeys.anthropicApiKey
       });
     }
 
     const event = JSON.parse(data) as Event;
 
     if (event.type === 'initialize') {
+      const history = await getHistory();
+
       //  const latestSessionIndex = history.sessions.length - 1;
       //  const sessionInfo = history.sessions[latestSessionIndex];
       //  const session = await getSession(sessionInfo.id);
@@ -111,7 +121,8 @@ stdin.on('data', async (data: string) => {
           type: 'initialize',
           payload: 'eligible',
           provider: configFile.provider,
-          model: configFile.model
+          model: configFile.model,
+          session_count: history.sessions.length
         });
       }
     }
@@ -182,9 +193,9 @@ My prompt is => ${event.payload}`
           type: 'error',
           payload: `Stream error: ${streamError}`
         });
-      } finally {
-        sendResponse({ type: 'response', payload: 'stream_end' });
       }
+
+      sendResponse({ type: 'response', payload: 'stream_end' });
 
       await writeFile(
         join(configDir, `${event.sessionId}.json`),

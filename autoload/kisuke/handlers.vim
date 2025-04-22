@@ -12,7 +12,7 @@ func! kisuke#handlers#initialize(reply)
   elseif l:eligiblityState ==# 'missing_api_key'
     call kisuke#ui#render_buffer_menu('missing_api_key', a:reply.provider, a:reply.model)
   elseif l:eligiblityState ==# 'eligible'
-    call kisuke#ui#render_buffer_menu('eligible', a:reply.provider, a:reply.model)
+    call kisuke#ui#render_buffer_menu('eligible', a:reply.provider, a:reply.model, a:reply.session_count)
   endif
   "  let g:kisuke.state.session_id = a:reply.sessionInfo.id
   "  let g:kisuke.state.total_sessions = a:reply.totalSessions
@@ -71,30 +71,32 @@ func s:handle_stream(reply)
 endfunc
 
 func! kisuke#handlers#new_session(reply)
+  call kisuke#buffer#prepare_chat_buffer()
+
   silent! %delete
 
   let g:kisuke.state.session_id = a:reply.sessionInfo.id
-  let g:kisuke.state.total_sessions = a:reply.totalSessions
 
-  call setbufline(g:kisuke.state.buf_nr, 1, '> ' . 'Kisuke initialized')
-  call setbufline(g:kisuke.state.buf_nr, 2, '> ' . 'Session ' . a:reply.currentSession . '/' . g:kisuke.state.total_sessions)
+  call setbufline(g:kisuke.state.buf_nr, line('$'), '> ' . 'Kisuke Session')
 
   for entry in a:reply.payload.messages
-    call setbufline(g:kisuke.state.buf_nr, 3, ' ')
-    call setbufline(g:kisuke.state.buf_nr, 4, 'Kisuke > ' . entry.message)
+    call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
+    call appendbufline(g:kisuke.state.buf_nr, line('$'), 'Kisuke > ' . entry.message)
   endfor
 
-  call setbufline(g:kisuke.state.buf_nr, 5, ' ')
+  call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
 endfunc
 
 func! kisuke#handlers#switch_session(reply)
+  call kisuke#buffer#prepare_chat_buffer()
+
   silent! %delete
 
   let g:kisuke.state.session_id = a:reply.sessionInfo.id
   let l:line_num = 2
 
   call appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized')
-  call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . 'Session ' . a:reply.currentSession . '/' . g:kisuke.state.total_sessions)
+
   call s:process_session_history(a:reply.payload.messages)
 endfunc
 

@@ -47,6 +47,7 @@ interface InitializeOutput {
   payload: 'not_configured' | 'missing_api_key' | 'eligible';
   provider?: string;
   model?: string;
+  session_count?: number;
 }
 
 interface PromptOutput {
