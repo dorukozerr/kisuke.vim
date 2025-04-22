@@ -11,7 +11,7 @@ interface InitializeEvent {
 }
 
 interface NewSessionEvent {
-  type: 'newSession';
+  type: 'new_session';
 }
 
 interface PromptEvent {
@@ -55,7 +55,7 @@ interface PromptOutput {
 }
 
 interface NewSessionOutput {
-  type: 'newSession';
+  type: 'new_session';
   totalSessions: number;
   currentSession: number;
   sessionInfo: { id: string; name: string };
@@ -63,7 +63,7 @@ interface NewSessionOutput {
 }
 
 interface SwitchSessionOuput {
-  type: 'switchSession';
+  type: 'switch_session';
   currentSession: number;
   sessionInfo: { id: string; name: string };
   payload: Session;

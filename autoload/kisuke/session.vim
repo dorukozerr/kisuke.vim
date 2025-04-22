@@ -1,6 +1,6 @@
 func! kisuke#session#create_new_session()
   if s:check_conditions()
-    call kisuke#buffer#focus({ 'type': 'newSession' })
+    call kisuke#buffer#focus({ 'type': 'new_session' })
   endif
 endfunc
 

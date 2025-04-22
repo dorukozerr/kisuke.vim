@@ -47,8 +47,8 @@ func! kisuke#server#parse_reply(channel, reply)
   let l:handlers = {
         \ 'initialize': function('kisuke#handlers#initialize'),
         \ 'response': function('kisuke#handlers#response'),
-        \ 'newSession': function('kisuke#handlers#new_session'),
-        \ 'switchSession': function('kisuke#handlers#switch_session'),
+        \ 'new_session': function('kisuke#handlers#new_session'),
+        \ 'switch_session': function('kisuke#handlers#switch_session'),
         \ 'error': function('kisuke#handlers#error'),
         \ }
 

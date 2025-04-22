@@ -213,7 +213,7 @@ My prompt is => ${event.payload}`
       );
     }
 
-    if (event.type === 'newSession') {
+    if (event.type === 'new_session') {
       const sessionId = randomBytes(16).toString('hex');
 
       history.sessions.push({ id: sessionId, name: sessionId });
@@ -227,7 +227,7 @@ My prompt is => ${event.payload}`
       currentSessionIndex = history.sessions.length - 1;
 
       sendResponse({
-        type: 'newSession',
+        type: 'new_session',
         totalSessions: history.sessions.length,
         currentSession: history.sessions.length,
         sessionInfo: { id: sessionId, name: sessionId },
@@ -243,7 +243,7 @@ My prompt is => ${event.payload}`
         const session = await getSession(sessionInfo.id);
 
         sendResponse({
-          type: 'switchSession',
+          type: 'switch_session',
           currentSession: currentSessionIndex + 1,
           sessionInfo,
           payload: session
@@ -255,7 +255,7 @@ My prompt is => ${event.payload}`
         const session = await getSession(sessionInfo.id);
 
         sendResponse({
-          type: 'switchSession',
+          type: 'switch_session',
           currentSession: currentSessionIndex + 1,
           sessionInfo,
           payload: session
@@ -271,7 +271,7 @@ My prompt is => ${event.payload}`
         const session = await getSession(sessionInfo.id);
 
         sendResponse({
-          type: 'switchSession',
+          type: 'switch_session',
           currentSession: currentSessionIndex + 1,
           sessionInfo,
           payload: session
@@ -283,7 +283,7 @@ My prompt is => ${event.payload}`
         const session = await getSession(sessionInfo.id);
 
         sendResponse({
-          type: 'switchSession',
+          type: 'switch_session',
           currentSession: currentSessionIndex + 1,
           sessionInfo,
           payload: session
