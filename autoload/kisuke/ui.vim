@@ -1,15 +1,57 @@
-func! kisuke#ui#render_main_page()
-  call appendbufline(g:kisuke.state.buf_nr, 0, [
-        \ '•• ━━━━━━━━━━ ⟡ KISUKE ⟡ ━━━━━━━━━━ ••',
-        \ ' ',
-        \ '➤ Start new chat',
-        \ '➤ Load previous chat',
-        \ '➤ Change AI model',
-        \ '➤ Configure settings',
-        \ '➤ View help',
-        \ ' ',
-        \ 'Press Enter to select an option'
-        \])
+let s:kisuke = {}
+let s:kisuke.state = {
+      \ 'selected_provider': '',
+      \ 'selected_model': '',
+      \}
+
+func! kisuke#ui#render_buffer_menu(state, selected_provider, selected_model)
+  silent! %delete
+
+  if a:state === "not_configured"
+    call appendbufline(g:kisuke.state.buf_nr, 0, [
+          \ '•• ━━━━━━━━━━ ⟡ KISUKE ⟡ ━━━━━━━━━━ ••',
+          \ ' ',
+          \ '➤ Configure the plugin',
+          \ ' ',
+          \ 'Press Enter to select an option'
+          \])
+  elseif a:state === "missing_api_key"
+    let s:kisuke.state = {
+          \ 'selected_provider': a:selected_provider,
+          \ 'selected_model': a:selected_model,
+          \}
+
+    call appendbufline(g:kisuke.state.buf_nr, 0, [
+          \ '•• ━━━━━━━━━━ ⟡ KISUKE ⟡ ━━━━━━━━━━ ••',
+          \ ' ',
+          \ 'API key is missing for ' . selected_provider,
+          \ 'Selected Model - ' . selected_model,
+          \ ' ',
+          \ '➤ Save API key',
+          \ '➤ Reconfigure provider and model',
+          \ ' ',
+          \ 'Press Enter to select an option'
+          \])
+  elseif a:state === "eligible"
+    let s:kisuke.state = {
+          \ 'selected_provider': a:selected_provider,
+          \ 'selected_model': a:selected_model,
+          \}
+
+    call appendbufline(g:kisuke.state.buf_nr, 0, [
+          \ '•• ━━━━━━━━━━ ⟡ KISUKE ⟡ ━━━━━━━━━━ ••',
+          \ ' ',
+          \ 'Selected Provider - ' . selected_provider,
+          \ 'Selected Model - ' . selected_model,
+          \ ' ',
+          \ '➤ Start new chat',
+          \ '➤ Load previous chat',
+          \ '➤ Reconfigure provider and model',
+          \ ' ',
+          \ 'Press Enter to select an option'
+          \])
+  endif
+
 
 
   nnoremap <buffer> <CR> :call kisuke#ui#select_menu_option()<CR>

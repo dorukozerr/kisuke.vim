@@ -38,10 +38,7 @@ const setupKisukeFiles = async () => {
     JSON.stringify({
       provider: '',
       model: '',
-      apiKeys: {
-        anthropicApiKey: '',
-        openAiApiKey: ''
-      }
+      apiKeys: { anthropicApiKey: '' }
     })
   );
 
@@ -86,43 +83,43 @@ stdin.on('data', async (data: string) => {
     const event = JSON.parse(data) as Event;
 
     if (event.type === 'initialize') {
-      const latestSessionIndex = history.sessions.length - 1;
-      const sessionInfo = history.sessions[latestSessionIndex];
-      const session = await getSession(sessionInfo.id);
+      //  const latestSessionIndex = history.sessions.length - 1;
+      //  const sessionInfo = history.sessions[latestSessionIndex];
+      //  const session = await getSession(sessionInfo.id);
 
-      currentSessionIndex = latestSessionIndex;
+      //  currentSessionIndex = latestSessionIndex;
 
-      sendResponse({
-        type: 'initialize',
-        totalSessions: history.sessions.length,
-        currentSession: currentSessionIndex + 1,
-        sessionInfo,
-        payload: session
-      });
+      // sendResponse({
+      //   type: 'initialize',
+      //   totalSessions: history.sessions.length,
+      //   currentSession: currentSessionIndex + 1,
+      //   sessionInfo,
+      //   payload: session
+      // });
 
-      //  if (!configFile.provider || !configFile.model) {
-      //    sendResponse({
-      //      type: 'initialize',
-      //      sessions: history.sessions,
-      //      payload: 'configurationNeeded'
-      //    });
-      //  } else if (
-      //    (configFile.provider === 'anthropic' &&
-      //      !configFile.apiKeys.anthropicApiKey) ||
-      //    (configFile.provider === 'openAi' && !configFile.apiKeys.openAiApiKey)
-      //  ) {
-      //    sendResponse({
-      //      type: 'initialize',
-      //      sessions: history.sessions,
-      //      payload: 'configurationNeeded'
-      //    });
-      //  } else {
-      //    sendResponse({
-      //      type: 'initialize',
-      //      sessions: history.sessions,
-      //      payload: 'readyToUse'
-      //    });
-      //  }
+      if (!configFile.provider || !configFile.model) {
+        sendResponse({
+          type: 'initialize',
+          payload: 'not_configured'
+        });
+      } else if (
+        configFile.provider === 'anthropic' &&
+        !configFile.apiKeys.anthropicApiKey
+      ) {
+        sendResponse({
+          type: 'initialize',
+          payload: 'missing_api_key',
+          provider: configFile.provider,
+          model: configFile.model
+        });
+      } else {
+        sendResponse({
+          type: 'initialize',
+          payload: 'eligible',
+          provider: configFile.provider,
+          model: configFile.model
+        });
+      }
     }
 
     if (event.type === 'prompt') {
@@ -238,7 +235,7 @@ My prompt is => ${event.payload}`
       });
     }
 
-    if (event.type === 'nextSession') {
+    if (event.type === 'next_session') {
       if (currentSessionIndex === history.sessions.length - 1) {
         currentSessionIndex = 0;
 
@@ -266,7 +263,7 @@ My prompt is => ${event.payload}`
       }
     }
 
-    if (event.type === 'prevSession') {
+    if (event.type === 'prev_session') {
       if (currentSessionIndex === 0) {
         currentSessionIndex = history.sessions.length - 1;
 
@@ -294,7 +291,7 @@ My prompt is => ${event.payload}`
       }
     }
 
-    if (event.type === 'deleteSession') {
+    if (event.type === 'delete_session') {
       history.sessions = history.sessions.filter(
         (session) => session.id !== event.payload
       );
@@ -321,19 +318,19 @@ My prompt is => ${event.payload}`
         );
       }
 
-      const latestSessionIndex = history.sessions.length - 1;
-      const sessionInfo = history.sessions[latestSessionIndex];
-      const session = await getSession(sessionInfo.id);
+      // const latestSessionIndex = history.sessions.length - 1;
+      // const sessionInfo = history.sessions[latestSessionIndex];
+      // const session = await getSession(sessionInfo.id);
 
-      currentSessionIndex = latestSessionIndex;
+      // currentSessionIndex = latestSessionIndex;
 
-      sendResponse({
-        type: 'initialize',
-        totalSessions: history.sessions.length,
-        currentSession: currentSessionIndex + 1,
-        sessionInfo,
-        payload: session
-      });
+      // sendResponse({
+      //   type: 'initialize',
+      //   totalSessions: history.sessions.length,
+      //   currentSession: currentSessionIndex + 1,
+      //   sessionInfo,
+      //   payload: session
+      // });
     }
   } catch (error) {
     sendResponse({

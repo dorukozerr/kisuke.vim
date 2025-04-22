@@ -10,6 +10,10 @@ interface InitializeEvent {
   type: 'initialize';
 }
 
+interface NewSessionEvent {
+  type: 'newSession';
+}
+
 interface PromptEvent {
   type: 'prompt';
   payload: string;
@@ -21,23 +25,13 @@ interface PromptEvent {
   }[];
 }
 
-interface NewSessionEvent {
-  type: 'newSession';
-}
-
 interface SwitchSessionEvent {
-  type: 'nextSession' | 'prevSession';
+  type: 'next_session' | 'prev_session';
   paylod: string;
 }
 
-interface RenameSessionEvent {
-  type: 'renameSession';
-  payload: string;
-  sessionId: string;
-}
-
 interface DeleteSessionEvent {
-  type: 'deleteSession';
+  type: 'delete_session';
   payload: string;
 }
 
@@ -46,21 +40,13 @@ export type Event =
   | PromptEvent
   | NewSessionEvent
   | SwitchSessionEvent
-  | RenameSessionEvent
   | DeleteSessionEvent;
-
-// interface InitializeOutput {
-//   type: 'initialize';
-//   sessions: History['sessions'];
-//   payload: 'configurationNeeded' | 'readyToUse';
-// }
 
 interface InitializeOutput {
   type: 'initialize';
-  totalSessions: number;
-  currentSession: number;
-  sessionInfo: { id: string; name: string };
-  payload: Session;
+  payload: 'not_configured' | 'missing_api_key' | 'eligible';
+  provider?: string;
+  model?: string;
 }
 
 interface PromptOutput {

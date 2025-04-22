@@ -6,20 +6,20 @@ endfunc
 
 func! kisuke#session#go_to_next_session()
   if s:check_conditions()
-    call kisuke#buffer#focus({ 'type': 'nextSession' })
+    call kisuke#buffer#focus({ 'type': 'next_session' })
   endif
 endfunc
 
 func! kisuke#session#go_to_previous_session()
   if s:check_conditions()
-    call kisuke#buffer#focus({ 'type': 'prevSession' })
+    call kisuke#buffer#focus({ 'type': 'prev_session' })
   endif
 endfunc
 
 
 func! kisuke#session#delete_current_session()
   if s:check_conditions()
-    call kisuke#buffer#focus({ 'type': 'deleteSession', 'payload': g:kisuke.state.session_id })
+    call kisuke#buffer#focus({ 'type': 'delete_session', 'payload': g:kisuke.state.session_id })
   endif
 endfunc
 

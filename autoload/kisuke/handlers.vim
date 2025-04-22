@@ -5,20 +5,27 @@ let s:kisuke.state = {
       \ }
 
 func! kisuke#handlers#initialize(reply)
-  silent! %delete
+  let l:eligiblityState = a:reply.payload
 
-  let g:kisuke.state.session_id = a:reply.sessionInfo.id
-  let g:kisuke.state.total_sessions = a:reply.totalSessions
-
-  call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> ' . 'Kisuke initialized')
-  call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> ' . 'Session ' . a:reply.currentSession . '/' . g:kisuke.state.total_sessions)
-  call s:process_session_history(a:reply.payload.messages)
-
-  if len(g:kisuke.state.marked_files)
-    call kisuke#buffer#render_marked_content()
+  if l:eligiblityState ==# 'not_configured'
+    call kisuke#ui#render_buffer_menu('not_configured')
+  elseif l:eligiblityState ==# 'missing_api_key'
+    call kisuke#ui#render_buffer_menu('missing_api_key', a:reply.provider, a:reply.model)
+  elseif l:eligiblityState ==# 'eligible'
+    call kisuke#ui#render_buffer_menu('eligible', a:reply.provider, a:reply.model)
   endif
-
-  call kisuke#syntax#setup()
+  "  let g:kisuke.state.session_id = a:reply.sessionInfo.id
+  "  let g:kisuke.state.total_sessions = a:reply.totalSessions
+  "
+  "  call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> ' . 'Kisuke initialized')
+  "  call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> ' . 'Session ' . a:reply.currentSession . '/' . g:kisuke.state.total_sessions)
+  "  call s:process_session_history(a:reply.payload.messages)
+  "
+  "  if len(g:kisuke.state.marked_files)
+  "    call kisuke#buffer#render_marked_content()
+  "  endif
+  "
+  "  call kisuke#syntax#setup()
 endfunc
 
 func! kisuke#handlers#response(reply)
