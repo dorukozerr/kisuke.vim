@@ -15,6 +15,7 @@ interface GoogleConfig extends BaseConfig {
   provider: 'google';
   model:
     | 'pro-2.5-exp'
+    | 'pro-2.5-prev'
     | 'flash-2.0-exp'
     | 'flash-1.5'
     | 'flash-1.5-8b'

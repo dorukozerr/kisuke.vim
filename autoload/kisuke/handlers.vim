@@ -34,9 +34,10 @@ func! kisuke#handlers#new_session(reply)
   let g:kisuke.state.session_id = a:reply.session_info.id
 
   let l:session_count = a:reply.session_info.current_index + 1 . '/' . a:reply.session_info.total_count
+  let l:cleaned_session_name = substitute(a:reply.session_info.name, '\%x00', '', 'g')
 
   call appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
-  call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . a:reply.session_info.name)
+  call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . l:cleaned_session_name)
 
   for entry in a:reply.payload.messages
     call appendbufline(g:kisuke.state.buf_nr, line('$'), 'Kisuke > ' . entry.message)
@@ -53,9 +54,10 @@ func! kisuke#handlers#resume_last_session(reply)
   let g:kisuke.state.session_id = a:reply.session_info.id
 
   let l:session_count = a:reply.session_info.current_index + 1 . '/' . a:reply.session_info.total_count
+  let l:cleaned_session_name = substitute(a:reply.session_info.name, '\%x00', '', 'g')
 
   call appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
-  call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . a:reply.session_info.name)
+  call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . l:cleaned_session_name)
 
   call s:process_session_history(a:reply.payload.messages)
 endfunc
@@ -72,9 +74,10 @@ func! kisuke#handlers#restore_session(reply)
   let g:kisuke.state.session_id = a:reply.session_info.id
 
   let l:session_count = a:reply.session_info.current_index + 1 . '/' . a:reply.session_info.total_count
+  let l:cleaned_session_name = substitute(a:reply.session_info.name, '\%x00', '', 'g')
 
   call appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
-  call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . a:reply.session_info.name)
+  call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . l:cleaned_session_name)
 
   call s:process_session_history(a:reply.payload.messages)
 endfunc
