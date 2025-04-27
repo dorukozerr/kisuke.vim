@@ -13,7 +13,6 @@
   "license": "MIT",
   "private": false,
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.40.0",
     "@eslint/js": "^9.25.1",
     "@types/node": "^22.15.2",
     "concurrently": "^9.1.2",
@@ -24,5 +23,10 @@
     "prettier": "^3.5.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.31.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.40.0",
+    "@google/genai": "^0.10.0",
+    "openai": "^4.96.0"
   }
 }
