@@ -117,6 +117,88 @@ export const sendStreamResponse = async (
 
       return true;
     }
+
+    if (config.provider === 'google') {
+      const client = new GoogleGenAI({ apiKey: config.apiKeys.google });
+
+      const promptParts = [
+        { text: BaseAIInstruction },
+        { text: sessionHistoryForStream(history) },
+        {
+          text: context
+            ? fileContextsProcessingInstructionsForStream(
+                JSON.stringify(context),
+                prompt
+              )
+            : prompt
+        }
+      ];
+
+      const models = {
+        'pro-2.5-exp': 'gemini-2.0-pro-exp-02-05',
+        'flash-2.0-exp': 'gemini-2.0-flash-exp',
+        'flash-1.5': 'gemini-1.5-flash-latest',
+        'flash-1.5-8b': 'gemini-1.5-flash-8b-latest',
+        'pro-1.5': 'gemini-1.5-pro-latest'
+      };
+
+      const stream = await client.models.generateContentStream({
+        model: models[config.model],
+        contents: [{ role: 'user', parts: promptParts }]
+      });
+
+      stdOutput({ type: 'response', payload: 'stream_start' });
+
+      try {
+        let completeResponse = '';
+
+        for await (const chunk of stream) {
+          if (chunk.text) {
+            stdOutput({
+              type: 'response',
+              payload: chunk.text
+            });
+            completeResponse += chunk.text;
+          }
+        }
+
+        stdOutput({ type: 'response', payload: 'stream_end' });
+
+        await writeFile(
+          `${sessionId}.json`,
+          JSON.stringify({
+            messages: [
+              ...session.messages,
+              {
+                sender: 'User',
+                message: prompt,
+                referenceCount: context.length
+              },
+              {
+                sender: 'Kisuke',
+                message: completeResponse
+              }
+            ]
+          })
+        );
+
+        return true;
+      } catch (error) {
+        await writeError(error, 'googleStreamInner');
+
+        stdOutput({
+          type: 'error',
+          payload: `Streaming error, ${
+            error instanceof Error
+              ? {
+                  message: error.message,
+                  stack: error.stack
+                }
+              : String(error)
+          }`
+        });
+      }
+    }
   } catch (error) {
     await writeError(error, 'streamOuter');
 
@@ -135,28 +217,65 @@ export const sendStreamResponse = async (
 };
 
 export const generateSessionName = async (prompt: string) => {
-  const config = await getConfig();
+  try {
+    const config = await getConfig();
 
-  if (config.provider === 'anthropic') {
-    const client = new Anthropic({ apiKey: config.apiKeys.anthropic });
+    if (config.provider === 'anthropic') {
+      const client = new Anthropic({ apiKey: config.apiKeys.anthropic });
+
+      const models = {
+        sonnet: 'claude-3-7-sonnet-latest',
+        haiku: 'claude-3-5-haiku-latest',
+        opus: 'claude-3-opus-latest'
+      };
+
+      const aiResponse = await client.messages.create({
+        max_tokens: 1024,
+        model: models[config.model],
+        messages: [
+          { role: 'assistant', content: sessionNameGenerationInstructions },
+          { role: 'user', content: prompt }
+        ]
+      });
+
+      const sessionName = (aiResponse.content[0] as { text: string }).text;
+
+      return sessionName;
+    }
 
     const models = {
-      sonnet: 'claude-3-7-sonnet-latest',
-      haiku: 'claude-3-5-haiku-latest',
-      opus: 'claude-3-opus-latest'
+      'pro-2.5-exp': 'gemini-2.0-pro-exp-02-05',
+      'flash-2.0-exp': 'gemini-2.0-flash-exp',
+      'flash-1.5': 'gemini-1.5-flash-latest',
+      'flash-1.5-8b': 'gemini-1.5-flash-8b-latest',
+      'pro-1.5': 'gemini-1.5-pro-latest'
     };
 
-    const aiResponse = await client.messages.create({
-      max_tokens: 1024,
-      model: models[config.model],
-      messages: [
-        { role: 'assistant', content: sessionNameGenerationInstructions },
-        { role: 'user', content: prompt }
-      ]
+    if (config.provider === 'google') {
+      const client = new GoogleGenAI({ apiKey: config.apiKeys.google });
+
+      const aiResponse = await client.models.generateContent({
+        model: models[config.model],
+        contents: prompt
+      });
+
+      const sessionName = aiResponse.text;
+
+      return sessionName;
+    }
+  } catch (error) {
+    await writeError(error, 'generateSessionName');
+
+    stdOutput({
+      type: 'error',
+      payload: `Streaming error, ${
+        error instanceof Error
+          ? {
+              message: error.message,
+              stack: error.stack
+            }
+          : String(error)
+      }`
     });
-
-    const sessionName = (aiResponse.content[0] as { text: string }).text;
-
-    return sessionName;
   }
 };

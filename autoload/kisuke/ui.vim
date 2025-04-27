@@ -1,7 +1,7 @@
 let s:providers = [
       \ { 'name': 'Anthropic', 'models': ['Sonnet', 'Haiku', 'Opus'] },
+      \ { 'name': 'Google', 'models': ['Pro-2.5-exp', 'Flash-2.0-exp','Flash-1.5', 'Flash-1.5-8b', 'Pro-1.5'] },
       \ { 'name': 'OpenAI', 'models': ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'] },
-      \ { 'name': 'Google', 'models': ['gemini-pro', 'gemini-ultra'] },
       \ ]
 
 let s:kisuke = {}
