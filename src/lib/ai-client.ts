@@ -254,9 +254,14 @@ export const generateSessionName = async (prompt: string) => {
     if (config.provider === 'google') {
       const client = new GoogleGenAI({ apiKey: config.apiKeys.google });
 
+      const promptParts = [
+        { text: sessionNameGenerationInstructions },
+        { text: prompt }
+      ];
+
       const aiResponse = await client.models.generateContent({
         model: models[config.model],
-        contents: prompt
+        contents: promptParts
       });
 
       const sessionName = aiResponse.text;

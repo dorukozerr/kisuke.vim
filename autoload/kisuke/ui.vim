@@ -117,7 +117,7 @@ func! kisuke#ui#render_buffer_menu(state, ...) abort
 endfunc
 
 func! s:add_menu_item(text, action, ...) abort
-  let item_text = '➤ ' . a:text
+  let item_text = '✦ ' . a:text
 
   call add(g:kisuke.state.menu_items, item_text)
 
@@ -133,7 +133,7 @@ endfunc
 func! kisuke#ui#select_menu_option() abort
   let line = getline('.')
 
-  if stridx(line, '➤ ') != 0
+  if stridx(line, '✦ ') != 0
     echo 'Not a valid menu option'
 
     return
