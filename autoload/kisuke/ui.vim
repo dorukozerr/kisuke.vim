@@ -1,7 +1,7 @@
 let s:providers = [
       \ { 'name': 'Anthropic', 'models': ['Sonnet', 'Haiku', 'Opus'] },
-      \ { 'name': 'OpenAI', 'models': ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'] },
-      \ { 'name': 'Google', 'models': ['gemini-pro', 'gemini-ultra'] },
+      \ { 'name': 'Google', 'models': ['Pro-2.5-exp', 'Flash-2.0-exp','Flash-1.5', 'Flash-1.5-8b', 'Pro-1.5'] },
+      \ { 'name': 'OpenAI', 'models': ['gpt-4.1', 'gpt-4.1-mini', 'gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'] },
       \ ]
 
 let s:kisuke = {}
@@ -117,7 +117,7 @@ func! kisuke#ui#render_buffer_menu(state, ...) abort
 endfunc
 
 func! s:add_menu_item(text, action, ...) abort
-  let item_text = '➤ ' . a:text
+  let item_text = '✦ ' . a:text
 
   call add(g:kisuke.state.menu_items, item_text)
 
@@ -133,7 +133,7 @@ endfunc
 func! kisuke#ui#select_menu_option() abort
   let line = getline('.')
 
-  if stridx(line, '➤ ') != 0
+  if stridx(line, '✦ ') != 0
     echo 'Not a valid menu option'
 
     return
@@ -160,8 +160,6 @@ endfunc
 
 func! kisuke#ui#select_model(model) abort
   let s:kisuke.state.current_model = a:model
-
-  let has_api_key = kisuke#server#check_api_key(s:kisuke.state.current_provider)
 
   call kisuke#server#configure(s:kisuke.state.current_provider, s:kisuke.state.current_model)
 endfunc

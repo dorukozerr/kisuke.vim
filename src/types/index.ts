@@ -1,3 +1,40 @@
+interface BaseConfig {
+  apiKeys: {
+    anthropic: string;
+    google: string;
+    openai: string;
+  };
+}
+
+interface AnthropicConfig extends BaseConfig {
+  provider: 'anthropic';
+  model: 'sonnet' | 'haiku' | 'opus';
+}
+
+interface GoogleConfig extends BaseConfig {
+  provider: 'google';
+  model:
+    | 'pro-2.5-exp'
+    | 'flash-2.0-exp'
+    | 'flash-1.5'
+    | 'flash-1.5-8b'
+    | 'pro-1.5';
+}
+
+interface OpenAIConfig extends BaseConfig {
+  provider: 'openai';
+  model:
+    | 'gpt-4.1'
+    | 'gpt-4.1-mini'
+    | 'gpt-4o'
+    | 'gpt-4o-mini'
+    | 'gpt-4-turbo'
+    | 'gpt-4'
+    | 'gpt-3.5-turbo';
+}
+
+export type Config = AnthropicConfig | GoogleConfig | OpenAIConfig;
+
 export interface History {
   sessions: { id: string; name: string }[];
 }

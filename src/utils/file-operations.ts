@@ -3,7 +3,7 @@ import { homedir } from 'os';
 import { existsSync } from 'fs';
 import { mkdir, readFile, writeFile as fsWriteFile } from 'fs/promises';
 
-import { History, Session } from '../types';
+import { Config, History, Session } from '../types';
 
 const configDir = join(homedir(), '.config', 'kisuke');
 
@@ -53,13 +53,17 @@ const setupKisuke = async () => {
 
 export const getConfig = async () => {
   try {
-    return JSON.parse(await readFile(join(configDir, 'config.json'), 'utf-8'));
+    return JSON.parse(
+      await readFile(join(configDir, 'config.json'), 'utf-8')
+    ) as Config;
   } catch (error) {
     await writeError(error, 'getConfig');
 
     await setupKisuke();
 
-    return JSON.parse(await readFile(join(configDir, 'config.json'), 'utf-8'));
+    return JSON.parse(
+      await readFile(join(configDir, 'config.json'), 'utf-8')
+    ) as Config;
   }
 };
 

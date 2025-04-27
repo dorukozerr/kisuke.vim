@@ -24,44 +24,51 @@ func! kisuke#server#start_process()
 endfunc
 
 func! kisuke#server#configure(provider, model)
-  let l:provider_key = tolower(a:provider)
-  let l:api_key = input('Enter your ' . a:provider . ' API key: ')
+  let l:config_file = expand('~/.config/kisuke/config.json')
+  let l:config = kisuke#server#load()
+  let l:lower_provider = tolower(a:provider)
+  let l:api_key = ''
+
+  if has_key(l:config, 'apiKeys')
+        \ && has_key(l:config.apiKeys, l:lower_provider)
+        \ && !empty(l:config.apiKeys[l:lower_provider])
+    let l:api_key = l:config.apiKeys[l:lower_provider]
+    echom 'Using existing API key for ' . a:provider
+  else
+    let l:api_key = input('Enter your ' . a:provider . ' API key: ')
+  endif
 
   let l:checks = [
         \ {'condition': g:kisuke.state.job == v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
-        \ {'condition': empty(l:api_key), 'message': 'Please provide a valid api key'},
+        \ {'condition': empty(l:api_key), 'message': 'API key cannot be empty. Please provide a valid key.'},
         \ {'condition': empty(a:provider), 'message': 'Please provide a valid provider'},
         \ {'condition': empty(a:model), 'message': 'Please provide a valid model'},
         \ ]
 
   if kisuke#utils#validate(l:checks)
-    let l:config_file = expand('~/.config/kisuke/config.json')
-    let l:config = {}
-
-    if filereadable(l:config_file)
-      let l:config = json_decode(join(readfile(l:config_file), "\n"))
-    endif
-
-    let l:config.provider = a:provider
-    let l:config.model = a:model
-
     if !has_key(l:config, 'apiKeys')
       let l:config.apiKeys = {}
     endif
 
-    let l:config.apiKeys[l:provider_key] = l:api_key
+    let l:config.provider = l:lower_provider
+    let l:config.model = tolower(a:model)
+    let l:config.apiKeys[l:lower_provider] = l:api_key
 
-    call writefile([json_encode(l:config)], l:config_file)
+    call writefile([json_encode(l:config)], l:config_file, 'w')
     call kisuke#buffer#restore({ 'type': 'initialize' })
 
     redraw!
-
-    echom a:provider . ' API key saved'
+    echom a:provider . ' configuration updated using model ' . a:model . '.'
+  else
+    echohl WarningMsg | echom 'Configuration aborted due to validation errors.' | echohl None
   endif
 endfunc
 
 func! kisuke#server#parse_reply(channel, reply)
   let l:reply = json_decode(a:reply)
+
+  let g:kisuke.state.marked_files = []
+  let g:kisuke.state.marked_code_blocks = []
 
   let l:handlers = {
         \ 'initialize': function('kisuke#handlers#initialize'),
@@ -97,15 +104,4 @@ func! kisuke#server#load()
         \ 'model': '',
         \ 'apiKeys': {}
         \ }
-endfunc
-
-func! kisuke#server#check_api_key(provider)
-  let l:config = kisuke#server#load()
-  let l:provider_key = tolower(a:provider) . 'ApiKey'
-
-  if has_key(l:config, 'apiKeys') && has_key(l:config.apiKeys, l:provider_key)
-    return !empty(l:config.apiKeys[l:provider_key])
-  endif
-
-  return 0
 endfunc

@@ -10,7 +10,7 @@ export const initializeHandler = async () => {
       payload: 'not_configured'
     });
   } else if (
-    (config.provider === 'anthropic' && !config.apiKeys.anthropicApiKey) ||
+    (config.provider === 'anthropic' && !config.apiKeys.anthropic) ||
     (config.provider === 'openai' && !config.apiKeys.openai) ||
     (config.provider === 'google' && !config.apiKeys.google)
   ) {
