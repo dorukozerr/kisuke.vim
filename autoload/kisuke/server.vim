@@ -23,21 +23,40 @@ func! kisuke#server#start_process()
         \ })
 endfunc
 
-func! kisuke#server#configure()
-  let l:api_key = input('Enter your Claude API key: ')
+func! kisuke#server#configure(provider, model)
+  let l:provider_key = tolower(a:provider)
+  let l:api_key = input('Enter your ' . a:provider . ' API key: ')
 
   let l:checks = [
         \ {'condition': g:kisuke.state.job == v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
         \ {'condition': empty(l:api_key), 'message': 'Please provide a valid api key'},
+        \ {'condition': empty(a:provider), 'message': 'Please provide a valid provider'},
+        \ {'condition': empty(a:model), 'message': 'Please provide a valid model'},
         \ ]
 
   if kisuke#utils#validate(l:checks)
-    call writefile([json_encode({ 'apiKey': l:api_key })], expand('~/.config/kisuke/config.json'))
-    call kisuke#buffer#focus({ 'type': 'initialize' })
+    let l:config_file = expand('~/.config/kisuke/config.json')
+    let l:config = {}
+
+    if filereadable(l:config_file)
+      let l:config = json_decode(join(readfile(l:config_file), "\n"))
+    endif
+
+    let l:config.provider = a:provider
+    let l:config.model = a:model
+
+    if !has_key(l:config, 'apiKeys')
+      let l:config.apiKeys = {}
+    endif
+
+    let l:config.apiKeys[l:provider_key] = l:api_key
+
+    call writefile([json_encode(l:config)], l:config_file)
+    call kisuke#buffer#restore({ 'type': 'initialize' })
 
     redraw!
 
-    echom 'Api key saved'
+    echom a:provider . ' API key saved'
   endif
 endfunc
 
@@ -47,8 +66,11 @@ func! kisuke#server#parse_reply(channel, reply)
   let l:handlers = {
         \ 'initialize': function('kisuke#handlers#initialize'),
         \ 'response': function('kisuke#handlers#response'),
-        \ 'newSession': function('kisuke#handlers#new_session'),
-        \ 'switchSession': function('kisuke#handlers#switch_session'),
+        \ 'new_session': function('kisuke#handlers#new_session'),
+        \ 'resume_last_session': function('kisuke#handlers#resume_last_session'),
+        \ 'switch_session': function('kisuke#handlers#switch_session'),
+        \ 'load_sessions': function('kisuke#handlers#load_sessions'),
+        \ 'restore_session': function('kisuke#handlers#restore_session'),
         \ 'error': function('kisuke#handlers#error'),
         \ }
 
@@ -59,4 +81,31 @@ func! kisuke#server#parse_reply(channel, reply)
   endif
 
   let g:kisuke.state.is_pending = 0
+endfunc
+
+func! kisuke#server#load()
+  let l:config_file = expand('~/.config/kisuke/config.json')
+
+  if filereadable(l:config_file)
+    let l:config = json_decode(join(readfile(l:config_file), "\n"))
+
+    return l:config
+  endif
+
+  return {
+        \ 'provider': '',
+        \ 'model': '',
+        \ 'apiKeys': {}
+        \ }
+endfunc
+
+func! kisuke#server#check_api_key(provider)
+  let l:config = kisuke#server#load()
+  let l:provider_key = tolower(a:provider) . 'ApiKey'
+
+  if has_key(l:config, 'apiKeys') && has_key(l:config.apiKeys, l:provider_key)
+    return !empty(l:config.apiKeys[l:provider_key])
+  endif
+
+  return 0
 endfunc

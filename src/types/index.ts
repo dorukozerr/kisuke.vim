@@ -10,7 +10,11 @@ interface InitializeEvent {
   type: 'initialize';
 }
 
-interface PromptEvent {
+interface NewSessionEvent {
+  type: 'new_session';
+}
+
+export interface PromptEvent {
   type: 'prompt';
   payload: string;
   sessionId: string;
@@ -21,39 +25,51 @@ interface PromptEvent {
   }[];
 }
 
-interface NewSessionEvent {
-  type: 'newSession';
+interface ResumeLastSessionEvent {
+  type: 'resume_last_session';
 }
 
-interface SwitchSessionEvent {
-  type: 'nextSession' | 'prevSession';
-  paylod: string;
+interface LoadSessionsEvent {
+  type: 'load_sessions';
 }
 
-interface RenameSessionEvent {
-  type: 'renameSession';
+export interface RestoreSessionEvent {
+  type: 'restore_session';
   payload: string;
-  sessionId: string;
 }
 
-interface DeleteSessionEvent {
-  type: 'deleteSession';
+export interface DeleteSessionEvent {
+  type: 'delete_session';
   payload: string;
 }
 
 export type Event =
   | InitializeEvent
-  | PromptEvent
   | NewSessionEvent
-  | SwitchSessionEvent
-  | RenameSessionEvent
+  | PromptEvent
+  | ResumeLastSessionEvent
+  | LoadSessionsEvent
+  | RestoreSessionEvent
   | DeleteSessionEvent;
 
 interface InitializeOutput {
   type: 'initialize';
+  payload: 'not_configured' | 'missing_api_key' | 'eligible';
+  provider?: string;
+  model?: string;
+  session_count?: number;
+}
+
+interface NewSessionOutput {
+  type: 'new_session';
   totalSessions: number;
-  currentSession: number;
-  sessionInfo: { id: string; name: string };
+  current_session: number;
+  session_info: {
+    id: string;
+    name: string;
+    total_count: number;
+    current_index: number;
+  };
   payload: Session;
 }
 
@@ -62,18 +78,30 @@ interface PromptOutput {
   payload: string;
 }
 
-interface NewSessionOutput {
-  type: 'newSession';
-  totalSessions: number;
-  currentSession: number;
-  sessionInfo: { id: string; name: string };
+interface ResumeLastSessionOutput {
+  type: 'resume_last_session';
+  session_info: {
+    id: string;
+    name: string;
+    total_count: number;
+    current_index: number;
+  };
   payload: Session;
 }
 
-interface SwitchSessionOuput {
-  type: 'switchSession';
-  currentSession: number;
-  sessionInfo: { id: string; name: string };
+interface LoadSessionsOutput {
+  type: 'load_sessions';
+  payload: { id: string; name: string }[];
+}
+
+interface RestoreSessionOutput {
+  type: 'restore_session';
+  session_info: {
+    id: string;
+    name: string;
+    total_count: number;
+    current_index: number;
+  };
   payload: Session;
 }
 
@@ -84,7 +112,9 @@ interface ErrorOutput {
 
 export type Output =
   | InitializeOutput
-  | PromptOutput
   | NewSessionOutput
-  | SwitchSessionOuput
+  | PromptOutput
+  | ResumeLastSessionOutput
+  | LoadSessionsOutput
+  | RestoreSessionOutput
   | ErrorOutput;

@@ -6,26 +6,30 @@ A minimal AI assistant integration for Vim, inspired by modern AI-powered IDEs.
 
 ## About
 
-Kisuke.vim is my first Vim plugin, born from a desire to learn plugin development and bring simple AI capabilities to Vim. While there are sophisticated alternatives available, this plugin aims to provide a straightforward AI integration focusing on simplicity and usability.
+Kisuke.vim is my first Vim plugin. I created it because I wanted to learn plugin development and bring simple AI capabilities to Vim. There are many sophisticated alternatives out there, but this plugin focuses on simplicity and usability - I just wanted something that works without being too complex.
 
 ## Current Features
 
-- 📝 Multi-session chat interface within Vim
-- 📂 File context sharing (mark files to include in your prompts)
-- 🤖 Claude AI integration for intelligent responses
-- 💬 Simple buffer-based conversation UI
-- 🔄 Session management (create, switch, delete)
+- Multi-session chat interface within Vim
+- File context sharing (mark files to include in your prompts)
+- Claude AI integration for intelligent responses
+- Simple buffer-based conversation UI
+- Session management (create, switch, delete)
+- Code snippet selection for context
 
 ## Planned Features
 
-- ✨ Code snippet selection for context
-- 🔌 Multiple AI model support:
-  - OpenAI (ChatGPT)
-  - Local models via Ollama
-  - More to come
-- 🛠️ Enhanced file context handling
-- ⚙️ Configurable model settings
-- 📚 More IDE-like features
+- Multiple AI providers and models support
+- Enhanced file context handling
+  - Instead of writing every code block or file that has been marked to session history, I plan to create a tool (that's what it's called in Anthropic API) that can read files anytime it wants to reference them. This way session history won't be bloated with marked context content.
+- Configurable system commands - you can guide the AI to behave as you want
+
+### Why I won't implement auto-applying suggestions
+
+I do not plan to add functionality for applying suggestions/generated code blocks to files by shortcut or automatically. There are 2 reasons for this:
+
+1. It's quite tricky to implement and I don't want to work on this right now
+2. This is really a personal decision - I prefer going slow and understanding what AI suggests/generates for me. If I want to use something, I can just yank and paste it myself.
 
 ## Installation
 
@@ -46,11 +50,11 @@ yarn build
 cd ~
 ```
 
-Support for other plugin managers coming soon.
+I'm working on instructions for other plugin managers - coming soon!
 
 ## Key Mappings
 
-- Add these to .vimrc
+Add these to your .vimrc:
 
 ```vim
 nnoremap <Leader>ka :KisukeConfiguration<CR>
@@ -78,11 +82,11 @@ nnoremap <Leader>kd :KisukeDeleteSession<CR>
 
 ## Current Status
 
-This plugin is in active development, with new features being added regularly. While functional, it's still in its early stages and welcomes community feedback and contributions.
+This plugin is in active development and I'm adding new features regularly. It's still in early stages but works fine for daily use. Honestly, I built it for myself first, but I hope others find it useful too!
 
 ## Contributing
 
-As this is a learning project, I'm open to suggestions, feedback, and contributions. Feel free to open issues or submit pull requests.
+Since this is my learning project, I'm very open to suggestions, feedback, and contributions. If something doesn't work or you have ideas, please feel free to open issues or submit pull requests.
 
 ## License
 

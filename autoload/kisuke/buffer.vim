@@ -6,7 +6,7 @@ func! kisuke#buffer#open()
   let g:kisuke.state.is_pending = 1
 
   if bufexists(g:kisuke.state.buf_nr)
-    call kisuke#buffer#focus({ 'type': 'initialize' })
+    call kisuke#buffer#restore({ 'type': 'initialize' })
   else
     call kisuke#buffer#create()
   endif
@@ -17,32 +17,12 @@ func! kisuke#buffer#create()
 
   let g:kisuke.state.buf_nr = bufnr('%')
 
-  setlocal
-        \ buftype=prompt
-        \ noswapfile
-        \ nobuflisted
-        \ nonumber
-        \ norelativenumber
+  call kisuke#buffer#prepare_menu_buffer()
 
-  call kisuke#syntax#setup()
-
-  call prompt_setprompt(g:kisuke.state.buf_nr, 'Prompt > ')
-  call prompt_setcallback(g:kisuke.state.buf_nr, function('kisuke#buffer#on_submit'))
   call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode({ 'type': 'initialize' }))
-
-  augroup g:kisuke.state.buf_name
-    autocmd!
-    autocmd TextChanged,TextChangedI <buffer> setlocal nomodified
-  augroup END
-
-  augroup KisukeSyntax
-    autocmd!
-    autocmd BufEnter,TextChanged <buffer>
-          \ let b:syntax_setup_done = 0 | call kisuke#syntax#setup()
-  augroup END
 endfunc
 
-func! kisuke#buffer#focus(payload = v:null)
+func! kisuke#buffer#restore(payload = v:null)
   let l:wid = bufwinid(g:kisuke.state.buf_nr)
 
   if l:wid ==# -1
@@ -71,7 +51,7 @@ func! kisuke#buffer#mark_focused_file()
     let l:file_index = -1
     let l:index = 0
 
-    call kisuke#buffer#focus()
+    call kisuke#buffer#restore()
     call kisuke#buffer#clear_marked_content()
 
     for entry in g:kisuke.state.marked_files
@@ -109,7 +89,7 @@ func! kisuke#buffer#mark_highlighted_code() range
     let l:highlighted = getline(a:firstline, a:lastline)
     let l:file_type = &filetype
 
-    call kisuke#buffer#focus()
+    call kisuke#buffer#restore()
     call kisuke#buffer#clear_marked_content()
 
     call add(g:kisuke.state.marked_code_blocks, {
@@ -134,7 +114,7 @@ func! kisuke#buffer#remove_last_marked_code_block()
         \ ]
 
   if kisuke#utils#validate(l:checks)
-    call kisuke#buffer#focus()
+    call kisuke#buffer#restore()
     call kisuke#buffer#clear_marked_content()
 
     call remove(g:kisuke.state.marked_code_blocks, len(g:kisuke.state.marked_code_blocks) - 1)
@@ -276,4 +256,44 @@ func! kisuke#buffer#on_submit(prompt)
 
     call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(l:payload))
   endif
+endfunc
+
+func! kisuke#buffer#prepare_chat_buffer()
+  setlocal
+        \ buftype=prompt
+        \ noswapfile
+        \ wrap
+        \ modifiable
+        \ nobuflisted
+        \ nonumber
+        \ norelativenumber
+
+  call kisuke#syntax#setup()
+
+  call prompt_setprompt(g:kisuke.state.buf_nr, 'Prompt > ')
+  call prompt_setcallback(g:kisuke.state.buf_nr, function('kisuke#buffer#on_submit'))
+
+  augroup g:kisuke.state.buf_name
+    autocmd!
+    autocmd TextChanged,TextChangedI <buffer> setlocal nomodified
+  augroup END
+
+  augroup KisukeSyntax
+    autocmd!
+    autocmd BufEnter,TextChanged <buffer>
+          \ let b:syntax_setup_done = 0 | call kisuke#syntax#setup()
+  augroup END
+endfunc
+
+func! kisuke#buffer#prepare_menu_buffer()
+  setlocal
+        \ buftype=nofile
+        \ bufhidden=hide
+        \ noswapfile
+        \ modifiable
+        \ nobuflisted
+        \ nowrap
+        \ nonumber
+        \ norelativenumber
+        \ filetype=kisuke_menu
 endfunc
