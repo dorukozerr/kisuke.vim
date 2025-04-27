@@ -2,7 +2,6 @@ let s:providers = [
       \ { 'name': 'OpenAI', 'models': ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'] },
       \ { 'name': 'Anthropic', 'models': ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku', 'claude-3.5-sonnet', 'claude-3.7-sonnet'] },
       \ { 'name': 'Google', 'models': ['gemini-pro', 'gemini-ultra'] },
-      \ { 'name': 'Ollama', 'models': ['llama3', 'llama2', 'mixtral', 'phi-3'] }
       \ ]
 
 let s:kisuke = {}
@@ -51,13 +50,17 @@ func! kisuke#ui#render_buffer_menu(state, ...) abort
           \ ' '
           \ ])
 
-    call s:add_menu_item('Start new chat', 'kisuke#buffer#restore', { 'type': 'new_session' })
+    call s:add_menu_item('Start new session', 'kisuke#buffer#restore', { 'type': 'new_session' })
 
     if s:kisuke.state.session_count > 0
-      call s:add_menu_item('Load previous chats', 'kisuke#ui#load_previous_sessions')
+      call s:add_menu_item('Resume last session', 'kisuke#buffer#restore', { 'type': 'resume_last_session' })
+
+      if s:kisuke.state.session_count > 1
+        call s:add_menu_item('Load previous sessions', 'kisuke#buffer#restore', { 'type': 'load_sessions' })
+      endif
     endif
 
-    call s:add_menu_item('Reconfigure provider or model', 'kisuke#ui#show_provider_selection')
+    call s:add_menu_item('Configure the plugin', 'kisuke#ui#render_buffer_menu', 'configure_plugin')
   elseif a:state ==# 'configure_plugin'
     call appendbufline(g:kisuke.state.buf_nr, line('$'), 'Select AI Provider:')
     call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
@@ -84,6 +87,18 @@ func! kisuke#ui#render_buffer_menu(state, ...) abort
 
     for model in models
       call s:add_menu_item(model, 'kisuke#ui#select_model', model)
+    endfor
+
+    call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
+    call s:add_menu_item('Go back to main menu', 'kisuke#buffer#restore', { 'type': 'initialize' })
+  elseif a:state ==# 'render_sessions'
+    let l:sessions = a:1
+
+    for session in l:sessions
+      call s:add_menu_item(session.name, 'kisuke#buffer#restore', {
+            \ 'type': 'restore_session',
+            \ 'payload': session.id
+            \ })
     endfor
 
     call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')

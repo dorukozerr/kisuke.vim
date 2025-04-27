@@ -14,7 +14,7 @@ interface NewSessionEvent {
   type: 'new_session';
 }
 
-interface PromptEvent {
+export interface PromptEvent {
   type: 'prompt';
   payload: string;
   sessionId: string;
@@ -25,21 +25,31 @@ interface PromptEvent {
   }[];
 }
 
-interface SwitchSessionEvent {
-  type: 'next_session' | 'prev_session';
-  paylod: string;
+interface ResumeLastSessionEvent {
+  type: 'resume_last_session';
 }
 
-interface DeleteSessionEvent {
+interface LoadSessionsEvent {
+  type: 'load_sessions';
+}
+
+export interface RestoreSessionEvent {
+  type: 'restore_session';
+  payload: string;
+}
+
+export interface DeleteSessionEvent {
   type: 'delete_session';
   payload: string;
 }
 
 export type Event =
   | InitializeEvent
-  | PromptEvent
   | NewSessionEvent
-  | SwitchSessionEvent
+  | PromptEvent
+  | ResumeLastSessionEvent
+  | LoadSessionsEvent
+  | RestoreSessionEvent
   | DeleteSessionEvent;
 
 interface InitializeOutput {
@@ -50,23 +60,48 @@ interface InitializeOutput {
   session_count?: number;
 }
 
+interface NewSessionOutput {
+  type: 'new_session';
+  totalSessions: number;
+  current_session: number;
+  session_info: {
+    id: string;
+    name: string;
+    total_count: number;
+    current_index: number;
+  };
+  payload: Session;
+}
+
 interface PromptOutput {
   type: 'response';
   payload: string;
 }
 
-interface NewSessionOutput {
-  type: 'new_session';
-  totalSessions: number;
-  currentSession: number;
-  sessionInfo: { id: string; name: string };
+interface ResumeLastSessionOutput {
+  type: 'resume_last_session';
+  session_info: {
+    id: string;
+    name: string;
+    total_count: number;
+    current_index: number;
+  };
   payload: Session;
 }
 
-interface SwitchSessionOuput {
-  type: 'switch_session';
-  currentSession: number;
-  sessionInfo: { id: string; name: string };
+interface LoadSessionsOutput {
+  type: 'load_sessions';
+  payload: { id: string; name: string }[];
+}
+
+interface RestoreSessionOutput {
+  type: 'restore_session';
+  session_info: {
+    id: string;
+    name: string;
+    total_count: number;
+    current_index: number;
+  };
   payload: Session;
 }
 
@@ -77,7 +112,9 @@ interface ErrorOutput {
 
 export type Output =
   | InitializeOutput
-  | PromptOutput
   | NewSessionOutput
-  | SwitchSessionOuput
+  | PromptOutput
+  | ResumeLastSessionOutput
+  | LoadSessionsOutput
+  | RestoreSessionOutput
   | ErrorOutput;

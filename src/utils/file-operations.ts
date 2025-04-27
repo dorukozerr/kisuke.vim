@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { homedir } from 'os';
 import { existsSync } from 'fs';
-import { mkdir, readFile, writeFile as fsWriteFile, unlink } from 'fs/promises';
+import { mkdir, readFile, writeFile as fsWriteFile } from 'fs/promises';
 
 import { History, Session } from '../types';
 

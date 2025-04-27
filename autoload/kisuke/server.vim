@@ -24,7 +24,7 @@ func! kisuke#server#start_process()
 endfunc
 
 func! kisuke#server#configure(provider, model)
-  let l:provider_key = tolower(a:provider) . 'ApiKey'
+  let l:provider_key = tolower(a:provider)
   let l:api_key = input('Enter your ' . a:provider . ' API key: ')
 
   let l:checks = [
@@ -67,7 +67,10 @@ func! kisuke#server#parse_reply(channel, reply)
         \ 'initialize': function('kisuke#handlers#initialize'),
         \ 'response': function('kisuke#handlers#response'),
         \ 'new_session': function('kisuke#handlers#new_session'),
+        \ 'resume_last_session': function('kisuke#handlers#resume_last_session'),
         \ 'switch_session': function('kisuke#handlers#switch_session'),
+        \ 'load_sessions': function('kisuke#handlers#load_sessions'),
+        \ 'restore_session': function('kisuke#handlers#restore_session'),
         \ 'error': function('kisuke#handlers#error'),
         \ }
 

@@ -262,6 +262,7 @@ func! kisuke#buffer#prepare_chat_buffer()
   setlocal
         \ buftype=prompt
         \ noswapfile
+        \ wrap
         \ modifiable
         \ nobuflisted
         \ nonumber

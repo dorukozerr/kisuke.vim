@@ -14,11 +14,11 @@ func! kisuke#handlers#initialize(reply)
   elseif l:eligiblityState ==# 'eligible'
     call kisuke#ui#render_buffer_menu('eligible', a:reply.provider, a:reply.model, a:reply.session_count)
   endif
-  "  let g:kisuke.state.session_id = a:reply.sessionInfo.id
+  "  let g:kisuke.state.session_id = a:reply.session_info.id
   "  let g:kisuke.state.total_sessions = a:reply.totalSessions
   "
   "  call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> ' . 'Kisuke initialized')
-  "  call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> ' . 'Session ' . a:reply.currentSession . '/' . g:kisuke.state.total_sessions)
+  "  call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> ' . 'Session ' . a:reply.current_session . '/' . g:kisuke.state.total_sessions)
   "  call s:process_session_history(a:reply.payload.messages)
   "
   "  if len(g:kisuke.state.marked_files)
@@ -75,9 +75,13 @@ func! kisuke#handlers#new_session(reply)
 
   silent! %delete
 
-  let g:kisuke.state.session_id = a:reply.sessionInfo.id
+  let g:kisuke.state.session_id = a:reply.session_info.id
 
-  call setbufline(g:kisuke.state.buf_nr, line('$'), '> ' . 'Kisuke Session')
+  let l:session_count = a:reply.session_info.current_index + 1 . '/' . a:reply.session_info.total_count
+
+  call appendbufline(g:kisuke.state.buf_nr, line('$'), '> ' . 'Kisuke initialized ' . l:session_count)
+  call appendbufline(g:kisuke.state.buf_nr, line('$'), '> ' . a:reply.session_info.name)
+  call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
 
   for entry in a:reply.payload.messages
     call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
@@ -87,15 +91,38 @@ func! kisuke#handlers#new_session(reply)
   call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
 endfunc
 
-func! kisuke#handlers#switch_session(reply)
+func! kisuke#handlers#resume_last_session(reply)
   call kisuke#buffer#prepare_chat_buffer()
 
   silent! %delete
 
-  let g:kisuke.state.session_id = a:reply.sessionInfo.id
-  let l:line_num = 2
+  let g:kisuke.state.session_id = a:reply.session_info.id
 
-  call appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized')
+  let l:session_count = a:reply.session_info.current_index + 1 . '/' . a:reply.session_info.total_count
+
+  call appendbufline(g:kisuke.state.buf_nr, line('$'), '> ' . 'Kisuke initialized ' . l:session_count)
+  call appendbufline(g:kisuke.state.buf_nr, line('$'), '> ' . a:reply.session_info.name)
+  call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
+
+  call s:process_session_history(a:reply.payload.messages)
+endfunc
+
+func! kisuke#handlers#load_sessions(reply)
+  call kisuke#ui#render_buffer_menu('render_sessions', a:reply.payload)
+endfunc
+
+func! kisuke#handlers#restore_session(reply)
+  call kisuke#buffer#prepare_chat_buffer()
+
+  silent! %delete
+
+  let g:kisuke.state.session_id = a:reply.session_info.id
+
+  let l:session_count = a:reply.session_info.current_index + 1 . '/' . a:reply.session_info.total_count
+
+  call appendbufline(g:kisuke.state.buf_nr, line('$'), '> ' . 'Kisuke initialized ' . l:session_count)
+  call appendbufline(g:kisuke.state.buf_nr, line('$'), '> ' . a:reply.session_info.name)
+  call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
 
   call s:process_session_history(a:reply.payload.messages)
 endfunc

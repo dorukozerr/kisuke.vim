@@ -1,23 +1,12 @@
-import { randomBytes } from 'crypto';
-import { join } from 'path';
-import { homedir } from 'os';
-import { readFile, unlink } from 'fs/promises';
-
-import { Anthropic } from '@anthropic-ai/sdk';
-import { TextDelta } from '@anthropic-ai/sdk/resources';
-
 import { Event, Output } from './types';
-import { initialSessionData, BaseAIInstruction } from './utils/initials';
-import {
-  writeFile,
-  writeError,
-  getConfig,
-  getHistory,
-  getSession
-} from './utils/file-operations';
-import { aiClient, updateAIClient } from './lib/ai-client';
-
-const configDir = join(homedir(), '.config', 'kisuke');
+import { writeError } from './utils/file-operations';
+import { initializeHandler } from './std-handlers/initialize';
+import { promptHandler } from './std-handlers/prompt';
+import { newSessionHandler } from './std-handlers/new-session';
+import { resumeLastSessionHandler } from './std-handlers/resume-last-session';
+import { loadSessionsHandler } from './std-handlers/load_sessions';
+import { restoreSessionHandler } from './std-handlers/restore-session';
+import { deleteSessionHandler } from './std-handlers/delete-session';
 
 const stdin = process.stdin;
 const stdout = process.stdout;
@@ -25,272 +14,22 @@ const stdout = process.stdout;
 stdin.resume();
 stdin.setEncoding('utf-8');
 
-let currentSessionIndex: number = 0;
-
 stdin.on('data', async (data: string) => {
   try {
     const event = JSON.parse(data) as Event;
 
-    if (event.type === 'initialize') {
-      const configFile = await getConfig();
-      const history = await getHistory();
-
-      if (!configFile.provider || !configFile.model) {
-        sendResponse({
-          type: 'initialize',
-          payload: 'not_configured'
-        });
-      } else if (
-        (configFile.provider === 'anthropic' &&
-          !configFile.apiKeys.anthropicApiKey) ||
-        (configFile.provider === 'openai' && !configFile.apiKeys.openai) ||
-        (configFile.provider === 'google' && !configFile.apiKeys.google)
-      ) {
-        sendResponse({
-          type: 'initialize',
-          payload: 'missing_api_key',
-          provider: configFile.provider,
-          model: configFile.model
-        });
-      } else {
-        sendResponse({
-          type: 'initialize',
-          payload: 'eligible',
-          provider: configFile.provider,
-          model: configFile.model,
-          session_count: history.sessions.length
-        });
-      }
-    }
-
-    if (event.type === 'prompt') {
-      updateAIClient();
-
-      const session = await getSession(event.sessionId);
-      const context: {
-        fileName: string;
-        content: string;
-        type: 'all' | 'block';
-      }[] = [];
-
-      if (event.context) {
-        await Promise.all(
-          event.context.map(async (entry) => {
-            if (entry.scope === 'all') {
-              const fileContent = await readFile(entry.file_path, 'utf-8');
-
-              context.push({
-                fileName: entry.file_path,
-                content: fileContent,
-                type: 'all'
-              });
-            } else if (entry.scope === 'block') {
-              context.push({
-                fileName: entry.file_path,
-                content: entry.highlighted_code ?? '',
-                type: 'block'
-              });
-            }
-          })
-        );
-      }
-
-      const stream = aiClient!.messages.stream({
-        model: 'claude-3-7-sonnet-latest',
-        max_tokens: 102400,
-        messages: [
-          { role: 'assistant', content: BaseAIInstruction },
-          {
-            role: 'assistant',
-            content: `stringified session history, please parse it accordingly before using it => ${JSON.stringify(session.messages)}`
-          },
-          {
-            role: 'user',
-            content: event.context
-              ? `Here is the context of this prompt, there can be full files or code blocks in context, their type tell you about this info. If its all then its full file, if its block its a code block as you can assume. Digest this stringified context data and use it generating your next response. Stringified Context => ${JSON.stringify(context)}
-
-My prompt is => ${event.payload}`
-              : event.payload
-          }
-        ]
-      });
-
-      sendResponse({ type: 'response', payload: 'stream_start' });
-
-      try {
-        for await (const chunk of stream) {
-          if (chunk.type === 'content_block_delta') {
-            sendResponse({
-              type: 'response',
-              payload: (chunk.delta as TextDelta).text
-            });
-          }
-        }
-      } catch (error) {
-        await writeError(error, 'stream');
-
-        sendResponse({
-          type: 'error',
-          payload: `Streaming error, ${
-            error instanceof Error
-              ? {
-                  message: error.message,
-                  stack: error.stack
-                }
-              : String(error)
-          }`
-        });
-      }
-
-      sendResponse({ type: 'response', payload: 'stream_end' });
-
-      await writeFile(
-        `${event.sessionId}.json`,
-        JSON.stringify({
-          messages: [
-            ...session.messages,
-            {
-              sender: 'User',
-              message: event.payload,
-              referenceCount: context.length
-            },
-            {
-              sender: 'Kisuke',
-              message: (
-                stream.messages[3].content[0] as unknown as { text: string }
-              ).text
-            }
-          ]
-        })
-      );
-    }
-
-    if (event.type === 'new_session') {
-      const history = await getHistory();
-
-      const sessionId = randomBytes(16).toString('hex');
-
-      history.sessions.push({ id: sessionId, name: sessionId });
-
-      await Promise.all([
-        writeFile('history.json', JSON.stringify(history)),
-        writeFile(`${sessionId}.json`, JSON.stringify(initialSessionData))
-      ]);
-
-      currentSessionIndex = history.sessions.length - 1;
-
-      sendResponse({
-        type: 'new_session',
-        totalSessions: history.sessions.length,
-        currentSession: history.sessions.length,
-        sessionInfo: { id: sessionId, name: sessionId },
-        payload: initialSessionData
-      });
-    }
-
-    if (event.type === 'next_session') {
-      const history = await getHistory();
-
-      if (currentSessionIndex === history.sessions.length - 1) {
-        currentSessionIndex = 0;
-
-        const sessionInfo = history.sessions[0];
-        const session = await getSession(sessionInfo.id);
-
-        sendResponse({
-          type: 'switch_session',
-          currentSession: currentSessionIndex + 1,
-          sessionInfo,
-          payload: session
-        });
-      } else {
-        currentSessionIndex++;
-
-        const sessionInfo = history.sessions[currentSessionIndex];
-        const session = await getSession(sessionInfo.id);
-
-        sendResponse({
-          type: 'switch_session',
-          currentSession: currentSessionIndex + 1,
-          sessionInfo,
-          payload: session
-        });
-      }
-    }
-
-    if (event.type === 'prev_session') {
-      const history = await getHistory();
-
-      if (currentSessionIndex === 0) {
-        currentSessionIndex = history.sessions.length - 1;
-
-        const sessionInfo = history.sessions[currentSessionIndex];
-        const session = await getSession(sessionInfo.id);
-
-        sendResponse({
-          type: 'switch_session',
-          currentSession: currentSessionIndex + 1,
-          sessionInfo,
-          payload: session
-        });
-      } else {
-        currentSessionIndex--;
-
-        const sessionInfo = history.sessions[currentSessionIndex];
-        const session = await getSession(sessionInfo.id);
-
-        sendResponse({
-          type: 'switch_session',
-          currentSession: currentSessionIndex + 1,
-          sessionInfo,
-          payload: session
-        });
-      }
-    }
-
-    if (event.type === 'delete_session') {
-      const history = await getHistory();
-
-      history.sessions = history.sessions.filter(
-        (session) => session.id !== event.payload
-      );
-
-      await unlink(join(configDir, `${event.payload}.json`));
-
-      if (history.sessions.length === 0) {
-        const sessionId = randomBytes(16).toString('hex');
-
-        history.sessions = [{ id: sessionId, name: sessionId }];
-
-        await Promise.all([
-          writeFile(
-            'history.json',
-            JSON.stringify({ sessions: [{ id: sessionId, name: sessionId }] })
-          ),
-          writeFile(`${sessionId}.json`, JSON.stringify(initialSessionData))
-        ]);
-      } else {
-        await writeFile('history.json', JSON.stringify(history));
-      }
-
-      // const latestSessionIndex = history.sessions.length - 1;
-      // const sessionInfo = history.sessions[latestSessionIndex];
-      // const session = await getSession(sessionInfo.id);
-
-      // currentSessionIndex = latestSessionIndex;
-
-      // sendResponse({
-      //   type: 'initialize',
-      //   totalSessions: history.sessions.length,
-      //   currentSession: currentSessionIndex + 1,
-      //   sessionInfo,
-      //   payload: session
-      // });
-    }
+    // TODO: Maybe convert this to object and call event.type as key, idk
+    if (event.type === 'initialize') initializeHandler();
+    if (event.type === 'prompt') promptHandler(event);
+    if (event.type === 'new_session') newSessionHandler();
+    if (event.type === 'resume_last_session') resumeLastSessionHandler();
+    if (event.type === 'load_sessions') loadSessionsHandler();
+    if (event.type === 'restore_session') restoreSessionHandler(event);
+    if (event.type === 'delete_session') deleteSessionHandler(event);
   } catch (error) {
     await writeError(error, 'std');
 
-    sendResponse({
+    stdOutput({
       type: 'error',
       payload: `Unknown server error, ${
         error instanceof Error
@@ -304,6 +43,6 @@ My prompt is => ${event.payload}`
   }
 });
 
-const sendResponse = (reply: Output) => {
+export const stdOutput = (reply: Output) => {
   stdout.write(JSON.stringify(reply) + '\n');
 };
