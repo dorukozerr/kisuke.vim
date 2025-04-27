@@ -1,6 +1,6 @@
 let s:providers = [
+      \ { 'name': 'Anthropic', 'models': ['Sonnet', 'Haiku', 'Opus'] },
       \ { 'name': 'OpenAI', 'models': ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'] },
-      \ { 'name': 'Anthropic', 'models': ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku', 'claude-3.5-sonnet', 'claude-3.7-sonnet'] },
       \ { 'name': 'Google', 'models': ['gemini-pro', 'gemini-ultra'] },
       \ ]
 
