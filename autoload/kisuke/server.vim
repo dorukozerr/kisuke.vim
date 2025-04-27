@@ -105,14 +105,3 @@ func! kisuke#server#load()
         \ 'apiKeys': {}
         \ }
 endfunc
-
-func! kisuke#server#check_api_key(provider)
-  let l:config = kisuke#server#load()
-  let l:provider_key = tolower(a:provider) . 'ApiKey'
-
-  if has_key(l:config, 'apiKeys') && has_key(l:config.apiKeys, l:provider_key)
-    return !empty(l:config.apiKeys[l:provider_key])
-  endif
-
-  return 0
-endfunc

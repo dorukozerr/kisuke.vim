@@ -50,7 +50,12 @@ export const sendStreamResponse = async (
 
       const stream = client.messages.stream({
         model: models[config.model],
-        max_tokens: 64000,
+        max_tokens:
+          config.model === 'opus'
+            ? 4096
+            : config.model === 'haiku'
+              ? 8192
+              : 64000,
         messages: [
           { role: 'assistant', content: BaseAIInstruction },
           { role: 'assistant', content: sessionHistoryForStream(history) },

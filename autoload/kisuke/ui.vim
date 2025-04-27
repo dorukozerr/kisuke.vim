@@ -161,7 +161,5 @@ endfunc
 func! kisuke#ui#select_model(model) abort
   let s:kisuke.state.current_model = a:model
 
-  let has_api_key = kisuke#server#check_api_key(s:kisuke.state.current_provider)
-
   call kisuke#server#configure(s:kisuke.state.current_provider, s:kisuke.state.current_model)
 endfunc
