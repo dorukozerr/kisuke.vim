@@ -24,7 +24,6 @@ func! kisuke#server#start_process()
 endfunc
 
 func! kisuke#server#configure(provider, model)
-  let l:provider_key = tolower(a:provider)
   let l:api_key = input('Enter your ' . a:provider . ' API key: ')
 
   let l:checks = [
@@ -42,14 +41,14 @@ func! kisuke#server#configure(provider, model)
       let l:config = json_decode(join(readfile(l:config_file), "\n"))
     endif
 
-    let l:config.provider = a:provider
-    let l:config.model = a:model
+    let l:config.provider = tolower(a:provider)
+    let l:config.model = tolower(a:model)
 
     if !has_key(l:config, 'apiKeys')
       let l:config.apiKeys = {}
     endif
 
-    let l:config.apiKeys[l:provider_key] = l:api_key
+    let l:config.apiKeys[tolower(a:provider)] = l:api_key
 
     call writefile([json_encode(l:config)], l:config_file)
     call kisuke#buffer#restore({ 'type': 'initialize' })
@@ -62,6 +61,9 @@ endfunc
 
 func! kisuke#server#parse_reply(channel, reply)
   let l:reply = json_decode(a:reply)
+
+  let g:kisuke.state.marked_files = []
+  let g:kisuke.state.marked_code_blocks = []
 
   let l:handlers = {
         \ 'initialize': function('kisuke#handlers#initialize'),

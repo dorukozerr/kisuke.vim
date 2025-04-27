@@ -1,3 +1,28 @@
+interface BaseConfig {
+  apiKeys: {
+    anthropic: string;
+    google: string;
+    openai: string;
+  };
+}
+
+interface AnthropicConfig extends BaseConfig {
+  provider: 'anthropic';
+  model: 'sonnet' | 'haiku' | 'opus';
+}
+
+interface GoogleConfig extends BaseConfig {
+  provider: 'google';
+  model: 'flash' | 'test';
+}
+
+interface OpenAIConfig extends BaseConfig {
+  provider: 'openai';
+  model: 'gpt-4.1' | 'gpt-4.5';
+}
+
+export type Config = AnthropicConfig | GoogleConfig | OpenAIConfig;
+
 export interface History {
   sessions: { id: string; name: string }[];
 }

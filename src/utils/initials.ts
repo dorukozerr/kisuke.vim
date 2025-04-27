@@ -50,3 +50,17 @@ example output format end
 
 add as many text, explanation or codeblocks as you find needed. output format just example just be super sure there is linebreak between everything.
 `;
+
+export const sessionHistoryForStream = (sessionHistory: string) =>
+  `stringified session history, please digest fully before generating a response => ${sessionHistory}`;
+
+export const fileContextsProcessingInstructionsForStream = (
+  context: string,
+  prompt: string
+) =>
+  `Here is the context of this prompt, there can be full files or code blocks in context, their type tell you about this info. If its all then its full file, if its block its a code block as you can assume. Digest this stringified context data and use it generating your next response. Stringified Context => ${context}
+---
+Prompt is => ${prompt}`;
+
+export const sessionNameGenerationInstructions =
+  'This is the beginning of AI chat session. I will provide you the first message of user. I want you to create me a session name based on the user message. Dont generate anything except session name I want just pure session name nothing else in generated message. By the way you had opening and closing tags in one of your responses I want only raw session name text ideally around 40-60 chars nothing else. Nothing in the beginning nothing in the end just session name nothing else, dont generate nonsense.';

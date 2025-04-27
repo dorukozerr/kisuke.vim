@@ -79,12 +79,10 @@ func! kisuke#handlers#new_session(reply)
 
   let l:session_count = a:reply.session_info.current_index + 1 . '/' . a:reply.session_info.total_count
 
-  call appendbufline(g:kisuke.state.buf_nr, line('$'), '> ' . 'Kisuke initialized ' . l:session_count)
-  call appendbufline(g:kisuke.state.buf_nr, line('$'), '> ' . a:reply.session_info.name)
-  call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
+  call appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
+  call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . a:reply.session_info.name)
 
   for entry in a:reply.payload.messages
-    call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
     call appendbufline(g:kisuke.state.buf_nr, line('$'), 'Kisuke > ' . entry.message)
   endfor
 
@@ -100,9 +98,8 @@ func! kisuke#handlers#resume_last_session(reply)
 
   let l:session_count = a:reply.session_info.current_index + 1 . '/' . a:reply.session_info.total_count
 
-  call appendbufline(g:kisuke.state.buf_nr, line('$'), '> ' . 'Kisuke initialized ' . l:session_count)
-  call appendbufline(g:kisuke.state.buf_nr, line('$'), '> ' . a:reply.session_info.name)
-  call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
+  call appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
+  call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . a:reply.session_info.name)
 
   call s:process_session_history(a:reply.payload.messages)
 endfunc
@@ -120,15 +117,14 @@ func! kisuke#handlers#restore_session(reply)
 
   let l:session_count = a:reply.session_info.current_index + 1 . '/' . a:reply.session_info.total_count
 
-  call appendbufline(g:kisuke.state.buf_nr, line('$'), '> ' . 'Kisuke initialized ' . l:session_count)
-  call appendbufline(g:kisuke.state.buf_nr, line('$'), '> ' . a:reply.session_info.name)
-  call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
+  call appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
+  call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . a:reply.session_info.name)
 
   call s:process_session_history(a:reply.payload.messages)
 endfunc
 
 func! kisuke#handlers#error(reply)
-  call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, 'Server error > ' . a:reply.payload)
+  call appendbufline(g:kisuke.state.buf_nr, line('$'), 'Server error > ' . a:reply.payload)
 endfunc
 
 func! s:process_session_history(messages)
