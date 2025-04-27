@@ -95,7 +95,9 @@ func! kisuke#ui#render_buffer_menu(state, ...) abort
     let l:sessions = a:1
 
     for session in l:sessions
-      call s:add_menu_item(session.name, 'kisuke#buffer#restore', {
+      let l:cleaned_session_name = substitute(session.name, '\%x00', '', 'g')
+
+      call s:add_menu_item(l:cleaned_session_name, 'kisuke#buffer#restore', {
             \ 'type': 'restore_session',
             \ 'payload': session.id
             \ })
