@@ -1,13 +1,23 @@
 import { randomBytes } from 'crypto';
-import { mkdir, readFile, writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { homedir } from 'os';
-import { existsSync } from 'fs';
+import { readFile, unlink } from 'fs/promises';
+
 import { Anthropic } from '@anthropic-ai/sdk';
 import { TextDelta } from '@anthropic-ai/sdk/resources';
 
-import { History, Session, Event, Output } from './types';
+import { Event, Output } from './types';
 import { initialSessionData, BaseAIInstruction } from './utils/initials';
+import {
+  writeFile,
+  writeError,
+  getConfig,
+  getHistory,
+  getSession
+} from './utils/file-operations';
+import { aiClient, updateAIClient } from './lib/ai-client';
+
+const configDir = join(homedir(), '.config', 'kisuke');
 
 const stdin = process.stdin;
 const stdout = process.stdout;
@@ -15,91 +25,15 @@ const stdout = process.stdout;
 stdin.resume();
 stdin.setEncoding('utf-8');
 
-const configDir = join(homedir(), '.config', 'kisuke');
-
-if (!existsSync(configDir)) mkdir(configDir, { recursive: true });
-
-let anthropicClient: Anthropic | null = null;
 let currentSessionIndex: number = 0;
-
-const setupKisukeFiles = async () => {
-  await Promise.all([
-    writeFile(
-      join(configDir, 'history.json'),
-      JSON.stringify({ sessions: [] })
-    ),
-    writeFile(
-      join(configDir, 'config.json'),
-      JSON.stringify({
-        provider: '',
-        model: '',
-        apiKeys: { anthropicApiKey: '' }
-      })
-    )
-  ]);
-
-  return JSON.parse(
-    await readFile(join(configDir, 'history.json'), 'utf-8')
-  ) as History;
-};
-
-const getConfig = async () => {
-  try {
-    return JSON.parse(await readFile(join(configDir, 'config.json'), 'utf-8'));
-  } catch {
-    await setupKisukeFiles();
-
-    return JSON.parse(await readFile(join(configDir, 'config.json'), 'utf-8'));
-  }
-};
-
-const getHistory = async () => {
-  try {
-    return JSON.parse(
-      await readFile(join(configDir, 'history.json'), 'utf-8')
-    ) as History;
-  } catch {
-    await setupKisukeFiles();
-
-    return JSON.parse(
-      await readFile(join(configDir, 'history.json'), 'utf-8')
-    ) as History;
-  }
-};
-
-const getSession = async (sessionId: string) =>
-  JSON.parse(
-    await readFile(join(configDir, `${sessionId}.json`), 'utf-8')
-  ) as Session;
 
 stdin.on('data', async (data: string) => {
   try {
-    const configFile = await getConfig();
-
-    if (anthropicClient === null) {
-      anthropicClient = new Anthropic({
-        apiKey: configFile.apiKeys.anthropicApiKey
-      });
-    }
-
     const event = JSON.parse(data) as Event;
 
     if (event.type === 'initialize') {
+      const configFile = await getConfig();
       const history = await getHistory();
-
-      //  const latestSessionIndex = history.sessions.length - 1;
-      //  const sessionInfo = history.sessions[latestSessionIndex];
-      //  const session = await getSession(sessionInfo.id);
-
-      //  currentSessionIndex = latestSessionIndex;
-
-      // sendResponse({
-      //   type: 'initialize',
-      //   totalSessions: history.sessions.length,
-      //   currentSession: currentSessionIndex + 1,
-      //   sessionInfo,
-      //   payload: session
-      // });
 
       if (!configFile.provider || !configFile.model) {
         sendResponse({
@@ -107,8 +41,10 @@ stdin.on('data', async (data: string) => {
           payload: 'not_configured'
         });
       } else if (
-        configFile.provider === 'anthropic' &&
-        !configFile.apiKeys.anthropicApiKey
+        (configFile.provider === 'anthropic' &&
+          !configFile.apiKeys.anthropicApiKey) ||
+        (configFile.provider === 'openai' && !configFile.apiKeys.openai) ||
+        (configFile.provider === 'google' && !configFile.apiKeys.google)
       ) {
         sendResponse({
           type: 'initialize',
@@ -128,6 +64,8 @@ stdin.on('data', async (data: string) => {
     }
 
     if (event.type === 'prompt') {
+      updateAIClient();
+
       const session = await getSession(event.sessionId);
       const context: {
         fileName: string;
@@ -157,7 +95,7 @@ stdin.on('data', async (data: string) => {
         );
       }
 
-      const stream = anthropicClient.messages.stream({
+      const stream = aiClient!.messages.stream({
         model: 'claude-3-5-sonnet-latest',
         max_tokens: 4096,
         messages: [
@@ -188,17 +126,26 @@ My prompt is => ${event.payload}`
             });
           }
         }
-      } catch (streamError) {
+      } catch (error) {
+        await writeError(error, 'stream');
+
         sendResponse({
           type: 'error',
-          payload: `Stream error: ${streamError}`
+          payload: `Streaming error, ${
+            error instanceof Error
+              ? {
+                  message: error.message,
+                  stack: error.stack
+                }
+              : String(error)
+          }`
         });
       }
 
       sendResponse({ type: 'response', payload: 'stream_end' });
 
       await writeFile(
-        join(configDir, `${event.sessionId}.json`),
+        `${event.sessionId}.json`,
         JSON.stringify({
           messages: [
             ...session.messages,
@@ -226,12 +173,10 @@ My prompt is => ${event.payload}`
       history.sessions.push({ id: sessionId, name: sessionId });
 
       await Promise.all([
-        writeFile(join(configDir, 'history.json'), JSON.stringify(history)),
-        writeFile(
-          join(configDir, `${sessionId}.json`),
-          JSON.stringify(initialSessionData)
-        )
+        writeFile('history.json', JSON.stringify(history)),
+        writeFile(`${sessionId}.json`, JSON.stringify(initialSessionData))
       ]);
+
       currentSessionIndex = history.sessions.length - 1;
 
       sendResponse({
@@ -319,19 +264,13 @@ My prompt is => ${event.payload}`
 
         await Promise.all([
           writeFile(
-            join(configDir, 'history.json'),
+            'history.json',
             JSON.stringify({ sessions: [{ id: sessionId, name: sessionId }] })
           ),
-          writeFile(
-            join(configDir, `${sessionId}.json`),
-            JSON.stringify(initialSessionData)
-          )
+          writeFile(`${sessionId}.json`, JSON.stringify(initialSessionData))
         ]);
       } else {
-        await writeFile(
-          join(configDir, 'history.json'),
-          JSON.stringify(history)
-        );
+        await writeFile('history.json', JSON.stringify(history));
       }
 
       // const latestSessionIndex = history.sessions.length - 1;
@@ -349,9 +288,18 @@ My prompt is => ${event.payload}`
       // });
     }
   } catch (error) {
+    await writeError(error, 'std');
+
     sendResponse({
       type: 'error',
-      payload: `Unknown server error, ${(error as { message?: string })?.message}`
+      payload: `Unknown server error, ${
+        error instanceof Error
+          ? {
+              message: error.message,
+              stack: error.stack
+            }
+          : String(error)
+      }`
     });
   }
 });

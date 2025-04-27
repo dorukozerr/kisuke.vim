@@ -145,23 +145,8 @@ endfunc
 
 func! kisuke#ui#select_model(model) abort
   let s:kisuke.state.current_model = a:model
+
   let has_api_key = kisuke#server#check_api_key(s:kisuke.state.current_provider)
 
   call kisuke#server#configure(s:kisuke.state.current_provider, s:kisuke.state.current_model)
-endfunc
-
-func! kisuke#ui#show_provider_selection() abort
-  call kisuke#ui#render_buffer_menu('configure_plugin')
-endfunc
-
-func! kisuke#ui#create_new_session() abort
-  echom 'Create new session'
-endfunc
-
-func! kisuke#ui#load_previous_sessions() abort
-  echom 'Load previous sessions'
-endfunc
-
-func! kisuke#ui#load_prev_session(chat_id) abort
-  echom 'Load previous session with ID ' chat_id
 endfunc
