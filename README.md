@@ -57,14 +57,11 @@ I'm working on instructions for other plugin managers - coming soon!
 Add these to your .vimrc:
 
 ```vim
-nnoremap <Leader>ka :KisukeConfiguration<CR>
 nnoremap <Leader>ko :KisukeOpen<CR>
 nnoremap <Leader>km :KisukeMarkFocusedFile<CR>
 vnoremap <Leader>kh :KisukeMarkHighlighted<CR>
 nnoremap <leader>krc :KisukeRemoveLastMarkedCodeBlock<CR>
 nnoremap <Leader>kc :KisukeCreateNewSession<CR>
-nnoremap <Leader>kn :KisukeNextSession<CR>
-nnoremap <Leader>kp :KisukePreviousSession<CR>
 nnoremap <Leader>kd :KisukeDeleteSession<CR>
 ```
 
@@ -72,9 +69,6 @@ nnoremap <Leader>kd :KisukeDeleteSession<CR>
 | :------------------------------------------------------------- | :--------------------------------- | :---------------------------------------- | :--- |
 | <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>o</kbd>                | `:KisukeOpen`                      | Open Kisuke chat buffer                   | `n`  |
 | <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>c</kbd>                | `:KisukeCreateNewSession`          | Create new session                        | `n`  |
-| <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>n</kbd>                | `:KisukeNextSession`               | Next session                              | `n`  |
-| <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>p</kbd>                | `:KisukePreviousSession`           | Previous session                          | `n`  |
-| <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>a</kbd>                | `:KisukeConfiguration`             | Configure API key                         | `n`  |
 | <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>d</kbd>                | `:KisukeDeleteSession`             | Delete current session                    | `n`  |
 | <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>m</kbd>                | `:KisukeMarkFocusedFile`           | Mark or unmark focused file for context   | `n`  |
 | <kbd>leader</kbd> + <kbd>k</kbd> + <kbd>h</kbd>                | `:KisukeMarkHighlighted`           | Mark highlighted code block for context   | `v`  |
