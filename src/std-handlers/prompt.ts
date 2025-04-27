@@ -3,7 +3,7 @@ import { readFile } from 'fs/promises';
 import { PromptEvent } from '../types';
 import { stdOutput } from '..';
 import { getSession, writeFile, getHistory } from '../utils/file-operations';
-import { sendStreamResponse, generateSessionName } from '../lib/ai-client';
+import { sendStreamResponse, generateSessionName } from '../lib/ai-operations';
 
 export const promptHandler = async (event: PromptEvent) => {
   const history = await getHistory();

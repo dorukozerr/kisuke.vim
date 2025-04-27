@@ -13,18 +13,6 @@ import {
   sessionNameGenerationInstructions
 } from '../utils/initials';
 
-export const getAIClient = async () => {
-  const config = await getConfig();
-
-  return config.provider === 'anthropic'
-    ? new Anthropic({ apiKey: config.apiKeys.anthropic })
-    : config.provider === 'google'
-      ? new GoogleGenAI({ apiKey: config.apiKeys.google })
-      : config.provider === 'openai'
-        ? new OpenAI({ apiKey: config.apiKeys.openai })
-        : null;
-};
-
 export const sendStreamResponse = async (
   history: string,
   context: {
@@ -204,6 +192,69 @@ export const sendStreamResponse = async (
         });
       }
     }
+
+    if (config.provider === 'openai') {
+      const client = new OpenAI({ apiKey: config.apiKeys.openai });
+
+      const stream = await client.responses.create({
+        model: config.model,
+        input: [
+          { role: 'developer', content: BaseAIInstruction },
+          { role: 'developer', content: sessionHistoryForStream(history) },
+          {
+            role: 'user',
+            content: context
+              ? fileContextsProcessingInstructionsForStream(
+                  JSON.stringify(context),
+                  prompt
+                )
+              : prompt
+          }
+        ],
+        stream: true
+      });
+
+      let res = '';
+
+      stdOutput({ type: 'response', payload: 'stream_start' });
+
+      for await (const event of stream) {
+        if (event.type === 'response.output_text.delta') {
+          stdOutput({
+            type: 'response',
+            payload: (event as { delta: string }).delta
+          });
+        }
+
+        if (event.type === 'response.content_part.done') {
+          res = (event.part as { text: string }).text;
+        }
+      }
+
+      stdOutput({ type: 'response', payload: 'stream_end' });
+
+      await writeError(stream, 'openai_stream');
+
+      await writeFile(
+        `${sessionId}.json`,
+        JSON.stringify({
+          messages: [
+            ...session.messages,
+            {
+              sender: 'User',
+              message: prompt,
+              referenceCount: context.length
+            },
+            {
+              sender: 'Kisuke',
+              message: res
+            }
+          ]
+        })
+      );
+
+      return true;
+    }
   } catch (error) {
     await writeError(error, 'streamOuter');
 
@@ -248,14 +299,6 @@ export const generateSessionName = async (prompt: string) => {
       return sessionName;
     }
 
-    const models = {
-      'pro-2.5-exp': 'gemini-2.0-pro-exp-02-05',
-      'flash-2.0-exp': 'gemini-2.0-flash-exp',
-      'flash-1.5': 'gemini-1.5-flash-latest',
-      'flash-1.5-8b': 'gemini-1.5-flash-8b-latest',
-      'pro-1.5': 'gemini-1.5-pro-latest'
-    };
-
     if (config.provider === 'google') {
       const client = new GoogleGenAI({ apiKey: config.apiKeys.google });
 
@@ -264,12 +307,36 @@ export const generateSessionName = async (prompt: string) => {
         { text: prompt }
       ];
 
+      const models = {
+        'pro-2.5-exp': 'gemini-2.0-pro-exp-02-05',
+        'flash-2.0-exp': 'gemini-2.0-flash-exp',
+        'flash-1.5': 'gemini-1.5-flash-latest',
+        'flash-1.5-8b': 'gemini-1.5-flash-8b-latest',
+        'pro-1.5': 'gemini-1.5-pro-latest'
+      };
+
       const aiResponse = await client.models.generateContent({
         model: models[config.model],
         contents: promptParts
       });
 
       const sessionName = aiResponse.text;
+
+      return sessionName;
+    }
+
+    if (config.provider === 'openai') {
+      const client = new OpenAI({ apiKey: config.apiKeys.openai });
+
+      const aiResponse = await client.responses.create({
+        model: config.model,
+        input: [
+          { role: 'developer', content: sessionNameGenerationInstructions },
+          { role: 'user', content: prompt }
+        ]
+      });
+
+      const sessionName = aiResponse.output_text;
 
       return sessionName;
     }

@@ -23,7 +23,14 @@ interface GoogleConfig extends BaseConfig {
 
 interface OpenAIConfig extends BaseConfig {
   provider: 'openai';
-  model: 'gpt-4.1' | 'gpt-4.5';
+  model:
+    | 'gpt-4.1'
+    | 'gpt-4.1-mini'
+    | 'gpt-4o'
+    | 'gpt-4o-mini'
+    | 'gpt-4-turbo'
+    | 'gpt-4'
+    | 'gpt-3.5-turbo';
 }
 
 export type Config = AnthropicConfig | GoogleConfig | OpenAIConfig;
