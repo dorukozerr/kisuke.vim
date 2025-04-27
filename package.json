@@ -6,8 +6,9 @@
   "author": "Doruk Özer <dorukozer@protonmail.com>",
   "main": "src/index.ts",
   "scripts": {
-    "build": "yarn && tsc",
-    "format": "prettier ./src/**/* --check"
+    "format": "prettier src --check",
+    "lint": "eslint src",
+    "build": "yarn && yarn format && yarn lint && tsc"
   },
   "license": "MIT",
   "private": false,
