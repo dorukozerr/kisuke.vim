@@ -96,8 +96,8 @@ stdin.on('data', async (data: string) => {
       }
 
       const stream = aiClient!.messages.stream({
-        model: 'claude-3-5-sonnet-latest',
-        max_tokens: 4096,
+        model: 'claude-3-7-sonnet-latest',
+        max_tokens: 102400,
         messages: [
           { role: 'assistant', content: BaseAIInstruction },
           {
