@@ -14,18 +14,6 @@ func! kisuke#handlers#initialize(reply)
   elseif l:eligiblityState ==# 'eligible'
     call kisuke#ui#render_buffer_menu('eligible', a:reply.provider, a:reply.model, a:reply.session_count)
   endif
-  "  let g:kisuke.state.session_id = a:reply.session_info.id
-  "  let g:kisuke.state.total_sessions = a:reply.totalSessions
-  "
-  "  call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> ' . 'Kisuke initialized')
-  "  call appendbufline(g:kisuke.state.buf_nr, line('$') - 1, '> ' . 'Session ' . a:reply.current_session . '/' . g:kisuke.state.total_sessions)
-  "  call s:process_session_history(a:reply.payload.messages)
-  "
-  "  if len(g:kisuke.state.marked_files)
-  "    call kisuke#buffer#render_marked_content()
-  "  endif
-  "
-  "  call kisuke#syntax#setup()
 endfunc
 
 func! kisuke#handlers#response(reply)
@@ -36,38 +24,6 @@ func! kisuke#handlers#response(reply)
   else
     call s:handle_stream(a:reply)
   endif
-endfunc
-
-func! s:handle_stream_start()
-  call setbufline(g:kisuke.state.buf_nr, line('$'), ' ')
-
-  let s:kisuke.state.response_start_line = line('$') + 1
-endfunc
-
-func! s:handle_stream_end()
-  let g:kisuke.state.marked_files = []
-  let g:kisuke.state.marked_code_blocks = []
-  let s:kisuke.state.stream_response = ''
-  let s:kisuke.state.response_start_line = v:null
-
-  call setbufline(g:kisuke.state.buf_nr, line('$') + 1, ' ')
-endfunc
-
-func s:handle_stream(reply)
-  let s:kisuke.state.stream_response = s:kisuke.state.stream_response . a:reply.payload
-  let l:index = 0
-
-  for line in split(s:kisuke.state.stream_response, '\n')
-    if l:index ==# 0
-      call setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, 'Kisuke > ' . line)
-    else
-      call setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, line)
-    endif
-
-    normal! G
-
-    let l:index += 1
-  endfor
 endfunc
 
 func! kisuke#handlers#new_session(reply)
@@ -125,6 +81,38 @@ endfunc
 
 func! kisuke#handlers#error(reply)
   call appendbufline(g:kisuke.state.buf_nr, line('$'), 'Server error > ' . a:reply.payload)
+endfunc
+
+func s:handle_stream(reply)
+  let s:kisuke.state.stream_response = s:kisuke.state.stream_response . a:reply.payload
+  let l:index = 0
+
+  for line in split(s:kisuke.state.stream_response, '\n')
+    if l:index ==# 0
+      call setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, 'Kisuke > ' . line)
+    else
+      call setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, line)
+    endif
+
+    normal! G
+
+    let l:index += 1
+  endfor
+endfunc
+
+func! s:handle_stream_start()
+  call setbufline(g:kisuke.state.buf_nr, line('$'), ' ')
+
+  let s:kisuke.state.response_start_line = line('$') + 1
+endfunc
+
+func! s:handle_stream_end()
+  let g:kisuke.state.marked_files = []
+  let g:kisuke.state.marked_code_blocks = []
+  let s:kisuke.state.stream_response = ''
+  let s:kisuke.state.response_start_line = v:null
+
+  call setbufline(g:kisuke.state.buf_nr, line('$') + 1, ' ')
 endfunc
 
 func! s:process_session_history(messages)

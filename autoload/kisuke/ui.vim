@@ -108,7 +108,6 @@ func! kisuke#ui#render_buffer_menu(state, ...) abort
   call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
   call appendbufline(g:kisuke.state.buf_nr, line('$'), 'Press Enter to select an option')
 
-
   nnoremap <buffer> <CR> :call kisuke#ui#select_menu_option()<CR>
   nnoremap <buffer> j j
   nnoremap <buffer> k k

@@ -3,8 +3,6 @@ func! kisuke#buffer#open()
     call kisuke#server#start_process()
   endif
 
-  let g:kisuke.state.is_pending = 1
-
   if bufexists(g:kisuke.state.buf_nr)
     call kisuke#buffer#restore({ 'type': 'initialize' })
   else
@@ -23,16 +21,24 @@ func! kisuke#buffer#create()
 endfunc
 
 func! kisuke#buffer#restore(payload = v:null)
-  let l:wid = bufwinid(g:kisuke.state.buf_nr)
+  let l:checks = [
+        \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first' },
+        \ { 'condition': g:kisuke.state.is_pending, 'message': 'Please wait for server to finish its job' },
+        \ { 'condition': bufwinid(g:kisuke.state.buf_nr) ==# -1, 'message': 'Please run :KisukeOpen first' },
+        \ ]
 
-  if l:wid ==# -1
-    exe 'vsplit | buffer ' . g:kisuke.state.buf_nr
-  else
-    call win_gotoid(l:wid)
-  endif
+  if kisuke#utils#validate(l:checks)
+    let l:wid = bufwinid(g:kisuke.state.buf_nr)
 
-  if a:payload != v:null
-    call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(a:payload))
+    if l:wid ==# -1
+      exe 'vsplit | buffer ' . g:kisuke.state.buf_nr
+    else
+      call win_gotoid(l:wid)
+    endif
+
+    if a:payload != v:null
+      call ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(a:payload))
+    endif
   endif
 endfunc
 
@@ -40,11 +46,11 @@ func! kisuke#buffer#mark_focused_file()
   let l:current_file = expand('%:p')
 
   let l:checks = [
-        \ {'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
-        \ {'condition': g:kisuke.state.is_pending, 'message': 'Cannot mark a file while server generating response'},
-        \ {'condition': bufnr('%') ==# g:kisuke.state.buf_nr, 'message': 'Cannot mark Kisuke chat buffer'},
-        \ {'condition': bufwinid(g:kisuke.state.buf_nr) ==# -1, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
-        \ {'condition': empty(l:current_file), 'message': 'This file cannot be marked'},
+        \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko' },
+        \ { 'condition': g:kisuke.state.is_pending, 'message': 'Please wait for server to finish its job' },
+        \ { 'condition': bufnr('%') ==# g:kisuke.state.buf_nr, 'message': 'Cannot mark Kisuke chat buffer' },
+        \ { 'condition': bufwinid(g:kisuke.state.buf_nr) ==# -1, 'message': 'Please run :KisukeOpen first, or press <leader>ko '},
+        \ { 'condition': empty(l:current_file), 'message': 'This file cannot be marked '},
         \ ]
 
   if kisuke#utils#validate(l:checks)
@@ -78,11 +84,11 @@ func! kisuke#buffer#mark_highlighted_code() range
   let l:current_file = expand('%:p')
 
   let l:checks = [
-        \ {'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
-        \ {'condition': g:kisuke.state.is_pending, 'message': 'Cannot mark code while server generating response'},
-        \ {'condition': bufnr('%') ==# g:kisuke.state.buf_nr, 'message': 'Cannot mark Kisuke chat buffer'},
-        \ {'condition': bufwinid(g:kisuke.state.buf_nr) ==# -1, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
-        \ {'condition': empty(l:current_file), 'message': 'This file cannot be marked'},
+        \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first' },
+        \ { 'condition': g:kisuke.state.is_pending, 'message': 'Please wait for server to finish its job' },
+        \ { 'condition': bufnr('%') ==# g:kisuke.state.buf_nr, 'message': 'Cannot mark Kisuke chat buffer' },
+        \ { 'condition': bufwinid(g:kisuke.state.buf_nr) ==# -1, 'message': 'Please run :KisukeOpen first' },
+        \ { 'condition': empty(l:current_file), 'message': 'This file cannot be marked'},
         \ ]
 
   if kisuke#utils#validate(l:checks)
@@ -107,10 +113,10 @@ endfunc
 
 func! kisuke#buffer#remove_last_marked_code_block()
   let l:checks = [
-        \ {'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
-        \ {'condition': g:kisuke.state.is_pending, 'message': 'Cannot mark code while server generating response'},
-        \ {'condition': bufwinid(g:kisuke.state.buf_nr) ==# -1, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
-        \ {'condition': len(g:kisuke.state.marked_code_blocks) ==# 0, 'message': 'You have no marked code block'},
+        \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first'},
+        \ { 'condition': g:kisuke.state.is_pending, 'message': 'Please wait for server to finish its job'},
+        \ { 'condition': bufwinid(g:kisuke.state.buf_nr) ==# -1, 'message': 'Please run :KisukeOpen first'},
+        \ { 'condition': len(g:kisuke.state.marked_code_blocks) ==# 0, 'message': 'You have no marked code block'},
         \ ]
 
   if kisuke#utils#validate(l:checks)
@@ -237,7 +243,7 @@ endfunc
 func! kisuke#buffer#on_submit(prompt)
   let l:checks = [
         \ { 'condition': a:prompt ==# '', 'message': 'Cannot submit empty prompt, please write something' },
-        \ { 'condition': g:kisuke.state.is_pending, 'message': 'Cannot submit a new prompt while server generating a response' },
+        \ { 'condition': g:kisuke.state.is_pending, 'message': 'Please wait for server to finish its job' },
         \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Server is not running, try restarting vim' },
         \ ]
 

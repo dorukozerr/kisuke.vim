@@ -12,16 +12,15 @@ endfunc
 
 func s:check_conditions()
   let l:checks = [
-        \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko' },
-        \ { 'condition': g:kisuke.state.is_pending, 'message': 'Cannot mark a file while server generating response' },
-        \ { 'condition': bufwinid(g:kisuke.state.buf_nr) ==# -1, 'message': 'Please run :KisukeOpen first, or press <leader>ko' },
-        \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko' },
+        \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first' },
+        \ { 'condition': bufwinid(g:kisuke.state.buf_nr) ==# -1, 'message': 'Please run :KisukeOpen first' },
+        \ { 'condition': g:kisuke.state.is_pending, 'message': 'Please wait for server to finish its job' },
+        \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first' },
         \ ]
 
   if kisuke#utils#validate(l:checks)
     let g:kisuke.state.marked_files = []
     let g:kisuke.state.marked_code_blocks = []
-    let g:kisuke.state.is_pending = 1
 
     return 1
   else

@@ -37,9 +37,10 @@ let g:kisuke.state = {
       \ 'marked_code_blocks': [],
       \ }
 
-command! KisukeOpen call kisuke#buffer#open()
-command! KisukeMarkFocusedFile call kisuke#buffer#mark_focused_file()
+command! KisukeOpen                                  call kisuke#buffer#open()
+command! KisukeMarkFocusedFile                       call kisuke#buffer#mark_focused_file()
 command! -range KisukeMarkHighlighted <line1>,<line2>call kisuke#buffer#mark_highlighted_code()
-command! KisukeRemoveLastMarkedCodeBlock call kisuke#buffer#remove_last_marked_code_block()
-command! KisukeCreateNewSession call kisuke#session#create_new_session()
-command! KisukeDeleteSession call kisuke#session#delete_current_session()
+command! KisukeRemoveLastMarkedCodeBlock             call kisuke#buffer#remove_last_marked_code_block()
+command! KisukeCreateNewSession                      call kisuke#session#create_new_session()
+command! KisukeDeleteSession                         call kisuke#session#delete_current_session()
+command! KisukeResumeLastSession                     call kisuke#buffer#restore({ 'type': 'resume_last_session' })
