@@ -2,7 +2,7 @@
 
 A minimal AI assistant integration for Vim.
 
-![screenshot](ss-1.png)
+[Watch the video on YouTube](https://www.youtube.com/watch?v=cCadzIf8Ql0)
 
 ## About
 
