@@ -43,12 +43,9 @@ export const sendStreamResponse = async (
             : config.model === 'haiku'
               ? 8192
               : 64000,
+        system:
+          BaseAIInstruction + sessionHistoryForStream(JSON.stringify(session)),
         messages: [
-          { role: 'assistant', content: BaseAIInstruction },
-          {
-            role: 'assistant',
-            content: sessionHistoryForStream(JSON.stringify(session))
-          },
           {
             role: 'user',
             content: context
@@ -116,10 +113,14 @@ export const sendStreamResponse = async (
     if (config.provider === 'google') {
       const client = new GoogleGenAI({ apiKey: config.apiKeys.google });
 
-      const promptParts = [
-        { text: BaseAIInstruction },
-        { text: sessionHistoryForStream(JSON.stringify(session)) },
+      const messages = [
         {
+          role: 'model',
+          text:
+            BaseAIInstruction + sessionHistoryForStream(JSON.stringify(session))
+        },
+        {
+          role: 'user',
           text: context
             ? fileContextsProcessingInstructionsForStream(
                 JSON.stringify(context),
@@ -140,7 +141,7 @@ export const sendStreamResponse = async (
 
       const stream = await client.models.generateContentStream({
         model: models[config.model],
-        contents: [{ role: 'user', parts: promptParts }]
+        contents: messages
       });
 
       stdOutput({ type: 'response', payload: 'stream_start' });
@@ -201,12 +202,9 @@ export const sendStreamResponse = async (
 
       const stream = await client.responses.create({
         model: config.model,
+        instructions:
+          BaseAIInstruction + sessionHistoryForStream(JSON.stringify(session)),
         input: [
-          { role: 'developer', content: BaseAIInstruction },
-          {
-            role: 'developer',
-            content: sessionHistoryForStream(JSON.stringify(session))
-          },
           {
             role: 'user',
             content: context
@@ -294,10 +292,8 @@ export const generateSessionName = async (prompt: string) => {
       const aiResponse = await client.messages.create({
         max_tokens: 1024,
         model: models[config.model],
-        messages: [
-          { role: 'assistant', content: sessionNameGenerationInstructions },
-          { role: 'user', content: prompt }
-        ]
+        system: sessionNameGenerationInstructions,
+        messages: [{ role: 'user', content: prompt }]
       });
 
       const sessionName = (aiResponse.content[0] as { text: string }).text;
@@ -309,8 +305,8 @@ export const generateSessionName = async (prompt: string) => {
       const client = new GoogleGenAI({ apiKey: config.apiKeys.google });
 
       const promptParts = [
-        { text: sessionNameGenerationInstructions },
-        { text: prompt }
+        { role: 'model', text: sessionNameGenerationInstructions },
+        { role: 'user', text: prompt }
       ];
 
       const models = {
@@ -338,7 +334,7 @@ export const generateSessionName = async (prompt: string) => {
       const aiResponse = await client.responses.create({
         model: config.model,
         input: [
-          { role: 'developer', content: sessionNameGenerationInstructions },
+          { role: 'system', content: sessionNameGenerationInstructions },
           { role: 'user', content: prompt }
         ]
       });
