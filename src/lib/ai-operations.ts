@@ -100,7 +100,7 @@ export const sendStreamResponse = async (
             {
               sender: 'Kisuke',
               message: (
-                stream?.messages[3].content[0] as unknown as { text: string }
+                stream?.messages[1].content[0] as unknown as { text: string }
               ).text
             }
           ]
