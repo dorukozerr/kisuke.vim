@@ -113,7 +113,7 @@ export const sendStreamResponse = async (
     if (config.provider === 'google') {
       const client = new GoogleGenAI({ apiKey: config.apiKeys.google });
 
-      const messages = [
+      const contents = [
         {
           role: 'model',
           text:
@@ -141,7 +141,7 @@ export const sendStreamResponse = async (
 
       const stream = await client.models.generateContentStream({
         model: models[config.model],
-        contents: messages
+        contents
       });
 
       stdOutput({ type: 'response', payload: 'stream_start' });
@@ -304,7 +304,7 @@ export const generateSessionName = async (prompt: string) => {
     if (config.provider === 'google') {
       const client = new GoogleGenAI({ apiKey: config.apiKeys.google });
 
-      const promptParts = [
+      const contents = [
         { role: 'model', text: sessionNameGenerationInstructions },
         { role: 'user', text: prompt }
       ];
@@ -320,7 +320,7 @@ export const generateSessionName = async (prompt: string) => {
 
       const aiResponse = await client.models.generateContent({
         model: models[config.model],
-        contents: promptParts
+        contents
       });
 
       const sessionName = aiResponse.text;
