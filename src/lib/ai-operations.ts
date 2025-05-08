@@ -14,7 +14,6 @@ import {
 } from '../utils/initials';
 
 export const sendStreamResponse = async (
-  history: string,
   context: {
     fileName: string;
     content: string;
@@ -46,7 +45,10 @@ export const sendStreamResponse = async (
               : 64000,
         messages: [
           { role: 'assistant', content: BaseAIInstruction },
-          { role: 'assistant', content: sessionHistoryForStream(history) },
+          {
+            role: 'assistant',
+            content: sessionHistoryForStream(JSON.stringify(session))
+          },
           {
             role: 'user',
             content: context
@@ -116,7 +118,7 @@ export const sendStreamResponse = async (
 
       const promptParts = [
         { text: BaseAIInstruction },
-        { text: sessionHistoryForStream(history) },
+        { text: sessionHistoryForStream(JSON.stringify(session)) },
         {
           text: context
             ? fileContextsProcessingInstructionsForStream(
@@ -201,7 +203,10 @@ export const sendStreamResponse = async (
         model: config.model,
         input: [
           { role: 'developer', content: BaseAIInstruction },
-          { role: 'developer', content: sessionHistoryForStream(history) },
+          {
+            role: 'developer',
+            content: sessionHistoryForStream(JSON.stringify(session))
+          },
           {
             role: 'user',
             content: context

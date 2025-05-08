@@ -44,7 +44,6 @@ export const promptHandler = async (event: PromptEvent) => {
   }
 
   const isSuccess = await sendStreamResponse(
-    JSON.stringify(history),
     context,
     event.payload,
     session,
