@@ -14,7 +14,7 @@ export const writeFile = async (fileName: string, content: string) =>
 
 export const writeError = async (error: unknown, operation: string) =>
   await fsWriteFile(
-    join(configDir, 'errors.txt'),
+    join(configDir, 'errors.json'),
     JSON.stringify(
       {
         timestamp: new Date().toLocaleDateString(),

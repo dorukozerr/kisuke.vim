@@ -228,7 +228,7 @@ Common issues:
 Server not starting:
 - Ensure Node.js and Yarn are properly installed
 - Try running `yarn build` again in the plugin directory
-- Check ~/.config/kisuke/errors.txt for backend errors
+- Check ~/.config/kisuke/errors.json for backend errors
 
 API key issues:
 - Verify your API key is correct
