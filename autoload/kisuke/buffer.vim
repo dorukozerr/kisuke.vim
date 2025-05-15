@@ -197,6 +197,10 @@ func! kisuke#buffer#render_marked_content()
         endif
       endif
     endfor
+
+    if len(g:kisuke.state.marked_code_blocks)
+      call kisuke#syntax#setup()
+    endif
   endif
 
   if len(g:kisuke.state.marked_code_blocks)
@@ -272,21 +276,20 @@ func! kisuke#buffer#prepare_chat_buffer()
         \ nobuflisted
         \ nonumber
         \ norelativenumber
+        \ filetype=kisuke_chat
 
+  call prompt_setprompt(bufnr('%'), 'Prompt > ')
+  call prompt_setcallback(bufnr('%'), function('kisuke#buffer#on_submit'))
+
+  let g:kisuke.state.buf_nr = bufnr('%')
+
+  unlet! b:kisuke_syntax_initialized
   call kisuke#syntax#setup()
 
-  call prompt_setprompt(g:kisuke.state.buf_nr, 'Prompt > ')
-  call prompt_setcallback(g:kisuke.state.buf_nr, function('kisuke#buffer#on_submit'))
-
-  augroup g:kisuke.state.buf_name
-    autocmd!
+  augroup KisukeChatBuffer
+    autocmd! * <buffer>
     autocmd TextChanged,TextChangedI <buffer> setlocal nomodified
-  augroup END
-
-  augroup KisukeSyntax
-    autocmd!
-    autocmd BufEnter,TextChanged <buffer>
-          \ let b:syntax_setup_done = 0 | call kisuke#syntax#setup()
+    autocmd BufEnter <buffer> call kisuke#syntax#setup()
   augroup END
 endfunc
 
@@ -301,4 +304,6 @@ func! kisuke#buffer#prepare_menu_buffer()
         \ nonumber
         \ norelativenumber
         \ filetype=kisuke_menu
+
+  call kisuke#syntax#setup_menu()
 endfunc

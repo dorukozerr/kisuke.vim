@@ -116,6 +116,7 @@ func! s:handle_stream_end()
   let s:kisuke.state.response_start_line = v:null
 
   call setbufline(g:kisuke.state.buf_nr, line('$') + 1, ' ')
+  call kisuke#syntax#setup()
 endfunc
 
 func! s:process_session_history(messages)
@@ -126,26 +127,32 @@ func! s:process_session_history(messages)
       call s:render_user_prompt(entry)
     endif
   endfor
+
+  call kisuke#syntax#setup()
 endfunc
 
 func! s:render_kisuke_response(entry)
+  let l:bufnr = g:kisuke.state.buf_nr
+
   let s:kisuke.state.response_start_line = line('$') + 1
+  let l:lines = split(a:entry.message, '\n')
+
+  let l:buffer_lines = []
   let l:index = 0
 
-  for line in split(a:entry.message, '\n')
-    if l:index ==# 0
-      call setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, 'Kisuke > ' . line)
+  for line in l:lines
+    if l:index == 0
+      call add(l:buffer_lines, 'Kisuke > ' . line)
     else
-      call setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, line)
+      call add(l:buffer_lines, line)
     endif
-
     let l:index += 1
   endfor
 
   let s:kisuke.state.response_start_line = v:null
 
-  call setbufline(g:kisuke.state.buf_nr, line('$') + 1, ' ')
-
+  call add(l:buffer_lines, ' ')
+  call appendbufline(l:bufnr, line('$'), l:buffer_lines)
   call kisuke#syntax#setup()
 endfunc
 
