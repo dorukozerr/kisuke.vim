@@ -93,7 +93,21 @@ yarn build
 cd ~
 ```
 
-Remember to run `:helptags ALL` after installing with Pathogen or Vundle if you want access to any potential help files (though Kisuke doesn't have extensive help files currently).
+### Help Documentation
+
+Kisuke.vim includes comprehensive help documentation. After installation, you can access it by running:
+
+```vim
+:help kisuke
+```
+
+If the help tags aren't automatically generated during installation, you can generate them manually:
+
+```vim
+:helptags ALL
+```
+
+This will give you access to detailed information about commands, configuration options, and usage examples.
 
 ## Configuration
 
