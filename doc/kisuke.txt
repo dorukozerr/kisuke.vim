@@ -1,0 +1,259 @@
+*kisuke.txt*  AI Programming Assistant for Vim                           *kisuke*
+
+==============================================================================
+CONTENTS                                                    *kisuke-contents*
+
+    1. Introduction .................... |kisuke-introduction|
+    2. Installation .................... |kisuke-installation|
+    3. Configuration ................... |kisuke-configuration|
+    4. Commands ........................ |kisuke-commands|
+    5. Key Mappings .................... |kisuke-mappings|
+    6. Usage Examples .................. |kisuke-usage|
+    7. Context Sharing ................. |kisuke-context|
+    8. Session Management .............. |kisuke-sessions|
+    9. Troubleshooting ................. |kisuke-troubleshooting|
+   10. License ......................... |kisuke-license|
+
+==============================================================================
+1. INTRODUCTION                                         *kisuke-introduction*
+
+Kisuke.vim is a Vim plugin that integrates AI capabilities directly into your
+editor. Named after the brilliant scientist Kisuke Urahara from Bleach, this
+plugin acts as your programming assistant, providing code suggestions,
+explanations, and assistance without leaving Vim.
+
+Features:
+- Multi-session chat interface within Vim
+- Support for multiple AI providers and models
+- Buffer menu for easy navigation and session management
+- File context sharing (mark files to include in prompts)
+- Code snippet selection for context
+- Syntax highlighting for code blocks in the chat buffer
+- Session management (create, switch, delete)
+
+==============================================================================
+2. INSTALLATION                                         *kisuke-installation*
+
+Prerequisites:
+- Node.js and Yarn must be installed globally:
+  `npm i -g yarn@latest`
+
+Using Vim packages (Recommended): >
+    mkdir -p ~/.vim/pack/plugins/start
+    cd ~/.vim/pack/plugins/start
+    git clone https://github.com/dorukozerr/kisuke.vim.git
+    cd kisuke.vim
+    yarn build
+<
+
+Using vim-plug: >
+    " Add to your .vimrc
+    Plug 'dorukozerr/kisuke.vim', { 'do': 'yarn build' }
+
+    " Then run:
+    :PlugInstall
+<
+
+Using Vundle: >
+    " Add to your .vimrc
+    Plugin 'dorukozerr/kisuke.vim'
+
+    " Then run:
+    :PluginInstall
+
+    " After installation, build the Node.js backend:
+    cd ~/.vim/bundle/kisuke.vim
+    yarn build
+<
+
+Using Pathogen: >
+    cd ~/.vim/bundle
+    git clone https://github.com/dorukozerr/kisuke.vim.git
+    cd kisuke.vim
+    yarn build
+<
+
+==============================================================================
+3. CONFIGURATION                                     *kisuke-configuration*
+
+Kisuke will prompt you for provider configuration and API keys the first time
+you use it. All configuration is stored in:
+~/.config/kisuke/config.json
+
+Supported AI Providers and Models:
+
+Anthropic:
+  - sonnet (Claude 3 Sonnet)
+  - haiku (Claude 3 Haiku)
+  - opus (Claude 3 Opus)
+
+Google:
+  - pro-2.5-exp
+  - pro-2.5-prev
+  - flash-2.0-exp
+  - flash-1.5
+  - flash-1.5-8b
+  - pro-1.5
+
+OpenAI:
+  - gpt-4.1
+  - gpt-4.1-mini
+  - gpt-4o
+  - gpt-4o-mini
+  - gpt-4-turbo
+  - gpt-4
+  - gpt-3.5-turbo
+
+You can configure or change your provider and model through the buffer menu,
+accessible via the `:KisukeOpen` command.
+
+==============================================================================
+4. COMMANDS                                               *kisuke-commands*
+
+*:KisukeOpen*
+    Open the Kisuke chat buffer and menu.
+
+*:KisukeMarkFocusedFile*
+    Mark/unmark the currently focused file to include as context in your next
+    prompt. Toggling behavior - run again to unmark.
+
+*:KisukeMarkHighlighted* (visual mode)
+    Mark the currently highlighted code section to include as context in your
+    next prompt.
+
+*:KisukeRemoveLastMarkedCodeBlock*
+    Remove the most recently added code block from the context.
+
+*:KisukeCreateNewSession*
+    Create a new chat session with the AI.
+
+*:KisukeDeleteSession*
+    Delete the current chat session.
+
+*:KisukeResumeLastSession*
+    Resume the most recent chat session.
+
+==============================================================================
+5. KEY MAPPINGS                                           *kisuke-mappings*
+
+Kisuke doesn't define default key mappings. Add these recommended mappings
+to your .vimrc:
+
+>
+    " Kisuke.vim key mappings
+    nnoremap <Leader>ko :KisukeOpen<CR>
+    nnoremap <Leader>km :KisukeMarkFocusedFile<CR>
+    vnoremap <Leader>kh :KisukeMarkHighlighted<CR>
+    nnoremap <leader>krc :KisukeRemoveLastMarkedCodeBlock<CR>
+    nnoremap <Leader>kc :KisukeCreateNewSession<CR>
+    nnoremap <Leader>kd :KisukeDeleteSession<CR>
+    nnoremap <Leader>krs :KisukeResumeLastSession<CR>
+<
+
+Mapping Reference:
+  <Leader>ko - Open Kisuke chat buffer & menu (normal mode)
+  <Leader>km - Mark/unmark focused file for context (normal mode)
+  <Leader>kh - Mark highlighted code block for context (visual mode)
+  <Leader>krc - Remove last added code block from context (normal mode)
+  <Leader>kc - Create new session (normal mode)
+  <Leader>kd - Delete current session (normal mode)
+  <Leader>krs - Resume the most recent session (normal mode)
+
+==============================================================================
+6. USAGE EXAMPLES                                           *kisuke-usage*
+
+Basic usage:
+1. Open Kisuke: `:KisukeOpen` or <Leader>ko
+2. Select an AI provider and model on first use
+3. Type your question/prompt in the buffer
+4. Press Enter to submit and wait for the AI response
+
+Adding file context:
+1. Navigate to a file you want to reference
+2. Mark it: `:KisukeMarkFocusedFile` or <Leader>km
+3. Return to Kisuke buffer: `:KisukeOpen` or <Leader>ko
+4. Your marked file will be included in the next prompt
+
+Adding code snippet context:
+1. In a file, use visual mode (v) to select code
+2. Mark it: `:KisukeMarkHighlighted` or <Leader>kh
+3. Return to Kisuke buffer
+4. Your code snippet will be included in the next prompt
+
+Managing sessions:
+- Create new: `:KisukeCreateNewSession` or <Leader>kc
+- Delete current: `:KisukeDeleteSession` or <Leader>kd
+- Resume last: `:KisukeResumeLastSession` or <Leader>krs
+
+==============================================================================
+7. CONTEXT SHARING                                         *kisuke-context*
+
+Kisuke allows you to share file and code context with the AI:
+
+Marking Files:
+- Navigate to any file and use `:KisukeMarkFocusedFile` or <Leader>km
+- The entire file will be included as context in your next prompt
+- Toggle behavior: marking again removes the file from context
+
+Marking Code Blocks:
+- Select code in visual mode and use `:KisukeMarkHighlighted` or <Leader>kh
+- Only the selected code will be included in your next prompt
+- Remove last added with `:KisukeRemoveLastMarkedCodeBlock` or <Leader>krc
+
+The context is cleared after each prompt submission.
+
+All marked files and code blocks appear in the Kisuke buffer before your
+prompt so you can confirm what context will be sent.
+
+==============================================================================
+8. SESSION MANAGEMENT                                     *kisuke-sessions*
+
+Kisuke maintains chat sessions with persistent history:
+
+- Each session has a unique ID and name (auto-generated based on first prompt)
+- Sessions are stored in ~/.config/kisuke/ directory
+- Create new sessions with `:KisukeCreateNewSession` or <Leader>kc
+- Delete the current session with `:KisukeDeleteSession` or <Leader>kd
+- Resume the last session with `:KisukeResumeLastSession` or <Leader>krs
+- Browse and select from previous sessions via the buffer menu
+
+Sessions help organize different conversations and reduce token usage by
+keeping conversations focused on specific topics.
+
+==============================================================================
+9. TROUBLESHOOTING                                 *kisuke-troubleshooting*
+
+Common issues:
+
+Server not starting:
+- Ensure Node.js and Yarn are properly installed
+- Try running `yarn build` again in the plugin directory
+- Check ~/.config/kisuke/errors.txt for backend errors
+
+API key issues:
+- Verify your API key is correct
+- Check ~/.config/kisuke/config.json to confirm it's saved
+- Some API keys require a billing account to be set up
+
+No syntax highlighting in code blocks:
+- Ensure Vim has syntax highlighting enabled: `:syntax on`
+- The language must be correctly specified after the opening ```
+
+Performance issues:
+- For large files, mark specific code blocks rather than entire files
+- Longer sessions consume more tokens; create new sessions for distinct topics
+- Some models (like Opus) are slower but more capable
+
+If issues persist:
+- Report issues on GitHub: https://github.com/dorukozerr/kisuke.vim/issues
+
+==============================================================================
+10. LICENSE                                               *kisuke-license*
+
+Kisuke.vim is released under the MIT License.
+Copyright (c) Doruk Özer
+
+See LICENSE file for details.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
