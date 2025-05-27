@@ -1,5 +1,5 @@
 let s:providers = [
-      \ { 'name': 'Anthropic', 'models': ['Sonnet', 'Haiku', 'Opus'] },
+      \ { 'name': 'Anthropic', 'models': ['Sonnet-4', 'Opus-4', 'Sonnet-3.7', 'Haiku-3.7', 'Opus-3.7'] },
       \ { 'name': 'Google', 'models': ['Pro-2.5-exp', 'Pro-2.5-prev', 'Flash-2.0-exp','Flash-1.5', 'Flash-1.5-8b', 'Pro-1.5'] },
       \ { 'name': 'OpenAI', 'models': ['gpt-4.1', 'gpt-4.1-mini', 'gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'] },
       \ ]

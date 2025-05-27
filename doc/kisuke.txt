@@ -83,8 +83,10 @@ you use it. All configuration is stored in:
 Supported AI Providers and Models:
 
 Anthropic:
-  - sonnet (Claude 3 Sonnet)
-  - haiku (Claude 3 Haiku)
+  - sonnect (Claude 4 Sonnet)
+  - opus (Claude 4 Opus)
+  - sonnet (Claude 3.7 Sonnet)
+  - haiku (Claude 3.5 Haiku)
   - opus (Claude 3 Opus)
 
 Google:

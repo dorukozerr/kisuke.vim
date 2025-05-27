@@ -30,19 +30,23 @@ export const sendStreamResponse = async (
       const client = new Anthropic({ apiKey: config.apiKeys.anthropic });
 
       const models = {
-        sonnet: 'claude-3-7-sonnet-latest',
-        haiku: 'claude-3-5-haiku-latest',
-        opus: 'claude-3-opus-latest'
+        'sonnet-4': 'claude-sonnet-4-20250514',
+        'opus-4': 'claude-4-opus-20250514',
+        'sonnet-3.7': 'claude-3-7-sonnet-latest',
+        'haiku-3.7': 'claude-3-5-haiku-latest',
+        'opus-3.7': 'claude-3-opus-latest'
       };
 
       const stream = client.messages.stream({
         model: models[config.model],
         max_tokens:
-          config.model === 'opus'
+          config.model === 'opus-3.7'
             ? 4096
-            : config.model === 'haiku'
+            : config.model === 'haiku-3.7'
               ? 8192
-              : 64000,
+              : config.model === 'opus-4'
+                ? 32000
+                : 64000,
         system:
           BaseAIInstruction + sessionHistoryForStream(JSON.stringify(session)),
         messages: [
@@ -284,13 +288,22 @@ export const generateSessionName = async (prompt: string) => {
       const client = new Anthropic({ apiKey: config.apiKeys.anthropic });
 
       const models = {
-        sonnet: 'claude-3-7-sonnet-latest',
-        haiku: 'claude-3-5-haiku-latest',
-        opus: 'claude-3-opus-latest'
+        'sonnet-4': 'claude-sonnet-4-20250514',
+        'opus-4': 'claude-4-opus-20250514',
+        'sonnet-3.7': 'claude-3-7-sonnet-latest',
+        'haiku-3.7': 'claude-3-5-haiku-latest',
+        'opus-3.7': 'claude-3-opus-latest'
       };
 
       const aiResponse = await client.messages.create({
-        max_tokens: 1024,
+        max_tokens:
+          config.model === 'opus-3.7'
+            ? 4096
+            : config.model === 'haiku-3.7'
+              ? 8192
+              : config.model === 'opus-4'
+                ? 32000
+                : 64000,
         model: models[config.model],
         system: sessionNameGenerationInstructions,
         messages: [{ role: 'user', content: prompt }]

@@ -8,7 +8,7 @@ interface BaseConfig {
 
 interface AnthropicConfig extends BaseConfig {
   provider: 'anthropic';
-  model: 'sonnet' | 'haiku' | 'opus';
+  model: 'sonnet-4' | 'opus-4' | 'sonnet-3.7' | 'haiku-3.7' | 'opus-3.7';
 }
 
 interface GoogleConfig extends BaseConfig {
