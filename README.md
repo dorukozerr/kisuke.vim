@@ -20,41 +20,32 @@ Kisuke.vim is a simple Vim plugin designed to bring basic AI capabilities into t
 
 ## Supported Providers and Models
 
-### Anthropic
+#### ANTHROPIC:
 
-- Claude 4 Series
-  - `sonnet-4` - Claude 4 Sonnet
-  - `opus-4` - Claude 4 Opus
-- Claude 3.7 Series
-  - `sonnet-3.7` - Claude 3.7 Sonnet (Latest)
-  - `haiku-3.7` - Claude 3.7 Haiku (Latest)
-  - `opus-3.7` - Claude 3.7 Opus (Latest)
+- sonnet-4
+- opus-4
+- sonnet-3.7
+- haiku-3.7
+- opus-3.7
 
-### Google
+####  GOOGLE:
 
-- Gemini 2.5 Series
-  - `pro-2.5-exp` - Gemini Pro 2.5 Experimental
-  - `pro-2.5-prev` - Gemini Pro 2.5 Preview
-- Gemini Flash Series
-  - `flash-2.0-exp` - Gemini Flash 2.0 Experimental
-  - `flash-1.5` - Gemini Flash 1.5
-  - `flash-1.5-8b` - Gemini Flash 1.5 8B
-- Legacy
-  - `pro-1.5` - Gemini Pro 1.5
+- pro-2.5-exp
+- pro-2.5-prev
+- flash-2.0-exp
+- flash-1.5
+- flash-1.5-8b
+- pro-1.5
 
-### OpenAI
+#### OPENAI
 
-- GPT-4.1 Series
-  - `gpt-4.1` - GPT-4.1
-  - `gpt-4.1-mini` - GPT-4.1 Mini
-- GPT-4 Optimized
-  - `gpt-4o` - GPT-4 Optimized
-  - `gpt-4o-mini` - GPT-4 Optimized Mini
-- GPT-4 Classic
-  - `gpt-4-turbo` - GPT-4 Turbo
-  - `gpt-4` - GPT-4
-- Legacy
-  - `gpt-3.5-turbo` - GPT-3.5 Turbo
+- gpt-4.1 (
+- gpt-4.1-mini
+- gpt-4o
+- gpt-4o-mini
+- gpt-4-turbo
+- gpt-4
+- gpt-3.5-turbo
 
 ## Installation
 
