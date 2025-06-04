@@ -296,15 +296,8 @@ export const generateSessionName = async (prompt: string) => {
       };
 
       const aiResponse = await client.messages.create({
-        max_tokens:
-          config.model === 'opus-3.7'
-            ? 4096
-            : config.model === 'haiku-3.7'
-              ? 8192
-              : config.model === 'opus-4'
-                ? 32000
-                : 64000,
         model: models[config.model],
+        max_tokens: 512,
         system: sessionNameGenerationInstructions,
         messages: [{ role: 'user', content: prompt }]
       });
