@@ -56,6 +56,11 @@ CODE BLOCK RULES (ESSENTIAL FOR VIM RENDERING):
   • cpp (not c++)
   • csharp (not c#)
   • rust, java, ruby, php
+- Example code block formatting below, do not generate anything else than this
+
+\`\`\`typescript (or any other language name)
+// code
+\`\`\`
 
 Code Standards:
 - Write clean, readable code

@@ -67,6 +67,8 @@ export const sendStreamResponse = async (
       try {
         for await (const chunk of stream) {
           if (chunk.type === 'content_block_delta') {
+            // await writeTempJson(chunk);
+
             stdOutput({
               type: 'response',
               payload: (chunk.delta as TextDelta).text
@@ -134,17 +136,8 @@ export const sendStreamResponse = async (
         }
       ];
 
-      const models = {
-        'pro-2.5-exp': 'gemini-2.0-pro-exp-02-05',
-        'pro-2.5-prev': 'gemini-2.5-pro-preview-05-06',
-        'flash-2.0-exp': 'gemini-2.0-flash-exp',
-        'flash-1.5': 'gemini-1.5-flash-latest',
-        'flash-1.5-8b': 'gemini-1.5-flash-8b-latest',
-        'pro-1.5': 'gemini-1.5-pro-latest'
-      };
-
       const stream = await client.models.generateContentStream({
-        model: models[config.model],
+        model: config.model,
         contents
       });
 
@@ -154,6 +147,8 @@ export const sendStreamResponse = async (
         let completeResponse = '';
 
         for await (const chunk of stream) {
+          // await writeTempJson(chunk);
+
           if (chunk.text) {
             stdOutput({
               type: 'response',
@@ -227,6 +222,8 @@ export const sendStreamResponse = async (
       stdOutput({ type: 'response', payload: 'stream_start' });
 
       for await (const event of stream) {
+        // await writeTempJson(event);
+
         if (event.type === 'response.output_text.delta') {
           stdOutput({
             type: 'response',
@@ -315,17 +312,8 @@ export const generateSessionName = async (prompt: string) => {
         { role: 'user', text: prompt }
       ];
 
-      const models = {
-        'pro-2.5-exp': 'gemini-2.0-pro-exp-02-05',
-        'pro-2.5-prev': 'gemini-2.5-pro-preview-05-06',
-        'flash-2.0-exp': 'gemini-2.0-flash-exp',
-        'flash-1.5': 'gemini-1.5-flash-latest',
-        'flash-1.5-8b': 'gemini-1.5-flash-8b-latest',
-        'pro-1.5': 'gemini-1.5-pro-latest'
-      };
-
       const aiResponse = await client.models.generateContent({
-        model: models[config.model],
+        model: config.model,
         contents
       });
 

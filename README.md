@@ -30,12 +30,8 @@ Kisuke.vim is a simple Vim plugin designed to bring basic AI capabilities into t
 
 ####  GOOGLE:
 
-- pro-2.5-exp
-- pro-2.5-prev
-- flash-2.0-exp
-- flash-1.5
-- flash-1.5-8b
-- pro-1.5
+- gemini-2.5-pro
+- gemini-2.5-flash
 
 #### OPENAI
 
