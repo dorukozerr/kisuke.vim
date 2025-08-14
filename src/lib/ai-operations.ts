@@ -5,12 +5,7 @@ import OpenAI from 'openai';
 
 import { Session } from '../types';
 import { stdOutput } from '..';
-import {
-  getConfig,
-  writeFile,
-  writeError,
-  writeTempJson
-} from '../utils/file-operations';
+import { getConfig, writeFile, writeError } from '../utils/file-operations';
 import {
   BaseAIInstruction,
   sessionHistoryForStream,
@@ -72,8 +67,6 @@ export const sendStreamResponse = async (
       try {
         for await (const chunk of stream) {
           if (chunk.type === 'content_block_delta') {
-            // await writeTempJson(chunk);
-
             stdOutput({
               type: 'response',
               payload: (chunk.delta as TextDelta).text
@@ -152,8 +145,6 @@ export const sendStreamResponse = async (
         let completeResponse = '';
 
         for await (const chunk of stream) {
-          // await writeTempJson(chunk);
-
           if (chunk.text) {
             stdOutput({
               type: 'response',
@@ -227,8 +218,6 @@ export const sendStreamResponse = async (
       stdOutput({ type: 'response', payload: 'stream_start' });
 
       for await (const event of stream) {
-        // await writeTempJson(event);
-
         if (event.type === 'response.output_text.delta') {
           stdOutput({
             type: 'response',
@@ -304,8 +293,6 @@ export const generateSessionName = async (prompt: string) => {
         system: sessionNameGenerationInstructions,
         messages: [{ role: 'user', content: prompt }]
       });
-
-      writeTempJson(aiResponse);
 
       const sessionName = (aiResponse.content[0] as { text: string }).text;
 
