@@ -88,4 +88,4 @@ File contexts (type 'all' = complete file, type 'block' = code snippet): ${conte
 User's request: ${prompt}`;
 
 export const sessionNameGenerationInstructions =
-  'Generate a concise, descriptive session name based on the user message. Output ONLY the session name as plain text. No formatting, no newlines, just the name (80-100 chars). Make it specific to the technical topic discussed. Session name can be max 80 character.';
+  'Create a brief session title (max 8 words) describing the main programming topic from the user message. Output ONLY the title, no explanations or formatting. Examples: "TypeScript Error Handling", "React Component Optimization", "Database Query Performance".';

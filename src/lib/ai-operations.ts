@@ -5,7 +5,12 @@ import OpenAI from 'openai';
 
 import { Session } from '../types';
 import { stdOutput } from '..';
-import { getConfig, writeFile, writeError } from '../utils/file-operations';
+import {
+  getConfig,
+  writeFile,
+  writeError,
+  writeTempJson
+} from '../utils/file-operations';
 import {
   BaseAIInstruction,
   sessionHistoryForStream,
@@ -294,10 +299,13 @@ export const generateSessionName = async (prompt: string) => {
 
       const aiResponse = await client.messages.create({
         model: models[config.model],
-        max_tokens: 512,
+        max_tokens: 30,
+        temperature: 0.3,
         system: sessionNameGenerationInstructions,
         messages: [{ role: 'user', content: prompt }]
       });
+
+      writeTempJson(aiResponse);
 
       const sessionName = (aiResponse.content[0] as { text: string }).text;
 
@@ -314,7 +322,8 @@ export const generateSessionName = async (prompt: string) => {
 
       const aiResponse = await client.models.generateContent({
         model: config.model,
-        contents
+        contents,
+        config: { maxOutputTokens: 30, temperature: 0.3 }
       });
 
       const sessionName = aiResponse.text;
@@ -327,6 +336,8 @@ export const generateSessionName = async (prompt: string) => {
 
       const aiResponse = await client.responses.create({
         model: config.model,
+        max_output_tokens: 30,
+        temperature: 0.3,
         input: [
           { role: 'system', content: sessionNameGenerationInstructions },
           { role: 'user', content: prompt }
