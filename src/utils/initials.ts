@@ -38,6 +38,7 @@ FORMAT REQUIREMENTS (ABSOLUTELY CRITICAL):
 - Use only simple dash (-) for bullet points when needed
 - NO empty lines between paragraphs in text sections
 - Code blocks MUST have exactly ONE empty line before and after
+- Always add some text to beginning of your answers, first characters or first line of your answer should not be code block delimiter backticks
 
 CODE BLOCK RULES (ESSENTIAL FOR VIM RENDERING):
 - Start with exactly three backticks followed immediately by language name
