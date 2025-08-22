@@ -8,7 +8,7 @@
 "          ╚═╝  ╚═╝╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝            "
 "                                                                  "
 " ================================================================ "
-" Author:      Doruk Özer <dorukozerr@protonmail.com>              "
+" Author:      Doruk Özer <dorukozer@protonmail.com>               "
 " License:     MIT                                                 "
 " Version:     0.2.0                                               "
 " Description: Kisuke - Simple AI plugin for Vim                   "
