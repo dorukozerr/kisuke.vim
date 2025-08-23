@@ -45,7 +45,7 @@ export const sendStreamResponse = async (
             ? 4096
             : config.model === 'haiku-3.7'
               ? 8192
-              : config.model === 'opus-4'
+              : config.model === 'opus-4' || config.model === 'opus-4-1'
                 ? 32000
                 : 64000,
         system:
