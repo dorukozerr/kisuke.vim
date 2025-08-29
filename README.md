@@ -29,6 +29,10 @@ Kisuke.vim is a simple Vim plugin designed to bring basic AI capabilities into t
 - haiku-3.7
 - opus-3.7
 
+#### GROK:
+
+- grok-4
+
 ####  GOOGLE:
 
 - gemini-2.5-pro
