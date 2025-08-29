@@ -259,8 +259,7 @@ export const sendStreamResponse = async (
     if (config.provider === 'grok') {
       const client = new OpenAI({
         apiKey: config.apiKeys.grok,
-        baseURL: 'https://api.x.ai/v1',
-        timeout: 60 * 5
+        baseURL: 'https://api.x.ai/v1'
       });
 
       const stream = await client.chat.completions.create({
