@@ -3,6 +3,7 @@ interface BaseConfig {
     anthropic: string;
     google: string;
     openai: string;
+    grok: string;
   };
 }
 
@@ -34,7 +35,12 @@ interface OpenAIConfig extends BaseConfig {
     | 'gpt-3.5-turbo';
 }
 
-export type Config = AnthropicConfig | GoogleConfig | OpenAIConfig;
+interface GrokConfig extends BaseConfig {
+  provider: 'grok';
+  model: 'grok-4';
+}
+
+export type Config = AnthropicConfig | GoogleConfig | OpenAIConfig | GrokConfig;
 
 export interface History {
   sessions: { id: string; name: string }[];

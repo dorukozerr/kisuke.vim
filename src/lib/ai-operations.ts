@@ -5,7 +5,12 @@ import OpenAI from 'openai';
 
 import { Session } from '../types';
 import { stdOutput } from '..';
-import { getConfig, writeFile, writeError } from '../utils/file-operations';
+import {
+  getConfig,
+  writeFile,
+  writeError,
+  writeTempJson
+} from '../utils/file-operations';
 import {
   BaseAIInstruction,
   sessionHistoryForStream,
@@ -229,6 +234,75 @@ export const sendStreamResponse = async (
         if (event.type === 'response.content_part.done') {
           res = (event.part as { text: string }).text;
         }
+      }
+
+      stdOutput({ type: 'response', payload: 'stream_end' });
+
+      await writeError(stream, 'openai_stream');
+
+      await writeFile(
+        `${sessionId}.json`,
+        JSON.stringify({
+          messages: [
+            ...session.messages,
+            {
+              sender: 'User',
+              message: prompt,
+              referenceCount: context.length
+            },
+            {
+              sender: 'Kisuke',
+              message: res
+            }
+          ]
+        })
+      );
+
+      return true;
+    }
+
+    if (config.provider === 'grok') {
+      const client = new OpenAI({
+        apiKey: config.apiKeys.grok,
+        baseURL: 'https://api.x.ai/v1',
+        timeout: 60
+      });
+
+      const stream = await client.chat.completions.create({
+        model: 'grok-4',
+        messages: [
+          {
+            role: 'system',
+            content:
+              BaseAIInstruction +
+              sessionHistoryForStream(JSON.stringify(session))
+          },
+          {
+            role: 'user',
+            content: context
+              ? fileContextsProcessingInstructionsForStream(
+                  JSON.stringify(context),
+                  prompt
+                )
+              : prompt
+          }
+        ],
+        stream: true
+      });
+
+      let res = '';
+
+      stdOutput({ type: 'response', payload: 'stream_start' });
+
+      for await (const chunk of stream) {
+        stdOutput({
+          type: 'response',
+          payload: chunk.choices[0].delta.content ?? ''
+        });
+
+        await writeTempJson(chunk);
+
+        res = res + (chunk.choices[0].delta.content ?? '');
       }
 
       stdOutput({ type: 'response', payload: 'stream_end' });

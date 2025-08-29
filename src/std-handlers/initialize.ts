@@ -12,7 +12,8 @@ export const initializeHandler = async () => {
   } else if (
     (config.provider === 'anthropic' && !config.apiKeys.anthropic) ||
     (config.provider === 'openai' && !config.apiKeys.openai) ||
-    (config.provider === 'google' && !config.apiKeys.google)
+    (config.provider === 'google' && !config.apiKeys.google) ||
+    (config.provider === 'grok' && !config.apiKeys.grok)
   ) {
     stdOutput({
       type: 'initialize',
