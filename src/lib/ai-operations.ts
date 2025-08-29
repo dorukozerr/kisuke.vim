@@ -5,12 +5,7 @@ import OpenAI from 'openai';
 
 import { Session } from '../types';
 import { stdOutput } from '..';
-import {
-  getConfig,
-  writeFile,
-  writeError,
-  writeTempJson
-} from '../utils/file-operations';
+import { getConfig, writeFile, writeError } from '../utils/file-operations';
 import {
   BaseAIInstruction,
   sessionHistoryForStream,
@@ -299,8 +294,6 @@ export const sendStreamResponse = async (
           type: 'response',
           payload: chunk.choices[0].delta.content ?? ''
         });
-
-        await writeTempJson(chunk);
 
         res = res + (chunk.choices[0].delta.content ?? '');
       }
