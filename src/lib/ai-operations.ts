@@ -259,7 +259,8 @@ export const sendStreamResponse = async (
     if (config.provider === 'grok') {
       const client = new OpenAI({
         apiKey: config.apiKeys.grok,
-        baseURL: 'https://api.x.ai/v1'
+        baseURL: 'https://api.x.ai/v1',
+        timeout: 720000
       });
 
       const stream = await client.chat.completions.create({
@@ -298,8 +299,6 @@ export const sendStreamResponse = async (
       }
 
       stdOutput({ type: 'response', payload: 'stream_end' });
-
-      await writeError(stream, 'openai_stream');
 
       await writeFile(
         `${sessionId}.json`,
