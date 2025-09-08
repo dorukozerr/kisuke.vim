@@ -21,12 +21,20 @@ func! kisuke#syntax#setup()
   syntax match KisukePrompt /^Prompt >/
   syntax match KisukeResponse /^Kisuke >/
   syntax match KisukeSystem /^> .*$/
+  syntax match KisukeSearch /^\[SEARCH\].*$/
+  syntax match KisukeFetch /^\[FETCH\].*$/
+  syntax match KisukeInfo /^\[INFO\].*$/
+  syntax match KisukeUsage /^\[USAGE\].*$/
 
   call s:process_code_blocks(l:current_buf)
 
   hi def link KisukePrompt Statement
   hi def link KisukeResponse Identifier
   hi def link KisukeSystem Special
+  hi def link KisukeSearch WarningMsg
+  hi def link KisukeFetch Function
+  hi def link KisukeInfo Comment
+  hi def link KisukeUsage Type
   hi def link KisukeCodeDelimiter Delimiter
 endfunc
 
