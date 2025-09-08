@@ -284,6 +284,8 @@ func! kisuke#buffer#prepare_chat_buffer()
   let g:kisuke.state.buf_nr = bufnr('%')
 
   unlet! b:kisuke_syntax_initialized
+  unlet! b:kisuke_base_syntax_applied
+  unlet! b:last_processed_line
   call kisuke#syntax#setup()
 
   augroup KisukeChatBuffer
