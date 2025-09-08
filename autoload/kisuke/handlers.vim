@@ -60,6 +60,7 @@ func! kisuke#handlers#resume_last_session(reply)
   call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . l:cleaned_session_name)
 
   call s:process_session_history(a:reply.payload.messages)
+  call kisuke#syntax#setup()
 endfunc
 
 func! kisuke#handlers#load_sessions(reply)
@@ -80,6 +81,7 @@ func! kisuke#handlers#restore_session(reply)
   call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . l:cleaned_session_name)
 
   call s:process_session_history(a:reply.payload.messages)
+  call kisuke#syntax#setup()
 endfunc
 
 func! kisuke#handlers#error(reply)
@@ -100,7 +102,6 @@ func s:handle_stream(reply)
     let l:index += 1
   endfor
 
-  call s:handle_incremental_syntax()
 endfunc
 
 func! s:handle_incremental_syntax()
@@ -133,8 +134,6 @@ func! s:process_session_history(messages)
       call s:render_user_prompt(entry)
     endif
   endfor
-
-  call kisuke#syntax#setup()
 endfunc
 
 func! s:render_kisuke_response(entry)
@@ -159,7 +158,6 @@ func! s:render_kisuke_response(entry)
 
   call add(l:buffer_lines, ' ')
   call appendbufline(l:bufnr, line('$'), l:buffer_lines)
-  call kisuke#syntax#setup()
 endfunc
 
 func! s:render_user_prompt(entry)
@@ -170,6 +168,4 @@ func! s:render_user_prompt(entry)
 
   call appendbufline(g:kisuke.state.buf_nr, line('$'), 'Prompt > ' . a:entry.message)
   call setbufline(g:kisuke.state.buf_nr, line('$') + 1, ' ')
-
-  call kisuke#syntax#setup()
 endfunc
