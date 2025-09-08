@@ -97,10 +97,16 @@ func s:handle_stream(reply)
       call setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, line)
     endif
 
-    normal! G
-
     let l:index += 1
   endfor
+
+  call s:handle_incremental_syntax()
+endfunc
+
+func! s:handle_incremental_syntax()
+  if exists('*kisuke#syntax#setup_incremental')
+    call kisuke#syntax#setup_incremental()
+  endif
 endfunc
 
 func! s:handle_stream_start()

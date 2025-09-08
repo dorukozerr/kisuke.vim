@@ -60,20 +60,110 @@ export const sendStreamResponse = async (
                 )
               : prompt
           }
-        ]
+        ],
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }]
       });
 
       stdOutput({ type: 'response', payload: 'stream_start' });
 
+      let completeResponse = '';
+      let modelInfo = '';
+
+      const totalUsage = {
+        input_tokens: 0,
+        output_tokens: 0,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+        server_tool_use: { web_search_requests: 0 }
+      };
+
       try {
         for await (const chunk of stream) {
-          if (chunk.type === 'content_block_delta') {
+          if (chunk?.type === 'message_start' && chunk?.message?.model) {
+            modelInfo = chunk.message.model;
+            if (chunk.message.usage) {
+              totalUsage.input_tokens += chunk.message.usage.input_tokens || 0;
+              totalUsage.output_tokens +=
+                chunk.message.usage.output_tokens || 0;
+              totalUsage.cache_creation_input_tokens +=
+                chunk.message.usage.cache_creation_input_tokens || 0;
+              totalUsage.cache_read_input_tokens +=
+                chunk.message.usage.cache_read_input_tokens || 0;
+            }
+          }
+
+          if (
+            chunk?.type === 'content_block_start' &&
+            chunk?.content_block?.type === 'server_tool_use' &&
+            chunk.content_block.name === 'web_search'
+          ) {
+            const needsSpacing =
+              completeResponse.length > 0 && !completeResponse.endsWith('\n\n');
+
+            let searchMessage;
+
+            if (completeResponse.length === 0) {
+              searchMessage = `I need to search for current information on this topic.\n\n[SEARCH] Querying web resources...\n\n`;
+            } else {
+              searchMessage = `${needsSpacing ? '\n\n' : ''}[SEARCH] Querying web resources...\n\n`;
+            }
+
+            completeResponse += searchMessage;
+
             stdOutput({
               type: 'response',
-              payload: (chunk.delta as TextDelta).text
+              payload: searchMessage
             });
           }
+
+          if (
+            chunk?.type === 'content_block_start' &&
+            chunk?.content_block?.type === 'web_search_tool_result'
+          ) {
+            const ccbc = chunk.content_block.content;
+
+            if (ccbc && Array.isArray(ccbc) && ccbc[0] && ccbc[0].url) {
+              const title = ccbc[0].title || ccbc[0].url;
+              const crawlMessage = `[FETCH] ${title}\n\n`;
+
+              completeResponse += crawlMessage;
+
+              stdOutput({
+                type: 'response',
+                payload: crawlMessage
+              });
+            }
+          }
+
+          if (
+            chunk?.type === 'content_block_delta' &&
+            chunk?.delta?.type === 'text_delta'
+          ) {
+            const text = (chunk.delta as TextDelta).text;
+
+            completeResponse += text;
+
+            stdOutput({
+              type: 'response',
+              payload: text
+            });
+          }
+
+          if (chunk?.type === 'message_delta' && chunk?.usage) {
+            totalUsage.input_tokens += chunk.usage.input_tokens || 0;
+            totalUsage.output_tokens += chunk.usage.output_tokens || 0;
+            totalUsage.cache_creation_input_tokens +=
+              chunk.usage.cache_creation_input_tokens || 0;
+            totalUsage.cache_read_input_tokens +=
+              chunk.usage.cache_read_input_tokens || 0;
+            if (chunk.usage.server_tool_use) {
+              totalUsage.server_tool_use.web_search_requests +=
+                chunk.usage.server_tool_use.web_search_requests || 0;
+            }
+          }
         }
+
+        await stream.finalMessage();
       } catch (error) {
         await writeError(error, 'streamInner');
 
@@ -87,6 +177,29 @@ export const sendStreamResponse = async (
                 }
               : String(error)
           }`
+        });
+      }
+
+      if (modelInfo || totalUsage.input_tokens > 0) {
+        const statsMessage = `\n\n[INFO]${modelInfo ? ` model=${modelInfo}` : ''}${
+          totalUsage.input_tokens > 0
+            ? `\n[USAGE] tokens_in=${totalUsage.input_tokens.toLocaleString()} tokens_out=${totalUsage.output_tokens.toLocaleString()}`
+            : ''
+        }${
+          totalUsage.cache_read_input_tokens > 0
+            ? ` cache_read=${totalUsage.cache_read_input_tokens.toLocaleString()}`
+            : ''
+        }${
+          totalUsage.server_tool_use.web_search_requests > 0
+            ? ` web_queries=${totalUsage.server_tool_use.web_search_requests}`
+            : ''
+        }\n\n`;
+
+        completeResponse += statsMessage;
+
+        stdOutput({
+          type: 'response',
+          payload: statsMessage
         });
       }
 
@@ -104,9 +217,7 @@ export const sendStreamResponse = async (
             },
             {
               sender: 'Kisuke',
-              message: (
-                stream?.messages[1].content[0] as unknown as { text: string }
-              ).text
+              message: completeResponse
             }
           ]
         })
