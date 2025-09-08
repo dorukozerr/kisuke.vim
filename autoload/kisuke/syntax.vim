@@ -14,6 +14,8 @@ func! kisuke#syntax#setup()
   if !exists('b:kisuke_syntax_initialized')
     syntax clear
     unlet! b:current_syntax
+    unlet! b:kisuke_base_syntax_applied
+    unlet! b:last_processed_line
     let b:included_langs = {}
     let b:kisuke_syntax_initialized = 1
   endif
@@ -35,26 +37,22 @@ func! kisuke#syntax#setup_incremental()
 endfunc
 
 func! s:setup_base_syntax()
-  if !exists('b:kisuke_base_syntax_applied')
-    syntax match KisukePrompt /^Prompt >/
-    syntax match KisukeResponse /^Kisuke >/
-    syntax match KisukeSystem /^> .*$/
-    syntax match KisukeSearch /^\[SEARCH\].*$/
-    syntax match KisukeFetch /^\[FETCH\].*$/
-    syntax match KisukeInfo /^\[INFO\].*$/
-    syntax match KisukeUsage /^\[USAGE\].*$/
+  syntax match KisukePrompt /^Prompt >/
+  syntax match KisukeResponse /^Kisuke >/
+  syntax match KisukeSystem /^> .*$/
+  syntax match KisukeSearch /^\[SEARCH\].*$/
+  syntax match KisukeFetch /^\[FETCH\].*$/
+  syntax match KisukeInfo /^\[INFO\].*$/
+  syntax match KisukeUsage /^\[USAGE\].*$/
 
-    hi def link KisukePrompt Statement
-    hi def link KisukeResponse Identifier
-    hi def link KisukeSystem Special
-    hi def link KisukeSearch WarningMsg
-    hi def link KisukeFetch Function
-    hi def link KisukeInfo Comment
-    hi def link KisukeUsage Type
-    hi def link KisukeCodeDelimiter Delimiter
-
-    let b:kisuke_base_syntax_applied = 1
-  endif
+  hi def link KisukePrompt Statement
+  hi def link KisukeResponse Identifier
+  hi def link KisukeSystem Special
+  hi def link KisukeSearch WarningMsg
+  hi def link KisukeFetch Function
+  hi def link KisukeInfo Comment
+  hi def link KisukeUsage Type
+  hi def link KisukeCodeDelimiter Delimiter
 endfunc
 
 func! s:process_code_blocks(buf_nr)
@@ -97,7 +95,7 @@ func! s:process_new_code_blocks(buf_nr)
     let b:last_processed_line = 1
   endif
 
-  let l:total_lines = line('$')
+  let l:total_lines = getbufinfo(a:buf_nr)[0]['linecount']
   if l:total_lines <= b:last_processed_line
     return
   endif
@@ -127,7 +125,7 @@ func! s:process_new_code_blocks(buf_nr)
 endfunc
 
 func! s:find_and_highlight_complete_block(end_line, lang)
-  let l:lines = getbufline('%', 1, a:end_line)
+  let l:lines = getbufline(g:kisuke.state.buf_nr, 1, a:end_line)
   let l:start_line = 0
   let l:found_lang = a:lang
 
