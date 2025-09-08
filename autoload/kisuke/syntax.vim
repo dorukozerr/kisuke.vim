@@ -18,24 +18,43 @@ func! kisuke#syntax#setup()
     let b:kisuke_syntax_initialized = 1
   endif
 
-  syntax match KisukePrompt /^Prompt >/
-  syntax match KisukeResponse /^Kisuke >/
-  syntax match KisukeSystem /^> .*$/
-  syntax match KisukeSearch /^\[SEARCH\].*$/
-  syntax match KisukeFetch /^\[FETCH\].*$/
-  syntax match KisukeInfo /^\[INFO\].*$/
-  syntax match KisukeUsage /^\[USAGE\].*$/
-
+  call s:setup_base_syntax()
   call s:process_code_blocks(l:current_buf)
+endfunc
 
-  hi def link KisukePrompt Statement
-  hi def link KisukeResponse Identifier
-  hi def link KisukeSystem Special
-  hi def link KisukeSearch WarningMsg
-  hi def link KisukeFetch Function
-  hi def link KisukeInfo Comment
-  hi def link KisukeUsage Type
-  hi def link KisukeCodeDelimiter Delimiter
+func! kisuke#syntax#setup_incremental()
+  let l:current_buf = bufnr('%')
+
+  if l:current_buf !=# g:kisuke.state.buf_nr
+    return
+  endif
+
+  call s:setup_base_syntax()
+
+  call s:process_new_code_blocks(l:current_buf)
+endfunc
+
+func! s:setup_base_syntax()
+  if !exists('b:kisuke_base_syntax_applied')
+    syntax match KisukePrompt /^Prompt >/
+    syntax match KisukeResponse /^Kisuke >/
+    syntax match KisukeSystem /^> .*$/
+    syntax match KisukeSearch /^\[SEARCH\].*$/
+    syntax match KisukeFetch /^\[FETCH\].*$/
+    syntax match KisukeInfo /^\[INFO\].*$/
+    syntax match KisukeUsage /^\[USAGE\].*$/
+
+    hi def link KisukePrompt Statement
+    hi def link KisukeResponse Identifier
+    hi def link KisukeSystem Special
+    hi def link KisukeSearch WarningMsg
+    hi def link KisukeFetch Function
+    hi def link KisukeInfo Comment
+    hi def link KisukeUsage Type
+    hi def link KisukeCodeDelimiter Delimiter
+
+    let b:kisuke_base_syntax_applied = 1
+  endif
 endfunc
 
 func! s:process_code_blocks(buf_nr)
@@ -71,6 +90,62 @@ func! s:process_code_blocks(buf_nr)
   for block in l:code_blocks
     call s:apply_syntax_to_block(block.lang, block.start, block.end)
   endfor
+endfunc
+
+func! s:process_new_code_blocks(buf_nr)
+  if !exists('b:last_processed_line')
+    let b:last_processed_line = 1
+  endif
+
+  let l:total_lines = line('$')
+  if l:total_lines <= b:last_processed_line
+    return
+  endif
+
+  let l:new_lines = getbufline(a:buf_nr, b:last_processed_line, l:total_lines)
+  let l:line_nr = b:last_processed_line - 1
+
+  for line in l:new_lines
+    let l:line_nr += 1
+
+    if line =~# '^```\S*'
+      execute 'syntax match KisukeCodeDelimiter /\%' . l:line_nr . 'l^```.*$/'
+
+      let l:lang = matchstr(line, '^```\s*\(\S\+\)')
+      let l:lang = substitute(l:lang, '^```\s*', '', '')
+
+      if !empty(l:lang)
+        call s:find_and_highlight_complete_block(l:line_nr, l:lang)
+      endif
+    elseif line =~# '^```$'
+      execute 'syntax match KisukeCodeDelimiter /\%' . l:line_nr . 'l^```$/'
+      call s:find_and_highlight_complete_block(l:line_nr, '')
+    endif
+  endfor
+
+  let b:last_processed_line = l:total_lines
+endfunc
+
+func! s:find_and_highlight_complete_block(end_line, lang)
+  let l:lines = getbufline('%', 1, a:end_line)
+  let l:start_line = 0
+  let l:found_lang = a:lang
+
+  for i in range(len(l:lines) - 1, 0, -1)
+    let l:line = l:lines[i]
+    if l:line =~# '^```\S*' && i < a:end_line - 1
+      let l:start_line = i + 1
+      if empty(a:lang)
+        let l:found_lang = matchstr(l:line, '^```\s*\(\S\+\)')
+        let l:found_lang = substitute(l:found_lang, '^```\s*', '', '')
+      endif
+      break
+    endif
+  endfor
+
+  if l:start_line > 0 && a:end_line > l:start_line && !empty(l:found_lang)
+    call s:apply_syntax_to_block(l:found_lang, l:start_line, a:end_line)
+  endif
 endfunc
 
 func! s:apply_syntax_to_block(lang, start_line, end_line)
