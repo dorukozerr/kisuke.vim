@@ -18,6 +18,11 @@ Kisuke.vim is a simple Vim plugin designed to bring basic AI capabilities into t
 - Syntax highlighting for code blocks in the chat buffer
 - Session management (create, switch, delete)
 
+### WIP Features
+
+- Web search for LLM calls
+  - Currently this is available only for anthropic models, but will add this to openai and grok too. Might not add to google, I don't even know if google sdk supports web search probably does but still won't add it
+
 ## Supported Providers and Models
 
 #### ANTHROPIC:
