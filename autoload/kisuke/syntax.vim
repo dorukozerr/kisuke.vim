@@ -18,10 +18,18 @@ func! kisuke#syntax#setup()
     unlet! b:last_processed_line
     let b:included_langs = {}
     let b:kisuke_syntax_initialized = 1
+    let b:syntax_content_hash = ''
   endif
 
   call s:setup_base_syntax()
-  call s:process_code_blocks(l:current_buf)
+  
+  let l:current_content = join(getbufline(l:current_buf, 1, '$'), "\n")
+  let l:content_hash = string(len(l:current_content)) . '_' . string(getbufinfo(l:current_buf)[0]['changedtick'])
+  
+  if b:syntax_content_hash !=# l:content_hash
+    call s:process_code_blocks(l:current_buf)
+    let b:syntax_content_hash = l:content_hash
+  endif
 endfunc
 
 func! kisuke#syntax#setup_incremental()

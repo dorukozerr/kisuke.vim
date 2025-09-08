@@ -198,9 +198,6 @@ func! kisuke#buffer#render_marked_content()
       endif
     endfor
 
-    if len(g:kisuke.state.marked_code_blocks)
-      call kisuke#syntax#setup()
-    endif
   endif
 
   if len(g:kisuke.state.marked_code_blocks)
@@ -291,7 +288,6 @@ func! kisuke#buffer#prepare_chat_buffer()
   augroup KisukeChatBuffer
     autocmd! * <buffer>
     autocmd TextChanged,TextChangedI <buffer> setlocal nomodified
-    autocmd BufEnter <buffer> call kisuke#syntax#setup()
   augroup END
 endfunc
 
