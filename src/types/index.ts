@@ -12,6 +12,7 @@ interface AnthropicConfig extends BaseConfig {
   model:
     | 'opus-4-1'
     | 'opus-4'
+    | 'sonnet-4-5'
     | 'sonnet-4'
     | 'sonnet-3.7'
     | 'haiku-3.7'

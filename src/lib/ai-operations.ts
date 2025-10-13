@@ -32,6 +32,7 @@ export const sendStreamResponse = async (
       const models = {
         'opus-4-1': 'claude-opus-4-1-20250805',
         'opus-4': 'claude-4-opus-20250514',
+        'sonnet-4-5': 'claude-sonnet-4-5-20250929',
         'sonnet-4': 'claude-sonnet-4-20250514',
         'sonnet-3.7': 'claude-3-7-sonnet-latest',
         'haiku-3.7': 'claude-3-5-haiku-latest',
@@ -458,6 +459,7 @@ export const generateSessionName = async (prompt: string) => {
       const models = {
         'opus-4-1': 'claude-opus-4-1-20250805',
         'opus-4': 'claude-4-opus-20250514',
+        'sonnet-4-5': 'claude-sonnet-4-5-20250929',
         'sonnet-4': 'claude-sonnet-4-20250514',
         'sonnet-3.7': 'claude-3-7-sonnet-latest',
         'haiku-3.7': 'claude-3-5-haiku-latest',
