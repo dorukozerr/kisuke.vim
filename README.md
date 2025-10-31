@@ -27,9 +27,9 @@ Kisuke.vim is a simple Vim plugin designed to bring basic AI capabilities into t
 
 #### ANTHROPIC:
 
-- sonnet-4-5
+- sonnet-4.5
 - sonnet-4
-- opus-4-1
+- opus-4.1
 - opus-4
 - sonnet-3.7
 - haiku-3.7
