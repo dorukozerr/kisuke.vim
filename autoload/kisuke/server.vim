@@ -18,7 +18,13 @@ func! kisuke#server#start_process()
 
   let node_script = plugin_root . '/dist/index.js'
 
-  let g:kisuke.state.job = job_start(['node', node_script], {
+  " call mkdir(expand('~/.config/kisuke'), 'p')
+  " let log_file = expand('~/.config/kisuke/output_log')
+  " let cmd = 'node ' . node_script . ' 2>&1 | tee -a ' . log_file
+
+  let cmd = 'node ' . node_script
+
+  let g:kisuke.state.job = job_start(['sh', '-c', cmd], {
         \ 'out_cb': function('kisuke#server#parse_reply'),
         \ })
 endfunc
