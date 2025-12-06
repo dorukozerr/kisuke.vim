@@ -1,6 +1,6 @@
 {
   "name": "kisuke.vim",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Vim/Neovim plugin to bring some AI features to vim. Really don't know where this is gonna go.",
   "repository": "git@github.com:dorukozerr/kisuke.vim.git",
   "author": "Doruk Özer <dorukozer@protonmail.com>",

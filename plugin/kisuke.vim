@@ -10,7 +10,7 @@
 " ================================================================ "
 " Author:      Doruk Özer <dorukozer@protonmail.com>               "
 " License:     MIT                                                 "
-" Version:     0.2.0                                               "
+" Version:     0.3.0                                               "
 " Description: Kisuke - Simple AI plugin for Vim                   "
 "                                                                  "
 " This is just my personal playground. I try to learn VimScript    "
