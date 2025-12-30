@@ -1,4 +1,6 @@
-import { Event, Output } from './types';
+import { Output } from './types';
+import { ZodError, z } from 'zod';
+import { clientPayloadSchema } from './schemas';
 import { writeError } from './utils/file-operations';
 import { initializeHandler } from './std-handlers/initialize';
 import { promptHandler } from './std-handlers/prompt';
@@ -16,29 +18,49 @@ stdin.setEncoding('utf-8');
 
 stdin.on('data', async (data: string) => {
   try {
-    const event = JSON.parse(data) as Event;
+    const payload = clientPayloadSchema.parse(JSON.parse(data));
 
-    // TODO: Maybe convert this to object and call event.type as key, idk
-    if (event.type === 'initialize') initializeHandler();
-    if (event.type === 'prompt') promptHandler(event);
-    if (event.type === 'new_session') newSessionHandler();
-    if (event.type === 'resume_last_session') resumeLastSessionHandler();
-    if (event.type === 'load_sessions') loadSessionsHandler();
-    if (event.type === 'restore_session') restoreSessionHandler(event);
-    if (event.type === 'delete_session') deleteSessionHandler(event);
+    switch (payload.type) {
+      case 'initialize':
+        initializeHandler();
+        break;
+      case 'prompt':
+        promptHandler(payload);
+        break;
+      case 'new_session':
+        newSessionHandler();
+        break;
+      case 'resume_last_session':
+        resumeLastSessionHandler();
+        break;
+      case 'load_sessions':
+        loadSessionsHandler();
+        break;
+      case 'restore_session':
+        restoreSessionHandler(payload);
+        break;
+      case 'delete_session':
+        deleteSessionHandler(payload);
+        break;
+    }
   } catch (error) {
-    await writeError(error, 'std');
+    await writeError(
+      error instanceof ZodError
+        ? z.treeifyError(error)
+        : error instanceof Error
+          ? `${error.name} - ${error.message}`
+          : error,
+      'client_payload'
+    );
 
     stdOutput({
       type: 'error',
-      payload: `Unknown server error, ${
-        error instanceof Error
-          ? {
-              message: error.message,
-              stack: error.stack
-            }
-          : String(error)
-      }`
+      payload:
+        error instanceof ZodError
+          ? 'Invalid client payload'
+          : error instanceof Error
+            ? `${error.name} - ${error.message}`
+            : 'Unknown client payload error'
     });
   }
 });
