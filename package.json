@@ -27,8 +27,10 @@
     "typescript-eslint": "^8.46.0"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.1",
     "@anthropic-ai/sdk": "^0.65.0",
     "@google/genai": "^1.24.0",
+    "ai": "^6.0.3",
     "openai": "^6.3.0",
     "zod": "^4.2.1"
   }

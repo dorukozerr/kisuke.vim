@@ -1,6 +1,8 @@
+import { createAnthropic } from '@ai-sdk/anthropic';
 import { Anthropic } from '@anthropic-ai/sdk';
 import { TextDelta } from '@anthropic-ai/sdk/resources';
 import { GoogleGenAI } from '@google/genai';
+import { streamText } from 'ai';
 import OpenAI from 'openai';
 
 import { stdOutput } from '~/index';
@@ -26,6 +28,61 @@ export const sendStreamResponse = async (
   const config = await getConfig();
 
   try {
+    const anthropic = createAnthropic({ apiKey: config.apiKeys.anthropic });
+
+    stdOutput({ type: 'response', payload: 'stream_start' });
+    const result = streamText({
+      model: anthropic('claude-sonnet-4-5'),
+      messages: [
+        {
+          role: 'system',
+          content:
+            BaseAIInstruction + sessionHistoryForStream(JSON.stringify(session))
+        },
+        {
+          role: 'user',
+          content: context
+            ? fileContextsProcessingInstructionsForStream(
+                JSON.stringify(context),
+                prompt
+              )
+            : prompt
+        }
+      ]
+    });
+
+    let res = '';
+
+    for await (const textPart of result.textStream) {
+      res += textPart;
+
+      stdOutput({
+        type: 'response',
+        payload: textPart
+      });
+    }
+
+    await writeFile(
+      `${sessionId}.json`,
+      JSON.stringify({
+        messages: [
+          ...session.messages,
+          {
+            sender: 'User',
+            message: prompt,
+            ...(context.length ? { referenceCount: context.length } : {})
+          },
+          {
+            sender: 'Kisuke',
+            message: res
+          }
+        ]
+      })
+    );
+
+    stdOutput({ type: 'response', payload: 'stream_end' });
+
+    return;
     if (config.provider === 'anthropic') {
       const client = new Anthropic({ apiKey: config.apiKeys.anthropic });
 
