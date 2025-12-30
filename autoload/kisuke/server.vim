@@ -53,10 +53,10 @@ fu! kisuke#server#configure(provider, model)
     let l:config.apiKeys[l:lower_provider] = l:api_key
 
     cal writefile([json_encode(l:config)], l:config_file, 'w')
-    echom json_encode(l:config)
+
     cal kisuke#buffer#restore({ 'type': 'initialize' })
 
-    redraw!
+    redw!
 
     echom a:provider . ' configuration updated using model ' . a:model . '.'
   el

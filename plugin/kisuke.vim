@@ -30,6 +30,7 @@ let g:kisuke.state = {
       \ 'job': v:null,
       \ 'buf_name': 'Kisuke',
       \ 'buf_nr': -1,
+      \ 'init_response': v:null,
       \ 'is_pending': 0,
       \ 'session_id': v:null,
       \ 'total_sessions': v:null,

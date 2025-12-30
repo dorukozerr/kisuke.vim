@@ -5,13 +5,15 @@ let s:kisuke.state = {
       \ }
 
 fu! kisuke#handlers#initialize(reply)
-  let l:eligiblityState = a:reply.payload
+  let g:kisuke.state.init_response = a:reply.payload
 
-  if l:eligiblityState ==# 'not_configured'
+  let l:res = a:reply.payload
+
+  if l:res ==# 'not_configured'
     cal kisuke#ui#render_buffer_menu('not_configured')
-  elsei l:eligiblityState ==# 'missing_api_key'
+  elsei l:res ==# 'missing_api_key'
     cal kisuke#ui#render_buffer_menu('missing_api_key', a:reply.provider, a:reply.model)
-  elsei l:eligiblityState ==# 'eligible'
+  elsei l:res ==# 'eligible'
     cal kisuke#ui#render_buffer_menu('eligible', a:reply.provider, a:reply.model, a:reply.session_count)
   en
 endfu

@@ -1,5 +1,6 @@
 fu! s:check_conditions()
   let l:checks = [
+        \ { 'condition': g:kisuke.state.init_response !=# 'eligible', 'message': 'Not eligible for this action' },
         \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first' },
         \ { 'condition': bufwinid(g:kisuke.state.buf_nr) ==# -1, 'message': 'Please run :KisukeOpen first' },
         \ { 'condition': g:kisuke.state.is_pending, 'message': 'Please wait for server to finish its job' },
