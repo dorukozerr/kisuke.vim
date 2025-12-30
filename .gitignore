@@ -1,27 +1,14 @@
-# Build artifacts
-/dist/
-
-# Dependencies
-/node_modules/
-/.yarn-integrity
-
-# Logs and debug files
+dist
+node_modules
+.yarn-integrity
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# Editor and OS specific files
 .DS_Store
 .vscode/
 *.swp
 *.swo
 *~
-
-# TypeScript cache
-*.tsbuildinfo
-
-# Vim help tags (generated on user's machine)
-/doc/tags
-
-drafts
+doc/tags
+CLAUDE.md

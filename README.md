@@ -51,29 +51,29 @@ I mean because of the video I recorded and this thing in `README.md` and many ot
 ### High-Level Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                  Vim Plugin Layer                       │
-│  - UI & User Interaction                                │
-│  - Custom JSON Protocol over stdio                      │
-└───────────────────────┬─────────────────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│                  Vim Plugin Layer                      │
+│  - UI & User Interaction                               │
+│  - Custom JSON Protocol over stdio                     │
+└───────────────────────┬────────────────────────────────┘
                         │
-┌───────────────────────▼─────────────────────────────────┐
-│              TypeScript Server Core                     │
-│  ┌───────────────────────────────────────────────────┐  │
-│  │         Vim Protocol Handler (stdio)              │  │
-│  │  - Receives Vim events                            │  │
-│  │  - Sends responses back to Vim                    │  │
-│  └─────────────────────┬─────────────────────────────┘  │
-│                        │                                │
-│  ┌─────────────────────▼─────────────────────────────┐  │
-│  │            Core Business Logic                    │  │
-│  │  - Session Management (enhanced)                  │  │
-│  │  - State Management                               │  │
-│  │  - LLM Orchestration                              │  │
-│  │  - Message/Context Handling                       │  │
-│  └─┬───────────────────────────────────────────────┬─┘  │
-│    │                                               │    │
-│  ┌─▼───────────────────────┐  ┌──────────────────▼──┐  │
+┌───────────────────────▼────────────────────────────────┐
+│              TypeScript Server Core                    │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │         Vim Protocol Handler (stdio)             │  │
+│  │  - Receives Vim events                           │  │
+│  │  - Sends responses back to Vim                   │  │
+│  └─────────────────────┬────────────────────────────┘  │
+│                        │                               │
+│  ┌────────────────────▼─────────────────────────────┐  │
+│  │            Core Business Logic                   │  │
+│  │  - Session Management (enhanced)                 │  │
+│  │  - State Management                              │  │
+│  │  - LLM Orchestration                             │  │
+│  │  - Message/Context Handling                      │  │
+│  └─┬─────────────────────────────────────────────┬──┘  │
+│    │                                             │     │
+│  ┌▼────────────────────────┐  ┌──────────────────▼──┐  │
 │  │   MCP Server Side       │  │   MCP Client Side   │  │
 │  │  (Expose Capabilities)  │  │  (Consume Tools)    │  │
 │  │                         │  │                     │  │
@@ -84,10 +84,10 @@ I mean because of the video I recorded and this thing in `README.md` and many ot
 │  └─────────────────────────┘  │    requests         │  │
 │                               │                     │  │
 │                               └──────────┬──────────┘  │
-└──────────────────────────────────────────┼─────────────┘
-                                           │
-        ┌──────────────────────────────────┼────────────────┐
-        │                                  │                │
+└─────────────────────────────────────────┼──────────────┘
+                                          │
+        ┌─────────────────────────────────┼───────────────┐
+        │                                 │               │
 ┌───────▼──────────┐  ┌──────────────────▼─┐  ┌───────────▼────┐
 │  Filesystem MCP  │  │    Git MCP         │  │  Custom MCP    │
 │  (Read/Write)    │  │    (VCS ops)       │  │  Servers       │
