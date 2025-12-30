@@ -8,7 +8,8 @@
   "scripts": {
     "format": "prettier src --check",
     "lint": "eslint src",
-    "build": "yarn && yarn format && yarn lint && tsc"
+    "build": "yarn && yarn format && yarn lint && tsc",
+    "dev": "tsx watch src/index.ts"
   },
   "license": "MIT",
   "private": false,
@@ -21,12 +22,14 @@
     "globals": "^16.4.0",
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.0"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.65.0",
     "@google/genai": "^1.24.0",
-    "openai": "^6.3.0"
+    "openai": "^6.3.0",
+    "zod": "^4.2.1"
   }
 }
