@@ -84,7 +84,7 @@ export const getConfig = async () => {
 
     await setupKisuke();
 
-    return await readFile(join(configDir, 'config.json'), 'utf-8');
+    return JSON.parse(await readFile(join(configDir, 'config.json'), 'utf-8'));
   }
 };
 
@@ -160,5 +160,33 @@ export const writeTempJson = async (data: object) => {
     await writeFile('temp.json', contentToWrite);
   } catch (error) {
     await writeError(error, 'writeTempJson - Write Appended Data');
+  }
+};
+
+export const writeMcpLog = async (operation: string, data: unknown) => {
+  const mcpLogPath = join(configDir, 'mcp-logs.json');
+  let currentLogs: object[] = [];
+
+  try {
+    const fileContent = await readFile(mcpLogPath, 'utf-8');
+    const parsedContent = JSON.parse(fileContent);
+
+    if (Array.isArray(parsedContent)) {
+      currentLogs = parsedContent;
+    } else {
+      await fsWriteFile(mcpLogPath, JSON.stringify([parsedContent], null, 2));
+      currentLogs = [parsedContent];
+    }
+  } catch {
+    currentLogs = [];
+  }
+
+  const logEntry = { timestamp: new Date().toISOString(), operation, data };
+  currentLogs.push(logEntry);
+
+  try {
+    await fsWriteFile(mcpLogPath, JSON.stringify(currentLogs, null, 2));
+  } catch (error) {
+    await writeError(error, 'writeMcpLog');
   }
 };

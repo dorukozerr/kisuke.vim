@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "elicitation-example": {
+      "url": "http://localhost:8083/sse",
+      "enabled": false
+    },
+    "my-remote-mcp-server": {
+      "url": "https://example.com/mcp",
+      "enabled": false
+    }
+  }
+}

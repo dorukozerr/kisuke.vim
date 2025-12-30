@@ -4,6 +4,8 @@ import {
   clientPayloadSchema,
   configSchema,
   historySchema,
+  mcpConfigSchema,
+  mcpServerConfigSchema,
   serverPayloadSchema,
   sessionSchema
 } from '~/schemas';
@@ -13,6 +15,8 @@ export type History = z.infer<typeof historySchema>;
 export type Session = z.infer<typeof sessionSchema>;
 export type ClientPayload = z.infer<typeof clientPayloadSchema>;
 export type ServerPayload = z.infer<typeof serverPayloadSchema>;
+export type McpServerConfig = z.infer<typeof mcpServerConfigSchema>;
+export type McpConfig = z.infer<typeof mcpConfigSchema>;
 
 export type PromptPayload = Extract<ClientPayload, { type: 'prompt' }>;
 export type RestoreSessionPayload = Extract<

@@ -123,6 +123,16 @@ export const clientPayloadSchema = z.discriminatedUnion('type', [
   })
 ]);
 
+// MCP Server config - AI SDK only supports SSE/HTTP transports
+export const mcpServerConfigSchema = z.object({
+  url: z.string(),
+  enabled: z.boolean().default(true)
+});
+
+export const mcpConfigSchema = z.object({
+  servers: z.record(z.string(), mcpServerConfigSchema).optional()
+});
+
 export const serverPayloadSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('initialize'),
@@ -178,5 +188,10 @@ export const serverPayloadSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('sandbox'),
     qweqwe: z.string()
+  }),
+  z.object({
+    type: z.literal('mcp_elicitation'),
+    message: z.string(),
+    schema: z.unknown()
   })
 ]);
