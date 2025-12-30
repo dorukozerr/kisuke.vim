@@ -56,7 +56,7 @@ fu! kisuke#server#configure(provider, model)
 
     cal kisuke#buffer#restore({ 'type': 'initialize' })
 
-    redw!
+    redr!
 
     echom a:provider . ' configuration updated using model ' . a:model . '.'
   el
@@ -80,6 +80,7 @@ fu! kisuke#server#parse_reply(channel, reply)
         \ 'restore_session': function('kisuke#handlers#restore_session'),
         \ 'next_session': function('kisuke#handlers#next_session'),
         \ 'previous_session': function('kisuke#handlers#previous_session'),
+        \ 'sandbox': function('kisuke#handlers#sandbox'),
         \ 'error': function('kisuke#handlers#error')
         \ }
 

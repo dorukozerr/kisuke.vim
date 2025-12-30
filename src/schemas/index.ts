@@ -117,6 +117,9 @@ export const clientPayloadSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('previous_session'),
     currentSessionId: z.string()
+  }),
+  z.object({
+    type: z.literal('sandbox')
   })
 ]);
 
@@ -171,5 +174,9 @@ export const serverPayloadSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('error'),
     payload: z.string()
+  }),
+  z.object({
+    type: z.literal('sandbox'),
+    qweqwe: z.string()
   })
 ]);

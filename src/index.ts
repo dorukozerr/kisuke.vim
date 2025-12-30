@@ -51,6 +51,9 @@ stdin.on('data', async (data: string) => {
       case 'previous_session':
         previousSessionHandler(payload);
         break;
+      case 'sandbox':
+        stdOutput({ type: 'sandbox', qweqwe: 'sssssnnnnndddboooxxx' });
+        break;
     }
   } catch (error) {
     await writeError(

@@ -249,15 +249,17 @@ fu! kisuke#buffer#on_submit(prompt)
   if kisuke#utils#validate(l:checks)
     let g:kisuke.state.is_pending = 1
 
-    let l:payload = {
-          \ 'type': 'prompt',
-          \ 'sessionId': g:kisuke.state.session_id,
-          \ 'payload': a:prompt,
-          \ }
+     let l:payload = { 'type': 'sandbox' }
 
-    let l:payload = len(g:kisuke.state.marked_files) || len(g:kisuke.state.marked_code_blocks)
-          \ ? extend(l:payload, { 'context': g:kisuke.state.marked_files + g:kisuke.state.marked_code_blocks })
-          \ : l:payload
+    " let l:payload = {
+    "       \ 'type': 'prompt',
+    "       \ 'sessionId': g:kisuke.state.session_id,
+    "       \ 'payload': a:prompt,
+    "       \ }
+
+    " let l:payload = len(g:kisuke.state.marked_files) || len(g:kisuke.state.marked_code_blocks)
+    "       \ ? extend(l:payload, { 'context': g:kisuke.state.marked_files + g:kisuke.state.marked_code_blocks })
+    "       \ : l:payload
 
     cal ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode(l:payload))
   en

@@ -130,6 +130,14 @@ fu! kisuke#handlers#previous_session(reply)
   echom 'Navigated to previous session: ' . l:cleaned_session_name
 endfu
 
+fu! kisuke#handlers#sandbox(reply)
+  cal kisuke#buffer#prepare_chat_buffer()
+
+  silent! %delete
+
+  cal appendbufline(g:kisuke.state.buf_nr, '$', '> ' . 'sandbox ' . a:reply.qweqwe)
+endfu
+
 fu! s:handle_stream(reply)
   let s:kisuke.state.stream_response = s:kisuke.state.stream_response . a:reply.payload
   let l:index = 0
