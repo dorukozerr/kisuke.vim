@@ -1,9 +1,9 @@
 import { readFile } from 'fs/promises';
 
-import { stdOutput } from '..';
-import { generateSessionName, sendStreamResponse } from '../lib/ai-operations';
-import { PromptPayload } from '../types';
-import { getHistory, getSession, writeFile } from '../utils/file-operations';
+import { stdOutput } from '~/index';
+import { PromptPayload } from '~/types';
+import { generateSessionName, sendStreamResponse } from '~/lib/ai-operations';
+import { getHistory, getSession, writeFile } from '~/utils/file-operations';
 
 export const promptHandler = async (event: PromptPayload) => {
   const history = await getHistory();

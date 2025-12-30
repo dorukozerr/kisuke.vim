@@ -1,6 +1,6 @@
-import { stdOutput } from '..';
-import { RestoreSessionPayload } from '../types';
-import { getHistory, getSession } from '../utils/file-operations';
+import { stdOutput } from '~/index';
+import { RestoreSessionPayload } from '~/types';
+import { getHistory, getSession } from '~/utils/file-operations';
 
 export const restoreSessionHandler = async (event: RestoreSessionPayload) => {
   const [{ sessions }, session] = await Promise.all([

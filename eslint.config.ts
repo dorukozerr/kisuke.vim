@@ -38,6 +38,7 @@ export default defineConfig([
             ],
             [String.raw`^@?\w`],
             [
+              '^~/index',
               '^~/types',
               '^~/schemas',
               '^~/lib',

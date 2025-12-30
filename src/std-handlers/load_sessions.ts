@@ -1,5 +1,5 @@
-import { stdOutput } from '..';
-import { getHistory } from '../utils/file-operations';
+import { stdOutput } from '~/index';
+import { getHistory } from '~/utils/file-operations';
 
 export const loadSessionsHandler = async () => {
   const { sessions } = await getHistory();

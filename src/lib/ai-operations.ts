@@ -3,15 +3,15 @@ import { TextDelta } from '@anthropic-ai/sdk/resources';
 import { GoogleGenAI } from '@google/genai';
 import OpenAI from 'openai';
 
-import { stdOutput } from '..';
-import { Session } from '../types';
-import { getConfig, writeError, writeFile } from '../utils/file-operations';
+import { stdOutput } from '~/index';
+import { Session } from '~/types';
+import { getConfig, writeError, writeFile } from '~/utils/file-operations';
 import {
   BaseAIInstruction,
   fileContextsProcessingInstructionsForStream,
   sessionHistoryForStream,
   sessionNameGenerationInstructions
-} from '../utils/initials';
+} from '~/utils/initials';
 
 export const sendStreamResponse = async (
   context: {

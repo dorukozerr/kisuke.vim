@@ -3,10 +3,10 @@ import { unlink } from 'fs/promises';
 import { homedir } from 'os';
 import { join } from 'path';
 
-import { stdOutput } from '..';
-import { DeleteSessionPayload } from '../types';
-import { getHistory, getSession, writeFile } from '../utils/file-operations';
-import { initialSessionData } from '../utils/initials';
+import { stdOutput } from '~/index';
+import { DeleteSessionPayload } from '~/types';
+import { getHistory, getSession, writeFile } from '~/utils/file-operations';
+import { initialSessionData } from '~/utils/initials';
 
 const configDir = join(homedir(), '.config', 'kisuke');
 
