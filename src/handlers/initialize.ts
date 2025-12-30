@@ -1,5 +1,6 @@
+import { getConfig, getHistory } from '~/utils/file-operations';
+
 import { stdOutput } from '..';
-import { getConfig, getHistory } from '../utils/file-operations';
 
 export const initializeHandler = async () => {
   const [config, history] = await Promise.all([getConfig(), getHistory()]);

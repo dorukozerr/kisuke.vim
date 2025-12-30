@@ -49,10 +49,11 @@ fu! kisuke#server#configure(provider, model)
     en
 
     let l:config.provider = l:lower_provider
-    let l:config.model = tolower(a:model)
+    let l:config.model = tolower(tolower(a:model))
     let l:config.apiKeys[l:lower_provider] = l:api_key
 
     cal writefile([json_encode(l:config)], l:config_file, 'w')
+    echom json_encode(l:config)
     cal kisuke#buffer#restore({ 'type': 'initialize' })
 
     redraw!

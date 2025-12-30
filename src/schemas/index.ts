@@ -13,13 +13,14 @@ export const configSchema = z.discriminatedUnion('provider', [
   baseConfigSchema.extend({
     provider: z.literal('anthropic'),
     model: z.enum([
-      'opus-4-1',
+      'opus-4.5',
+      'opus-4.1',
       'opus-4',
-      'sonnet-4-5',
+      'opus-3.7',
+      'sonnet-4,5',
       'sonnet-4',
       'sonnet-3.7',
-      'haiku-3.7',
-      'opus-3.7'
+      'haiku-3.7'
     ])
   }),
   baseConfigSchema.extend({

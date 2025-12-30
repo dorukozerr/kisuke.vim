@@ -16,10 +16,13 @@ export const writeFile = async (fileName: string, content: string) =>
 
 export const writeError = async (error: unknown, operation: string) => {
   const errorFilePath = join(configDir, 'errors.json');
+
   let currentErrors: object[] = [];
+
   try {
     const fileContent = await readFile(errorFilePath, 'utf-8');
     const parsedContent = JSON.parse(fileContent);
+
     if (Array.isArray(parsedContent)) {
       currentErrors = parsedContent;
     } else {
@@ -27,24 +30,17 @@ export const writeError = async (error: unknown, operation: string) => {
         errorFilePath,
         JSON.stringify([parsedContent], null, 2)
       );
+
       currentErrors = [parsedContent];
     }
   } catch (error) {
     currentErrors = error instanceof Error ? [error] : [];
   }
 
-  const errorEntry = {
-    timestamp: new Date().toISOString(),
-    operation,
-    error:
-      error instanceof Error
-        ? {
-            message: error.message,
-            stack: error.stack
-          }
-        : String(error)
-  };
+  const errorEntry = { timestamp: new Date().toISOString(), operation, error };
+
   currentErrors.push(errorEntry);
+
   try {
     await fsWriteFile(errorFilePath, JSON.stringify(currentErrors, null, 2));
   } catch (error) {
@@ -63,7 +59,7 @@ const setupKisuke = async () => {
       JSON.stringify({
         provider: '',
         model: '',
-        apiKeys: { anthropic: '', openai: '', google: '' }
+        apiKeys: { anthropic: '', openai: '', google: '', grok: '' }
       })
     )
   ]);
@@ -83,22 +79,12 @@ export const getConfig = async () => {
         : error instanceof Error
           ? `${error.name} - ${error.message}`
           : error,
-      'getConfig'
+      'get_config'
     );
-    try {
-      await setupKisuke();
-      const fileContent = await readFile(
-        join(configDir, 'config.json'),
-        'utf-8'
-      );
-      return configSchema.parse(JSON.parse(fileContent));
-    } catch {
-      return {
-        provider: 'anthropic',
-        model: 'sonnet-4-5' as const,
-        apiKeys: { anthropic: '', google: '', openai: '', grok: '' }
-      };
-    }
+
+    await setupKisuke();
+
+    return await readFile(join(configDir, 'config.json'), 'utf-8');
   }
 };
 
