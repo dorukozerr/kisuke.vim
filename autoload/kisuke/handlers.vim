@@ -161,7 +161,7 @@ func! s:render_kisuke_response(entry)
 endfunc
 
 func! s:render_user_prompt(entry)
-  if a:entry.referenceCount > 0
+  if has_key(a:entry, 'referenceCount') && a:entry.referenceCount > 0
     call appendbufline(g:kisuke.state.buf_nr, line('$'), '> References Added - ' . a:entry.referenceCount)
     call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
   endif

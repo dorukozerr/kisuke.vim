@@ -4,6 +4,7 @@ import { stdOutput } from '~/index';
 import { PromptPayload } from '~/types';
 import { generateSessionName, sendStreamResponse } from '~/lib/ai-operations';
 import { getHistory, getSession, writeFile } from '~/utils/file-operations';
+import { streamHandler } from '~/llm';
 
 export const promptHandler = async (event: PromptPayload) => {
   const history = await getHistory();
@@ -43,25 +44,27 @@ export const promptHandler = async (event: PromptPayload) => {
     );
   }
 
-  const isSuccess = await sendStreamResponse(
-    context,
-    event.payload,
-    session,
-    event.sessionId
-  );
+  await streamHandler(context, event.payload, session, event.sessionId);
 
-  if (session.messages.length === 1 && isSuccess) {
-    const sessionName = await generateSessionName(event.payload);
-
-    history.sessions = history.sessions.map((session) =>
-      session.id === event.sessionId
-        ? {
-            ...session,
-            name: `${new Date().toLocaleDateString()} - ${sessionName}`
-          }
-        : session
-    );
-
-    await writeFile('history.json', JSON.stringify(history));
-  }
+  //   const isSuccess = await sendStreamResponse(
+  //     context,
+  //     event.payload,
+  //     session,
+  //     event.sessionId
+  //   );
+  //
+  //   if (session.messages.length === 1 && isSuccess) {
+  //     const sessionName = await generateSessionName(event.payload);
+  //
+  //     history.sessions = history.sessions.map((session) =>
+  //       session.id === event.sessionId
+  //         ? {
+  //             ...session,
+  //             name: `${new Date().toLocaleDateString()} - ${sessionName}`
+  //           }
+  //         : session
+  //     );
+  //
+  //     await writeFile('history.json', JSON.stringify(history));
+  //   }
 };

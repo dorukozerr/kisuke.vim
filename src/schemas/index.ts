@@ -55,10 +55,17 @@ export const historySchema = z.object({
 
 export const sessionSchema = z.object({
   messages: z.array(
-    z.object({
-      sender: z.enum(['Kisuke', 'User']),
-      message: z.string()
-    })
+    z.discriminatedUnion('sender', [
+      z.object({
+        sender: z.literal('Kisuke'),
+        message: z.string()
+      }),
+      z.object({
+        sender: z.literal('User'),
+        message: z.string(),
+        referenceCount: z.number().optional()
+      })
+    ])
   )
 });
 
