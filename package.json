@@ -5,6 +5,7 @@
   "repository": "git@github.com:dorukozerr/kisuke.vim.git",
   "author": "Doruk Özer <dorukozer@protonmail.com>",
   "main": "dist/index.js",
+  "type": "module",
   "scripts": {
     "format": "prettier --write \"./src/**/*\"",
     "lint": "eslint --fix src",
