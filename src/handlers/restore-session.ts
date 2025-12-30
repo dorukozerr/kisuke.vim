@@ -2,14 +2,16 @@ import { stdOutput } from '~/index';
 import { RestoreSessionPayload } from '~/types';
 import { getHistory, getSession } from '~/utils/file-operations';
 
-export const restoreSessionHandler = async (event: RestoreSessionPayload) => {
+export const restoreSessionHandler = async ({
+  payload
+}: RestoreSessionPayload) => {
   const [{ sessions }, session] = await Promise.all([
     getHistory(),
-    getSession(event.payload)
+    getSession(payload)
   ]);
 
-  const sessionInfo = sessions.find(({ id }) => id === event.payload);
-  const sessionIndex = sessions.findIndex(({ id }) => id === event.payload);
+  const sessionInfo = sessions.find(({ id }) => id === payload);
+  const sessionIndex = sessions.findIndex(({ id }) => id === payload);
 
   if (!session || !sessionInfo) {
     stdOutput({ type: 'error', payload: 'Session not found.' });

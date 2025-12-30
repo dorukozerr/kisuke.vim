@@ -2,16 +2,16 @@ import { z, ZodError } from 'zod';
 
 import { ServerPayload } from '~/types';
 import { clientPayloadSchema } from '~/schemas';
-import { deleteSessionHandler } from '~/std-handlers/delete-session';
-import { initializeHandler } from '~/std-handlers/initialize';
-import { loadSessionsHandler } from '~/std-handlers/load_sessions';
-import { newSessionHandler } from '~/std-handlers/new-session';
-import { nextSessionHandler } from '~/std-handlers/next-session';
-import { previousSessionHandler } from '~/std-handlers/previous-session';
-import { promptHandler } from '~/std-handlers/prompt';
-import { restoreSessionHandler } from '~/std-handlers/restore-session';
-import { resumeLastSessionHandler } from '~/std-handlers/resume-last-session';
 import { writeError } from '~/utils/file-operations';
+import { deleteSessionHandler } from '~/handlers/delete-session';
+import { initializeHandler } from '~/handlers/initialize';
+import { loadSessionsHandler } from '~/handlers/load_sessions';
+import { newSessionHandler } from '~/handlers/new-session';
+import { nextSessionHandler } from '~/handlers/next-session';
+import { previousSessionHandler } from '~/handlers/previous-session';
+import { promptHandler } from '~/handlers/prompt';
+import { restoreSessionHandler } from '~/handlers/restore-session';
+import { resumeLastSessionHandler } from '~/handlers/resume-last-session';
 
 const stdin = process.stdin;
 const stdout = process.stdout;

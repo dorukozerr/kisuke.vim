@@ -10,12 +10,14 @@ import { initialSessionData } from '~/utils/initials';
 
 const configDir = join(homedir(), '.config', 'kisuke');
 
-export const deleteSessionHandler = async (event: DeleteSessionPayload) => {
+export const deleteSessionHandler = async ({
+  payload
+}: DeleteSessionPayload) => {
   const history = await getHistory();
 
-  history.sessions = history.sessions.filter(({ id }) => id !== event.payload);
+  history.sessions = history.sessions.filter(({ id }) => id !== payload);
 
-  await unlink(join(configDir, `${event.payload}.json`));
+  await unlink(join(configDir, `${payload}.json`));
 
   if (history.sessions.length === 0) {
     const sessionId = randomBytes(16).toString('hex');

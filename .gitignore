@@ -11,4 +11,5 @@ yarn-error.log*
 *.swo
 *~
 doc/tags
+.claude
 CLAUDE.md

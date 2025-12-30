@@ -10,9 +10,13 @@ import {
 } from '~/utils/file-operations';
 import { streamHandler } from '~/llm';
 
-export const promptHandler = async (event: PromptPayload) => {
+export const promptHandler = async ({
+  sessionId,
+  context: eventContext,
+  payload
+}: PromptPayload) => {
   // const history = await getHistory();
-  const session = await getSession(event.sessionId);
+  const session = await getSession(sessionId);
 
   const context: {
     fileName: string;
@@ -26,9 +30,9 @@ export const promptHandler = async (event: PromptPayload) => {
     return;
   }
 
-  if (event.context) {
+  if (eventContext) {
     await Promise.all(
-      event.context.map(async (entry) => {
+      eventContext.map(async (entry) => {
         if (entry.scope === 'all') {
           const fileContent = await readFile(entry.file_path, 'utf-8');
 
@@ -48,20 +52,20 @@ export const promptHandler = async (event: PromptPayload) => {
     );
   }
 
-  await streamHandler(context, event.payload, session, event.sessionId);
+  await streamHandler(context, payload, session, sessionId);
 
   //   const isSuccess = await sendStreamResponse(
   //     context,
-  //     event.payload,
+  //     payload,
   //     session,
-  //     event.sessionId
+  //     sessionId
   //   );
   //
   //   if (session.messages.length === 1 && isSuccess) {
-  //     const sessionName = await generateSessionName(event.payload);
+  //     const sessionName = await generateSessionName(payload);
   //
   //     history.sessions = history.sessions.map((session) =>
-  //       session.id === event.sessionId
+  //       session.id === sessionId
   //         ? {
   //             ...session,
   //             name: `${new Date().toLocaleDateString()} - ${sessionName}`
