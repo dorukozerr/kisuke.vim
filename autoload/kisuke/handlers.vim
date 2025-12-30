@@ -1,33 +1,33 @@
 let s:kisuke = {}
 let s:kisuke.state = {
       \ 'response_start_line': v:null,
-      \ 'stream_response': '',
+      \ 'stream_response': ''
       \ }
 
-func! kisuke#handlers#initialize(reply)
+fu! kisuke#handlers#initialize(reply)
   let l:eligiblityState = a:reply.payload
 
   if l:eligiblityState ==# 'not_configured'
-    call kisuke#ui#render_buffer_menu('not_configured')
-  elseif l:eligiblityState ==# 'missing_api_key'
-    call kisuke#ui#render_buffer_menu('missing_api_key', a:reply.provider, a:reply.model)
-  elseif l:eligiblityState ==# 'eligible'
-    call kisuke#ui#render_buffer_menu('eligible', a:reply.provider, a:reply.model, a:reply.session_count)
-  endif
-endfunc
+    cal kisuke#ui#render_buffer_menu('not_configured')
+  elsei l:eligiblityState ==# 'missing_api_key'
+    cal kisuke#ui#render_buffer_menu('missing_api_key', a:reply.provider, a:reply.model)
+  elsei l:eligiblityState ==# 'eligible'
+    cal kisuke#ui#render_buffer_menu('eligible', a:reply.provider, a:reply.model, a:reply.session_count)
+  en
+endfu
 
-func! kisuke#handlers#response(reply)
+fu! kisuke#handlers#response(reply)
   if a:reply.payload ==# 'stream_start'
-    call s:handle_stream_start()
-  elseif a:reply.payload ==# 'stream_end'
-    call s:handle_stream_end()
+    cal s:handle_stream_start()
+  elsei a:reply.payload ==# 'stream_end'
+    cal s:handle_stream_end()
   else
-    call s:handle_stream(a:reply)
-  endif
-endfunc
+    cal s:handle_stream(a:reply)
+  en
+endfu
 
-func! kisuke#handlers#new_session(reply)
-  call kisuke#buffer#prepare_chat_buffer()
+fu! kisuke#handlers#new_session(reply)
+  cal kisuke#buffer#prepare_chat_buffer()
 
   silent! %delete
 
@@ -36,39 +36,18 @@ func! kisuke#handlers#new_session(reply)
   let l:session_count = a:reply.session_info.current_index + 1 . '/' . a:reply.session_info.total_count
   let l:cleaned_session_name = substitute(a:reply.session_info.name, '\%x00', '', 'g')
 
-  call appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
-  call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . l:cleaned_session_name)
+  cal appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
+  cal appendbufline(g:kisuke.state.buf_nr, 1, '> ' . l:cleaned_session_name)
 
   for entry in a:reply.payload.messages
-    call appendbufline(g:kisuke.state.buf_nr, line('$'), 'Kisuke > ' . entry.message)
-  endfor
+    cal appendbufline(g:kisuke.state.buf_nr, line('$'), 'Kisuke > ' . entry.message)
+  endfo
 
-  call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
-endfunc
+  cal appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
+endfu
 
-func! kisuke#handlers#resume_last_session(reply)
-  call kisuke#buffer#prepare_chat_buffer()
-
-  silent! %delete
-
-  let g:kisuke.state.session_id = a:reply.session_info.id
-
-  let l:session_count = a:reply.session_info.current_index + 1 . '/' . a:reply.session_info.total_count
-  let l:cleaned_session_name = substitute(a:reply.session_info.name, '\%x00', '', 'g')
-
-  call appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
-  call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . l:cleaned_session_name)
-
-  call s:process_session_history(a:reply.payload.messages)
-  call kisuke#syntax#setup()
-endfunc
-
-func! kisuke#handlers#load_sessions(reply)
-  call kisuke#ui#render_buffer_menu('render_sessions', a:reply.payload)
-endfunc
-
-func! kisuke#handlers#restore_session(reply)
-  call kisuke#buffer#prepare_chat_buffer()
+fu! kisuke#handlers#resume_last_session(reply)
+  cal kisuke#buffer#prepare_chat_buffer()
 
   silent! %delete
 
@@ -77,19 +56,19 @@ func! kisuke#handlers#restore_session(reply)
   let l:session_count = a:reply.session_info.current_index + 1 . '/' . a:reply.session_info.total_count
   let l:cleaned_session_name = substitute(a:reply.session_info.name, '\%x00', '', 'g')
 
-  call appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
-  call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . l:cleaned_session_name)
+  cal appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
+  cal appendbufline(g:kisuke.state.buf_nr, 1, '> ' . l:cleaned_session_name)
 
-  call s:process_session_history(a:reply.payload.messages)
-  call kisuke#syntax#setup()
-endfunc
+  cal s:process_session_history(a:reply.payload.messages)
+  cal kisuke#syntax#setup()
+endfu
 
-func! kisuke#handlers#error(reply)
-  call appendbufline(g:kisuke.state.buf_nr, line('$'), 'Server error > ' . a:reply.payload)
-endfunc
+fu! kisuke#handlers#load_sessions(reply)
+  cal kisuke#ui#render_buffer_menu('render_sessions', a:reply.payload)
+endfu
 
-func! kisuke#handlers#next_session(reply)
-  call kisuke#buffer#prepare_chat_buffer()
+fu! kisuke#handlers#restore_session(reply)
+  cal kisuke#buffer#prepare_chat_buffer()
 
   silent! %delete
 
@@ -98,18 +77,39 @@ func! kisuke#handlers#next_session(reply)
   let l:session_count = a:reply.session_info.current_index + 1 . '/' . a:reply.session_info.total_count
   let l:cleaned_session_name = substitute(a:reply.session_info.name, '\%x00', '', 'g')
 
-  call appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
-  call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . l:cleaned_session_name)
+  cal appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
+  cal appendbufline(g:kisuke.state.buf_nr, 1, '> ' . l:cleaned_session_name)
 
-  call s:process_session_history(a:reply.payload.messages)
+  cal s:process_session_history(a:reply.payload.messages)
+  cal kisuke#syntax#setup()
+endfu
+
+fu! kisuke#handlers#error(reply)
+  cal appendbufline(g:kisuke.state.buf_nr, line('$'), 'Server error > ' . a:reply.payload)
+endfu
+
+fu! kisuke#handlers#next_session(reply)
+  cal kisuke#buffer#prepare_chat_buffer()
+
+  silent! %delete
+
+  let g:kisuke.state.session_id = a:reply.session_info.id
+
+  let l:session_count = a:reply.session_info.current_index + 1 . '/' . a:reply.session_info.total_count
+  let l:cleaned_session_name = substitute(a:reply.session_info.name, '\%x00', '', 'g')
+
+  cal appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
+  cal appendbufline(g:kisuke.state.buf_nr, 1, '> ' . l:cleaned_session_name)
+
+  cal s:process_session_history(a:reply.payload.messages)
   call kisuke#syntax#setup()
 
   redraw!
   echom 'Navigated to next session: ' . l:cleaned_session_name
-endfunc
+endfu
 
-func! kisuke#handlers#previous_session(reply)
-  call kisuke#buffer#prepare_chat_buffer()
+fu! kisuke#handlers#previous_session(reply)
+  cal kisuke#buffer#prepare_chat_buffer()
 
   silent! %delete
 
@@ -118,65 +118,64 @@ func! kisuke#handlers#previous_session(reply)
   let l:session_count = a:reply.session_info.current_index + 1 . '/' . a:reply.session_info.total_count
   let l:cleaned_session_name = substitute(a:reply.session_info.name, '\%x00', '', 'g')
 
-  call appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
-  call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . l:cleaned_session_name)
+  cal appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
+  cal appendbufline(g:kisuke.state.buf_nr, 1, '> ' . l:cleaned_session_name)
 
-  call s:process_session_history(a:reply.payload.messages)
-  call kisuke#syntax#setup()
+  cal s:process_session_history(a:reply.payload.messages)
+  cal kisuke#syntax#setup()
 
   redraw!
   echom 'Navigated to previous session: ' . l:cleaned_session_name
-endfunc
+endfu
 
-func s:handle_stream(reply)
+fu! s:handle_stream(reply)
   let s:kisuke.state.stream_response = s:kisuke.state.stream_response . a:reply.payload
   let l:index = 0
 
   for line in split(s:kisuke.state.stream_response, '\n')
     if l:index ==# 0
-      call setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, 'Kisuke > ' . line)
+      cal setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, 'Kisuke > ' . line)
     else
-      call setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, line)
-    endif
+      cal setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, line)
+    en
 
     let l:index += 1
-  endfor
+  endfo
+endfu
 
-endfunc
-
-func! s:handle_incremental_syntax()
+fu! s:handle_incremental_syntax()
   if exists('*kisuke#syntax#setup_incremental')
-    call kisuke#syntax#setup_incremental()
-  endif
-endfunc
+    cal kisuke#syntax#setup_incremental()
+  en
+endfu
 
-func! s:handle_stream_start()
-  call setbufline(g:kisuke.state.buf_nr, line('$'), ' ')
+fu! s:handle_stream_start()
+  cal setbufline(g:kisuke.state.buf_nr, line('$'), ' ')
 
   let s:kisuke.state.response_start_line = line('$') + 1
-endfunc
+endfu
 
-func! s:handle_stream_end()
+fu! s:handle_stream_end()
   let g:kisuke.state.marked_files = []
   let g:kisuke.state.marked_code_blocks = []
   let s:kisuke.state.stream_response = ''
   let s:kisuke.state.response_start_line = v:null
 
-  call setbufline(g:kisuke.state.buf_nr, line('$') + 1, ' ')
-  call kisuke#syntax#setup()
-endfunc
+  cal setbufline(g:kisuke.state.buf_nr, line('$') + 1, ' ')
+  cal kisuke#syntax#setup()
+endfu
 
-func! s:process_session_history(messages)
+fu! s:process_session_history(messages)
   for entry in a:messages
     if entry.sender ==# 'Kisuke'
-      call s:render_kisuke_response(entry)
-    elseif entry.sender ==# 'User'
-      call s:render_user_prompt(entry)
-    endif
-  endfor
-endfunc
+      cal s:render_kisuke_response(entry)
+    elsei entry.sender ==# 'User'
+      cal s:render_user_prompt(entry)
+    en
+  endfo
+endfu
 
-func! s:render_kisuke_response(entry)
+fu! s:render_kisuke_response(entry)
   let l:bufnr = g:kisuke.state.buf_nr
 
   let s:kisuke.state.response_start_line = line('$') + 1
@@ -187,25 +186,25 @@ func! s:render_kisuke_response(entry)
 
   for line in l:lines
     if l:index == 0
-      call add(l:buffer_lines, 'Kisuke > ' . line)
+      cal add(l:buffer_lines, 'Kisuke > ' . line)
     else
-      call add(l:buffer_lines, line)
-    endif
+      cal add(l:buffer_lines, line)
+    en
     let l:index += 1
-  endfor
+  endfo
 
   let s:kisuke.state.response_start_line = v:null
 
-  call add(l:buffer_lines, ' ')
-  call appendbufline(l:bufnr, line('$'), l:buffer_lines)
-endfunc
+  cal add(l:buffer_lines, ' ')
+  cal appendbufline(l:bufnr, line('$'), l:buffer_lines)
+endfu
 
-func! s:render_user_prompt(entry)
+fu! s:render_user_prompt(entry)
   if has_key(a:entry, 'referenceCount') && a:entry.referenceCount > 0
-    call appendbufline(g:kisuke.state.buf_nr, line('$'), '> References Added - ' . a:entry.referenceCount)
-    call appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
-  endif
+    cal appendbufline(g:kisuke.state.buf_nr, line('$'), '> References Added - ' . a:entry.referenceCount)
+    cal appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
+  en
 
-  call appendbufline(g:kisuke.state.buf_nr, line('$'), 'Prompt > ' . a:entry.message)
-  call setbufline(g:kisuke.state.buf_nr, line('$') + 1, ' ')
-endfunc
+  cal appendbufline(g:kisuke.state.buf_nr, line('$'), 'Prompt > ' . a:entry.message)
+  cal setbufline(g:kisuke.state.buf_nr, line('$') + 1, ' ')
+endfu

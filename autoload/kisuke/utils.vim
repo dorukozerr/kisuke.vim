@@ -1,17 +1,17 @@
-func! kisuke#utils#validate(checks)
+fu! kisuke#utils#validate(checks)
   if type(a:checks) ==# 3
     for check in a:checks
       if check.condition
         echom check.message
 
-        return 0
-      endif
-    endfor
+        retu 0
+      en
+    endfo
 
-    return 1
-  else
+    retu 1
+  el
     echom 'Error: Parameter must be a List'
 
-    return 0
-  endif
-endfunc
+    retu 0
+  en
+endfu

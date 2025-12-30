@@ -1,4 +1,4 @@
-func! kisuke#server#start_process()
+fu! kisuke#server#start_process()
   let l:paths = split(&runtimepath, ',')
   let l:plugin_root = ''
 
@@ -6,30 +6,20 @@ func! kisuke#server#start_process()
     if path =~ 'kisuke\.vim$'
       let l:plugin_root = path
 
-      break
-    endif
-  endfor
+      brea
+    en
+  endfo
 
   if empty(l:plugin_root)
-    echoerr 'could not find kisuke.vim in runtimepath'
+    echoe 'could not find kisuke.vim in runtimepath'
 
-    return
-  endif
+    retu
+  en
 
-  let node_script = plugin_root . '/dist/index.js'
+  let g:kisuke.state.job = job_start(['sh', '-c', 'node ' . plugin_root . '/dist/index.js'], { 'out_cb': function('kisuke#server#parse_reply') })
+endfu
 
-  " call mkdir(expand('~/.config/kisuke'), 'p')
-  " let log_file = expand('~/.config/kisuke/output_log')
-  " let cmd = 'node ' . node_script . ' 2>&1 | tee -a ' . log_file
-
-  let cmd = 'node ' . node_script
-
-  let g:kisuke.state.job = job_start(['sh', '-c', cmd], {
-        \ 'out_cb': function('kisuke#server#parse_reply'),
-        \ })
-endfunc
-
-func! kisuke#server#configure(provider, model)
+fu! kisuke#server#configure(provider, model)
   let l:config_file = expand('~/.config/kisuke/config.json')
   let l:config = kisuke#server#load()
   let l:lower_provider = tolower(a:provider)
@@ -42,38 +32,38 @@ func! kisuke#server#configure(provider, model)
     let l:api_key = l:config.apiKeys[l:lower_provider]
 
     echom 'Using existing API key for ' . a:provider
-  else
+  el
     let l:api_key = input('Enter your ' . a:provider . ' API key: ')
-  endif
+  en
 
   let l:checks = [
-        \ {'condition': g:kisuke.state.job == v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
-        \ {'condition': empty(l:api_key), 'message': 'API key cannot be empty. Please provide a valid key.'},
-        \ {'condition': empty(a:provider), 'message': 'Please provide a valid provider'},
-        \ {'condition': empty(a:model), 'message': 'Please provide a valid model'}
+        \ { 'condition': g:kisuke.state.job == v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko' },
+        \ { 'condition': empty(l:api_key), 'message': 'API key cannot be empty. Please provide a valid key.' },
+        \ { 'condition': empty(a:provider), 'message': 'Please provide a valid provider' },
+        \ { 'condition': empty(a:model), 'message': 'Please provide a valid model' }
         \ ]
 
   if kisuke#utils#validate(l:checks)
     if !has_key(l:config, 'apiKeys')
       let l:config.apiKeys = {}
-    endif
+    en
 
     let l:config.provider = l:lower_provider
     let l:config.model = tolower(a:model)
     let l:config.apiKeys[l:lower_provider] = l:api_key
 
-    call writefile([json_encode(l:config)], l:config_file, 'w')
-    call kisuke#buffer#restore({ 'type': 'initialize' })
+    cal writefile([json_encode(l:config)], l:config_file, 'w')
+    cal kisuke#buffer#restore({ 'type': 'initialize' })
 
     redraw!
 
     echom a:provider . ' configuration updated using model ' . a:model . '.'
-  else
+  el
     echohl WarningMsg | echom 'Configuration aborted due to validation errors.' | echohl None
-  endif
-endfunc
+  en
+endfu
 
-func! kisuke#server#parse_reply(channel, reply)
+fu! kisuke#server#parse_reply(channel, reply)
   let l:reply = json_decode(a:reply)
 
   let g:kisuke.state.marked_files = []
@@ -93,26 +83,24 @@ func! kisuke#server#parse_reply(channel, reply)
         \ }
 
   if has_key(l:handlers, l:reply.type)
-    call l:handlers[l:reply.type](l:reply)
-  else
-    echoerr 'Unknown message type'
-  endif
+    cal l:handlers[l:reply.type](l:reply)
+  el
+    echoe 'Unknown message type'
+  en
 
   let g:kisuke.state.is_pending = 0
-endfunc
+endfu
 
-func! kisuke#server#load()
+fu! kisuke#server#load()
   let l:config_file = expand('~/.config/kisuke/config.json')
 
   if filereadable(l:config_file)
-    let l:config = json_decode(join(readfile(l:config_file), "\n"))
+    retu json_decode(join(readfile(l:config_file), "\n"))
+  en
 
-    return l:config
-  endif
-
-  return {
+  retu {
         \ 'provider': '',
         \ 'model': '',
         \ 'apiKeys': {}
         \ }
-endfunc
+endfu
