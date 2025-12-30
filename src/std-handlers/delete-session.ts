@@ -1,16 +1,16 @@
 import { randomBytes } from 'crypto';
+import { unlink } from 'fs/promises';
 import { homedir } from 'os';
 import { join } from 'path';
-import { unlink } from 'fs/promises';
 
-import { DeleteSessionEvent } from '../types';
 import { stdOutput } from '..';
-import { getHistory, writeFile, getSession } from '../utils/file-operations';
+import { DeleteSessionPayload } from '../types';
+import { getHistory, getSession, writeFile } from '../utils/file-operations';
 import { initialSessionData } from '../utils/initials';
 
 const configDir = join(homedir(), '.config', 'kisuke');
 
-export const deleteSessionHandler = async (event: DeleteSessionEvent) => {
+export const deleteSessionHandler = async (event: DeleteSessionPayload) => {
   const history = await getHistory();
 
   history.sessions = history.sessions.filter(({ id }) => id !== event.payload);
@@ -34,12 +34,14 @@ export const deleteSessionHandler = async (event: DeleteSessionEvent) => {
   }
 
   const lastSession = history.sessions[history.sessions.length - 1];
+  if (!lastSession) {
+    stdOutput({ type: 'error', payload: 'Session not found.' });
+    return;
+  }
 
   const session = await getSession(lastSession.id);
-
   if (!session) {
     stdOutput({ type: 'error', payload: 'Session not found.' });
-
     return;
   }
 

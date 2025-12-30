@@ -1,19 +1,72 @@
 import { z } from 'zod';
 
+const baseConfigSchema = z.object({
+  apiKeys: z.object({
+    anthropic: z.string(),
+    google: z.string(),
+    openai: z.string(),
+    grok: z.string()
+  })
+});
+
+export const configSchema = z.discriminatedUnion('provider', [
+  baseConfigSchema.extend({
+    provider: z.literal('anthropic'),
+    model: z.enum([
+      'opus-4-1',
+      'opus-4',
+      'sonnet-4-5',
+      'sonnet-4',
+      'sonnet-3.7',
+      'haiku-3.7',
+      'opus-3.7'
+    ])
+  }),
+  baseConfigSchema.extend({
+    provider: z.literal('google'),
+    model: z.enum(['gemini-2.5-pro', 'gemini-2.5-flash'])
+  }),
+  baseConfigSchema.extend({
+    provider: z.literal('openai'),
+    model: z.enum([
+      'gpt-4.1',
+      'gpt-4.1-mini',
+      'gpt-4o',
+      'gpt-4o-mini',
+      'gpt-4-turbo',
+      'gpt-4',
+      'gpt-3.5-turbo'
+    ])
+  }),
+  baseConfigSchema.extend({
+    provider: z.literal('grok'),
+    model: z.literal('grok-4')
+  })
+]);
+
+export const historySchema = z.object({
+  sessions: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string()
+    })
+  )
+});
+
+export const sessionSchema = z.object({
+  messages: z.array(
+    z.object({
+      sender: z.enum(['Kisuke', 'User']),
+      message: z.string()
+    })
+  )
+});
+
 const sessionInfoSchema = z.object({
   id: z.string(),
   name: z.string(),
   total_count: z.number(),
   current_index: z.number()
-});
-
-const sessionSchema = z.object({
-  messages: z.array(
-    z.object({
-      sender: z.enum(['kisuke', 'user']),
-      message: z.string()
-    })
-  )
 });
 
 const contextSchema = z.object({

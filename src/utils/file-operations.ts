@@ -1,9 +1,11 @@
-import { join } from 'path';
-import { homedir } from 'os';
 import { existsSync } from 'fs';
 import { mkdir, readFile, writeFile as fsWriteFile } from 'fs/promises';
+import { homedir } from 'os';
+import { join } from 'path';
 
-import { Config, History, Session } from '../types';
+import { z, ZodError } from 'zod';
+
+import { configSchema, historySchema, sessionSchema } from '~/schemas';
 
 const configDir = join(homedir(), '.config', 'kisuke');
 
@@ -66,46 +68,85 @@ const setupKisuke = async () => {
     )
   ]);
 
-  return JSON.parse(
-    await readFile(join(configDir, 'history.json'), 'utf-8')
-  ) as History;
+  const fileContent = await readFile(join(configDir, 'history.json'), 'utf-8');
+  return historySchema.parse(JSON.parse(fileContent));
 };
 
 export const getConfig = async () => {
   try {
-    return JSON.parse(
-      await readFile(join(configDir, 'config.json'), 'utf-8')
-    ) as Config;
+    const fileContent = await readFile(join(configDir, 'config.json'), 'utf-8');
+    return configSchema.parse(JSON.parse(fileContent));
   } catch (error) {
-    await writeError(error, 'getConfig');
-    await setupKisuke();
-    return JSON.parse(
-      await readFile(join(configDir, 'config.json'), 'utf-8')
-    ) as Config;
+    await writeError(
+      error instanceof ZodError
+        ? z.treeifyError(error)
+        : error instanceof Error
+          ? `${error.name} - ${error.message}`
+          : error,
+      'getConfig'
+    );
+    try {
+      await setupKisuke();
+      const fileContent = await readFile(
+        join(configDir, 'config.json'),
+        'utf-8'
+      );
+      return configSchema.parse(JSON.parse(fileContent));
+    } catch {
+      return {
+        provider: 'anthropic',
+        model: 'sonnet-4-5' as const,
+        apiKeys: { anthropic: '', google: '', openai: '', grok: '' }
+      };
+    }
   }
 };
 
 export const getHistory = async () => {
   try {
-    return JSON.parse(
-      await readFile(join(configDir, 'history.json'), 'utf-8')
-    ) as History;
+    const fileContent = await readFile(
+      join(configDir, 'history.json'),
+      'utf-8'
+    );
+    return historySchema.parse(JSON.parse(fileContent));
   } catch (error) {
-    await writeError(error, 'getHistory');
-    await setupKisuke();
-    return JSON.parse(
-      await readFile(join(configDir, 'history.json'), 'utf-8')
-    ) as History;
+    await writeError(
+      error instanceof ZodError
+        ? z.treeifyError(error)
+        : error instanceof Error
+          ? `${error.name} - ${error.message}`
+          : error,
+      'getHistory'
+    );
+    try {
+      await setupKisuke();
+      const fileContent = await readFile(
+        join(configDir, 'history.json'),
+        'utf-8'
+      );
+      return historySchema.parse(JSON.parse(fileContent));
+    } catch {
+      return { sessions: [] };
+    }
   }
 };
 
 export const getSession = async (sessionId: string) => {
   try {
-    return JSON.parse(
-      await readFile(join(configDir, `${sessionId}.json`), 'utf-8')
-    ) as Session;
+    const fileContent = await readFile(
+      join(configDir, `${sessionId}.json`),
+      'utf-8'
+    );
+    return sessionSchema.parse(JSON.parse(fileContent));
   } catch (error) {
-    await writeError(error, `getSession => ${sessionId}`);
+    await writeError(
+      error instanceof ZodError
+        ? z.treeifyError(error)
+        : error instanceof Error
+          ? `${error.name} - ${error.message}`
+          : error,
+      `getSession => ${sessionId}`
+    );
     return null;
   }
 };

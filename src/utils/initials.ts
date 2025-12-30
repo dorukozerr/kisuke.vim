@@ -1,7 +1,7 @@
 export const initialSessionData = {
   messages: [
     {
-      sender: 'Kisuke',
+      sender: 'Kisuke' as const,
       message:
         "Welcome to Urahara candy shop, how can I help you today? By the way don't forget that longer sessions burn more tokens, try to use new sessions for every distinguished prompt."
     }

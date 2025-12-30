@@ -1,14 +1,15 @@
-import { Output } from './types';
-import { ZodError, z } from 'zod';
-import { clientPayloadSchema } from './schemas';
-import { writeError } from './utils/file-operations';
-import { initializeHandler } from './std-handlers/initialize';
-import { promptHandler } from './std-handlers/prompt';
-import { newSessionHandler } from './std-handlers/new-session';
-import { resumeLastSessionHandler } from './std-handlers/resume-last-session';
-import { loadSessionsHandler } from './std-handlers/load_sessions';
-import { restoreSessionHandler } from './std-handlers/restore-session';
-import { deleteSessionHandler } from './std-handlers/delete-session';
+import { z, ZodError } from 'zod';
+
+import { ServerPayload } from '~/types';
+import { clientPayloadSchema } from '~/schemas';
+import { deleteSessionHandler } from '~/std-handlers/delete-session';
+import { initializeHandler } from '~/std-handlers/initialize';
+import { loadSessionsHandler } from '~/std-handlers/load_sessions';
+import { newSessionHandler } from '~/std-handlers/new-session';
+import { promptHandler } from '~/std-handlers/prompt';
+import { restoreSessionHandler } from '~/std-handlers/restore-session';
+import { resumeLastSessionHandler } from '~/std-handlers/resume-last-session';
+import { writeError } from '~/utils/file-operations';
 
 const stdin = process.stdin;
 const stdout = process.stdout;
@@ -65,6 +66,6 @@ stdin.on('data', async (data: string) => {
   }
 });
 
-export const stdOutput = (reply: Output) => {
+export const stdOutput = (reply: ServerPayload) => {
   stdout.write(JSON.stringify(reply) + '\n');
 };
