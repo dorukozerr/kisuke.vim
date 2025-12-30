@@ -108,6 +108,14 @@ export const clientPayloadSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('delete_session'),
     payload: z.string()
+  }),
+  z.object({
+    type: z.literal('next_session'),
+    currentSessionId: z.string()
+  }),
+  z.object({
+    type: z.literal('previous_session'),
+    currentSessionId: z.string()
   })
 ]);
 
@@ -146,6 +154,16 @@ export const serverPayloadSchema = z.discriminatedUnion('type', [
   }),
   z.object({
     type: z.literal('restore_session'),
+    session_info: sessionInfoSchema,
+    payload: sessionSchema
+  }),
+  z.object({
+    type: z.literal('next_session'),
+    session_info: sessionInfoSchema,
+    payload: sessionSchema
+  }),
+  z.object({
+    type: z.literal('previous_session'),
     session_info: sessionInfoSchema,
     payload: sessionSchema
   }),

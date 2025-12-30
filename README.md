@@ -2,6 +2,17 @@
 
 - `v0.3.0` restructure
 
+**REALITY-CHECK:** This may seem like trolling or whatever but I wanted to just write my thoughts, I highly doubt someone gonna read this because I'm gonna delete this before merging to main. I'm a real retard and I'm dumb as fuck, the content below is what I added to `README.md` file in main branch
+
+```md
+WIP Features
+
+- Web search for LLM calls
+  - Currently this is available only for anthropic models, but will add this to openai and grok too. Might not add to google, I don't even know if google sdk supports web search probably does but still won't add it
+```
+
+I mean because of the video I recorded and this thing in `README.md` and many other things I wrote to random places I feel like a moron >.<
+
 ## Current Architecture
 
 ### Communication Flow

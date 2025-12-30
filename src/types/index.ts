@@ -23,3 +23,11 @@ export type DeleteSessionPayload = Extract<
   ClientPayload,
   { type: 'delete_session' }
 >;
+export type NextSessionPayload = Extract<
+  ClientPayload,
+  { type: 'next_session' }
+>;
+export type PreviousSessionPayload = Extract<
+  ClientPayload,
+  { type: 'previous_session' }
+>;

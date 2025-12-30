@@ -38,7 +38,9 @@ func! kisuke#server#configure(provider, model)
   if has_key(l:config, 'apiKeys')
         \ && has_key(l:config.apiKeys, l:lower_provider)
         \ && !empty(l:config.apiKeys[l:lower_provider])
+
     let l:api_key = l:config.apiKeys[l:lower_provider]
+
     echom 'Using existing API key for ' . a:provider
   else
     let l:api_key = input('Enter your ' . a:provider . ' API key: ')
@@ -48,7 +50,7 @@ func! kisuke#server#configure(provider, model)
         \ {'condition': g:kisuke.state.job == v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko'},
         \ {'condition': empty(l:api_key), 'message': 'API key cannot be empty. Please provide a valid key.'},
         \ {'condition': empty(a:provider), 'message': 'Please provide a valid provider'},
-        \ {'condition': empty(a:model), 'message': 'Please provide a valid model'},
+        \ {'condition': empty(a:model), 'message': 'Please provide a valid model'}
         \ ]
 
   if kisuke#utils#validate(l:checks)
@@ -64,6 +66,7 @@ func! kisuke#server#configure(provider, model)
     call kisuke#buffer#restore({ 'type': 'initialize' })
 
     redraw!
+
     echom a:provider . ' configuration updated using model ' . a:model . '.'
   else
     echohl WarningMsg | echom 'Configuration aborted due to validation errors.' | echohl None
@@ -84,7 +87,9 @@ func! kisuke#server#parse_reply(channel, reply)
         \ 'switch_session': function('kisuke#handlers#switch_session'),
         \ 'load_sessions': function('kisuke#handlers#load_sessions'),
         \ 'restore_session': function('kisuke#handlers#restore_session'),
-        \ 'error': function('kisuke#handlers#error'),
+        \ 'next_session': function('kisuke#handlers#next_session'),
+        \ 'previous_session': function('kisuke#handlers#previous_session'),
+        \ 'error': function('kisuke#handlers#error')
         \ }
 
   if has_key(l:handlers, l:reply.type)

@@ -10,6 +10,18 @@ func! kisuke#session#delete_current_session()
   endif
 endfunc
 
+func! kisuke#session#go_to_next_session()
+  if s:check_conditions()
+    call kisuke#buffer#restore({ 'type': 'next_session', 'currentSessionId': g:kisuke.state.session_id })
+  endif
+endfunc
+
+func! kisuke#session#go_to_previous_session()
+  if s:check_conditions()
+    call kisuke#buffer#restore({ 'type': 'previous_session', 'currentSessionId': g:kisuke.state.session_id })
+  endif
+endfunc
+
 func s:check_conditions()
   let l:checks = [
         \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first' },

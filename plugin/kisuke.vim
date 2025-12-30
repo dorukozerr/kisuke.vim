@@ -44,3 +44,5 @@ command! KisukeRemoveLastMarkedCodeBlock             call kisuke#buffer#remove_l
 command! KisukeCreateNewSession                      call kisuke#session#create_new_session()
 command! KisukeDeleteSession                         call kisuke#session#delete_current_session()
 command! KisukeResumeLastSession                     call kisuke#buffer#restore({ 'type': 'resume_last_session' })
+command! KisukeNextSession                           call kisuke#session#go_to_next_session()
+command! KisukePreviousSession                       call kisuke#session#go_to_previous_session()

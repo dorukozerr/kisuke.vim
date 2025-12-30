@@ -6,6 +6,8 @@ import { deleteSessionHandler } from '~/std-handlers/delete-session';
 import { initializeHandler } from '~/std-handlers/initialize';
 import { loadSessionsHandler } from '~/std-handlers/load_sessions';
 import { newSessionHandler } from '~/std-handlers/new-session';
+import { nextSessionHandler } from '~/std-handlers/next-session';
+import { previousSessionHandler } from '~/std-handlers/previous-session';
 import { promptHandler } from '~/std-handlers/prompt';
 import { restoreSessionHandler } from '~/std-handlers/restore-session';
 import { resumeLastSessionHandler } from '~/std-handlers/resume-last-session';
@@ -42,6 +44,12 @@ stdin.on('data', async (data: string) => {
         break;
       case 'delete_session':
         deleteSessionHandler(payload);
+        break;
+      case 'next_session':
+        nextSessionHandler(payload);
+        break;
+      case 'previous_session':
+        previousSessionHandler(payload);
         break;
     }
   } catch (error) {

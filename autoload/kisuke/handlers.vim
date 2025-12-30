@@ -88,6 +88,46 @@ func! kisuke#handlers#error(reply)
   call appendbufline(g:kisuke.state.buf_nr, line('$'), 'Server error > ' . a:reply.payload)
 endfunc
 
+func! kisuke#handlers#next_session(reply)
+  call kisuke#buffer#prepare_chat_buffer()
+
+  silent! %delete
+
+  let g:kisuke.state.session_id = a:reply.session_info.id
+
+  let l:session_count = a:reply.session_info.current_index + 1 . '/' . a:reply.session_info.total_count
+  let l:cleaned_session_name = substitute(a:reply.session_info.name, '\%x00', '', 'g')
+
+  call appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
+  call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . l:cleaned_session_name)
+
+  call s:process_session_history(a:reply.payload.messages)
+  call kisuke#syntax#setup()
+
+  redraw!
+  echom 'Navigated to next session: ' . l:cleaned_session_name
+endfunc
+
+func! kisuke#handlers#previous_session(reply)
+  call kisuke#buffer#prepare_chat_buffer()
+
+  silent! %delete
+
+  let g:kisuke.state.session_id = a:reply.session_info.id
+
+  let l:session_count = a:reply.session_info.current_index + 1 . '/' . a:reply.session_info.total_count
+  let l:cleaned_session_name = substitute(a:reply.session_info.name, '\%x00', '', 'g')
+
+  call appendbufline(g:kisuke.state.buf_nr, 0, '> ' . 'Kisuke initialized ' . l:session_count)
+  call appendbufline(g:kisuke.state.buf_nr, 1, '> ' . l:cleaned_session_name)
+
+  call s:process_session_history(a:reply.payload.messages)
+  call kisuke#syntax#setup()
+
+  redraw!
+  echom 'Navigated to previous session: ' . l:cleaned_session_name
+endfunc
+
 func s:handle_stream(reply)
   let s:kisuke.state.stream_response = s:kisuke.state.stream_response . a:reply.payload
   let l:index = 0
