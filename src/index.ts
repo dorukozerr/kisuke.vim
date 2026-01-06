@@ -72,11 +72,10 @@ stdin.on('data', async (data: string) => {
           ? 'Invalid client payload'
           : error instanceof Error
             ? `${error.name} - ${error.message}`
-            : 'Unknown client payload error'
+            : 'Unknown client payload error... ${String(error)}'
     });
   }
 });
 
-export const stdOutput = (reply: ServerPayload) => {
+export const stdOutput = (reply: ServerPayload) =>
   stdout.write(JSON.stringify(reply) + '\n');
-};

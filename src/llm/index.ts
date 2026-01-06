@@ -2,25 +2,13 @@ import { streamText } from 'ai';
 
 import { stdOutput } from '~/index';
 import { Session } from '~/types';
-import {
-  getConfig,
-  writeError,
-  writeFile,
-  writeMcpLog
-} from '~/utils/file-operations';
+import { getConfig, writeError, writeFile } from '~/utils/file-operations';
 import {
   BaseAIInstruction,
   fileContextsProcessingInstructionsForStream,
   sessionHistoryForStream
 } from '~/utils/initials';
-
-import {
-  closeMcpClient,
-  getMcpTools,
-  initializeMcpClient
-} from './mcp/client.js';
-import { getEnabledMcpServers } from './mcp/config.js';
-import { getAnthropic } from './providers/index.js';
+import { getAnthropic } from '~/llm/providers/index.js';
 
 export const streamHandler = async (
   context: {
@@ -35,26 +23,6 @@ export const streamHandler = async (
   try {
     const config = await getConfig();
     const anthropic = getAnthropic({ apiKey: config.apiKeys.anthropic });
-
-    // Initialize MCP client and fetch tools
-    const mcpServers = await getEnabledMcpServers();
-    let tools = {};
-
-    if (mcpServers.length > 0) {
-      // Connect to first enabled MCP server
-      const server = mcpServers[0];
-      if (server) {
-        try {
-          await initializeMcpClient(server);
-          tools = await getMcpTools();
-          await writeMcpLog('mcp_tools_loaded', {
-            count: Object.keys(tools).length
-          });
-        } catch (error) {
-          await writeMcpLog('mcp_init_error', { error });
-        }
-      }
-    }
 
     stdOutput({ type: 'response', payload: 'stream_start' });
 
@@ -75,22 +43,14 @@ export const streamHandler = async (
               )
             : prompt
         }
-      ],
-      ...(Object.keys(tools).length > 0 && {
-        tools,
-        maxSteps: 5
-      })
+      ]
     });
 
     let res = '';
 
     for await (const textPart of result.textStream) {
       res += textPart;
-
-      stdOutput({
-        type: 'response',
-        payload: textPart
-      });
+      stdOutput({ type: 'response', payload: textPart });
     }
 
     await writeFile(
@@ -112,9 +72,6 @@ export const streamHandler = async (
     );
 
     stdOutput({ type: 'response', payload: 'stream_end' });
-
-    // Clean up MCP client
-    await closeMcpClient();
   } catch (error) {
     const e =
       error instanceof Error
@@ -123,12 +80,6 @@ export const streamHandler = async (
 
     await writeError(e, 'stream_error');
 
-    stdOutput({
-      type: 'error',
-      payload: e
-    });
-
-    // Ensure MCP client is closed on error
-    await closeMcpClient();
+    stdOutput({ type: 'error', payload: e });
   }
 };

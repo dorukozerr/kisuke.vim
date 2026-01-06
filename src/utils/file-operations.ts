@@ -5,7 +5,13 @@ import { join } from 'path';
 
 import { z, ZodError } from 'zod';
 
-import { configSchema, historySchema, sessionSchema } from '~/schemas';
+import { McpServerConfig } from '~/types';
+import {
+  configSchema,
+  historySchema,
+  mcpConfigSchema,
+  sessionSchema
+} from '~/schemas';
 
 const configDir = join(homedir(), '.config', 'kisuke');
 
@@ -189,4 +195,28 @@ export const writeMcpLog = async (operation: string, data: unknown) => {
   } catch (error) {
     await writeError(error, 'writeMcpLog');
   }
+};
+
+export const getMcpConfig = async () => {
+  try {
+    const mcpConfigPath = join(configDir, 'mcp-config.json');
+
+    if (!existsSync(mcpConfigPath)) return { servers: {} };
+
+    return mcpConfigSchema.parse(
+      JSON.parse(await readFile(mcpConfigPath, 'utf-8'))
+    );
+  } catch {
+    return { servers: {} };
+  }
+};
+
+export const getEnabledMcpServers = async (): Promise<McpServerConfig[]> => {
+  const config = await getMcpConfig();
+
+  if (!config.servers) return [];
+
+  return Object.values(config.servers).filter(
+    (serverConfig) => serverConfig.enabled
+  );
 };

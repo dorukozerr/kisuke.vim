@@ -53,26 +53,4 @@ export const promptHandler = async ({
   }
 
   await streamHandler(context, payload, session, sessionId);
-
-  //   const isSuccess = await sendStreamResponse(
-  //     context,
-  //     payload,
-  //     session,
-  //     sessionId
-  //   );
-  //
-  //   if (session.messages.length === 1 && isSuccess) {
-  //     const sessionName = await generateSessionName(payload);
-  //
-  //     history.sessions = history.sessions.map((session) =>
-  //       session.id === sessionId
-  //         ? {
-  //             ...session,
-  //             name: `${new Date().toLocaleDateString()} - ${sessionName}`
-  //           }
-  //         : session
-  //     );
-  //
-  //     await writeFile('history.json', JSON.stringify(history));
-  //   }
 };

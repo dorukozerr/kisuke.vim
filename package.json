@@ -17,6 +17,7 @@
   "private": false,
   "devDependencies": {
     "@eslint/js": "^9.37.0",
+    "@types/express": "^5.0.6",
     "@types/node": "^24.7.2",
     "eslint": "^9.37.0",
     "eslint-plugin-prettier": "^5.5.4",
@@ -29,12 +30,9 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.1",
-    "@ai-sdk/mcp": "^1.0.1",
-    "@anthropic-ai/sdk": "^0.65.0",
-    "@google/genai": "^1.24.0",
     "@modelcontextprotocol/sdk": "^1.25.1",
     "ai": "^6.0.3",
-    "openai": "^6.3.0",
+    "express": "^5.2.1",
     "zod": "^4.2.1"
   }
 }
