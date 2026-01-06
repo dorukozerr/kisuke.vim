@@ -1,11 +1,11 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts'],
+  entry: ['src/index.ts', 'src/llm/mcp/server/*'],
   format: ['esm'],
-  splitting: false,
+  splitting: true,
+  bundle: true,
   clean: true,
-  minify: true,
   treeshake: true,
   outDir: 'dist',
   skipNodeModulesBundle: true,
