@@ -1,7 +1,5 @@
-import { stdOutput } from '~/index';
+import { llmSandbox } from '~/llm/sandbox';
 
 export const sandboxHandler = async () => {
-  stdOutput({ type: 'response', payload: 'stream_start' });
-  stdOutput({ type: 'response', payload: 'sandbox' });
-  stdOutput({ type: 'response', payload: 'stream_end' });
+  llmSandbox();
 };

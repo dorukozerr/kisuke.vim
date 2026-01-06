@@ -12,6 +12,7 @@ import { previousSessionHandler } from '~/handlers/previous-session';
 import { promptHandler } from '~/handlers/prompt';
 import { restoreSessionHandler } from '~/handlers/restore-session';
 import { resumeLastSessionHandler } from '~/handlers/resume-last-session';
+import { sandboxHandler } from '~/handlers/sandbox';
 
 const stdin = process.stdin;
 const stdout = process.stdout;
@@ -52,7 +53,7 @@ stdin.on('data', async (data: string) => {
         previousSessionHandler(payload);
         break;
       case 'sandbox':
-        stdOutput({ type: 'sandbox', qweqwe: 'sssssnnnnndddboooxxx' });
+        sandboxHandler();
         break;
     }
   } catch (error) {
