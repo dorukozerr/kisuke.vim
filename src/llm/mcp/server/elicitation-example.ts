@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { z } from 'zod';
 
 import { writeMcpLog } from '~/utils/file-operations';
 
@@ -21,41 +22,41 @@ mcpServer.registerTool(
   },
   async () => {
     try {
-      const identity = await mcpServer.server.elicitInput({
+      const elicitationStep1 = await mcpServer.server.elicitInput({
         mode: 'form',
-        message: 'Step 1: Enter who you are',
+        message: 'Elicitation Form - Step 1',
+        requestedSchema: z
+          .object({
+            step1Field: z
+              .enum(['s1v1', 's1v2'])
+              .describe('Elicitation Form - Step 1, description')
+          })
+          .toJSONSchema()
+      });
+
+      const elicitationStep2 = await mcpServer.server.elicitInput({
+        mode: 'form',
+        message: 'Elicitation Form - Step 2',
         requestedSchema: {
           type: 'object',
           properties: {
-            identity: {
+            step2Field: {
               type: 'string',
-              title: 'User Identity',
-              description: 'Identity of the user',
-              enum: ['someone', 'no-one']
+              description: 'Elicitation Form - Step 2, description',
+              enum: ['s2v1', 's2v2']
             }
           }
         }
       });
 
-      const favoriteEditor = await mcpServer.server.elicitInput({
-        mode: 'form',
-        message: 'Step 2: Select your favorite editor',
-        requestedSchema: {
-          type: 'object',
-          properties: {
-            identity: {
-              type: 'string',
-              title: 'Favorite Editory',
-              description: 'Favorite editor of user',
-              enum: ['notepad', 'atom', 'vim']
-            }
-          }
-        }
+      writeMcpLog('elicitation_mcp_server_log', {
+        elicitationStep1,
+        elicitationStep2
       });
 
       const inputs = {
-        ...identity.content,
-        ...favoriteEditor.content
+        ...elicitationStep1.content,
+        ...elicitationStep2.content
       };
 
       return {

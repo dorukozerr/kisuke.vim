@@ -18,14 +18,14 @@ export const stdioMcpClient = async () => {
     if (params.mode !== 'form')
       throw new Error('how come this ended up working?');
 
-    writeMcpLog('stdio_mcp_client_test_log', { method, params });
+    writeMcpLog('stdio_mcp_client_log', { method, params });
 
     return {
       action: 'accept',
-      content: {
-        title:
-          params.message === 'Step 1: Enter who you are' ? 'someone' : 'vim'
-      }
+      content:
+        params.message === 'Elicitation Form - Step 1'
+          ? { step1Field: 's1v3' }
+          : { step2Field: 's2v2' }
     };
   });
 
