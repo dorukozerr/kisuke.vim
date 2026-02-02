@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { ElicitRequestFormParams } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 
 import { writeMcpLog } from '~/utils/file-operations';
@@ -31,7 +32,7 @@ mcpServer.registerTool(
               .enum(['s1v1', 's1v2'])
               .describe('Elicitation Form - Step 1, description')
           })
-          .toJSONSchema()
+          .toJSONSchema() as ElicitRequestFormParams['requestedSchema']
       });
 
       const elicitationStep2 = await mcpServer.server.elicitInput({

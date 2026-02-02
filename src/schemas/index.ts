@@ -92,7 +92,7 @@ export const clientPayloadSchema = z.discriminatedUnion('type', [
   }),
   z.object({
     type: z.literal('prompt'),
-    payload: z.string(),
+    prompt: z.string(),
     sessionId: z.string(),
     context: z.array(contextSchema).optional()
   }),
@@ -117,12 +117,6 @@ export const clientPayloadSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('previous_session'),
     currentSessionId: z.string()
-  }),
-  z.object({
-    type: z.literal('sandbox'),
-    prompt: z.string(),
-    sessionId: z.string(),
-    context: z.array(contextSchema).optional()
   })
 ]);
 
