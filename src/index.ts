@@ -53,7 +53,7 @@ stdin.on('data', async (data: string) => {
         previousSessionHandler(payload);
         break;
       case 'sandbox':
-        sandboxHandler();
+        sandboxHandler(payload);
         break;
     }
   } catch (error) {

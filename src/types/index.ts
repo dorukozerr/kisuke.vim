@@ -35,3 +35,4 @@ export type PreviousSessionPayload = Extract<
   ClientPayload,
   { type: 'previous_session' }
 >;
+export type SandboxPayload = Extract<ClientPayload, { type: 'sandbox' }>;

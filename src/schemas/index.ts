@@ -119,7 +119,10 @@ export const clientPayloadSchema = z.discriminatedUnion('type', [
     currentSessionId: z.string()
   }),
   z.object({
-    type: z.literal('sandbox')
+    type: z.literal('sandbox'),
+    prompt: z.string(),
+    sessionId: z.string(),
+    context: z.array(contextSchema).optional()
   })
 ]);
 
@@ -187,7 +190,7 @@ export const serverPayloadSchema = z.discriminatedUnion('type', [
   }),
   z.object({
     type: z.literal('sandbox'),
-    qweqwe: z.string()
+    payload: z.string()
   }),
   z.object({
     type: z.literal('mcp_elicitation'),

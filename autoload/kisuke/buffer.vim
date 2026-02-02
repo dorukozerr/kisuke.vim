@@ -244,18 +244,18 @@ fu! kisuke#buffer#on_submit(prompt)
         \ { 'condition': a:prompt ==# '', 'message': 'Cannot submit empty prompt, please write something' },
         \ { 'condition': g:kisuke.state.is_pending, 'message': 'Please wait for server to finish its job' },
         \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Server is not running, try restarting vim' },
+        \ { 'condition': g:kisuke.state.session_id ==# v:null, 'message': 'Session ID is unavailable' },
         \ ]
 
   if kisuke#utils#validate(l:checks)
     let g:kisuke.state.is_pending = 1
 
-     let l:payload = { 'type': 'sandbox' }
+     let l:payload = {
+           \ 'type': 'sandbox',
+           \ 'sessionId': g:kisuke.state.session_id,
+           \ 'prompt': a:prompt,
+           \ }
 
-    " let l:payload = {
-    "       \ 'type': 'prompt',
-    "       \ 'sessionId': g:kisuke.state.session_id,
-    "       \ 'payload': a:prompt,
-    "       \ }
 
     " let l:payload = len(g:kisuke.state.marked_files) || len(g:kisuke.state.marked_code_blocks)
     "       \ ? extend(l:payload, { 'context': g:kisuke.state.marked_files + g:kisuke.state.marked_code_blocks })

@@ -49,6 +49,7 @@ fu! kisuke#handlers#new_session(reply)
 endfu
 
 fu! kisuke#handlers#resume_last_session(reply)
+  echom "handlers#resume_last_session"
   cal kisuke#buffer#prepare_chat_buffer()
 
   silent! %delete
@@ -70,6 +71,7 @@ fu! kisuke#handlers#load_sessions(reply)
 endfu
 
 fu! kisuke#handlers#restore_session(reply)
+  echom "handlers#restore_session"
   cal kisuke#buffer#prepare_chat_buffer()
 
   silent! %delete
