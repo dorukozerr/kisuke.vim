@@ -251,7 +251,7 @@ fu! kisuke#buffer#on_submit(prompt)
     let g:kisuke.state.is_pending = 1
 
      let l:payload = {
-           \ 'type': 'sandbox',
+           \ 'type': 'prompt',
            \ 'sessionId': g:kisuke.state.session_id,
            \ 'prompt': a:prompt,
            \ }

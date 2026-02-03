@@ -1,47 +1,48 @@
 import { streamText } from 'ai';
 
 import { stdOutput } from '~/index';
-import { Session } from '~/types';
-import { getConfig, writeError, writeFile } from '~/utils/file-operations';
+import { PromptPayload } from '~/types';
 import {
-  BaseAIInstruction,
-  fileContextsProcessingInstructionsForStream,
-  sessionHistoryForStream
-} from '~/utils/initials';
-import { getAnthropic } from '~/llm/providers/index.js';
+  getConfig,
+  getSession,
+  writeError,
+  writeFile,
+  writeTempJson
+} from '~/utils/file-operations';
+import { KISUKE_V030_SYSTEM_PROMPT } from '~/llm/prompts/system';
+import { getAnthropic } from '~/llm/providers';
 
-export const streamHandler = async (
-  context: {
-    fileName: string;
-    content: string;
-    type: 'all' | 'block';
-  }[],
-  prompt: string,
-  session: Session,
-  sessionId: string
-) => {
+export const processPrompt = async ({
+  sessionId,
+  prompt,
+  context: _
+}: PromptPayload) => {
   try {
     const config = await getConfig();
+    const session = await getSession(sessionId);
     const anthropic = getAnthropic({ apiKey: config.apiKeys.anthropic });
+
+    if (!session) throw new Error('Invalid session');
 
     stdOutput({ type: 'response', payload: 'stream_start' });
 
     const result = streamText({
-      model: anthropic('claude-opus-4-5'),
+      model: anthropic('claude-sonnet-4-5-20250929'),
       messages: [
         {
           role: 'system',
-          content:
-            BaseAIInstruction + sessionHistoryForStream(JSON.stringify(session))
+          content: KISUKE_V030_SYSTEM_PROMPT
         },
+        ...session.messages.map(
+          ({ sender, message }) =>
+            ({
+              role: sender === 'Kisuke' ? 'assistant' : 'user',
+              content: message
+            }) as const
+        ),
         {
           role: 'user',
-          content: context
-            ? fileContextsProcessingInstructionsForStream(
-                JSON.stringify(context),
-                prompt
-              )
-            : prompt
+          content: prompt
         }
       ]
     });
@@ -53,20 +54,15 @@ export const streamHandler = async (
       stdOutput({ type: 'response', payload: textPart });
     }
 
+    await writeTempJson({ test: JSON.stringify(result.content) });
+
     await writeFile(
       `${sessionId}.json`,
       JSON.stringify({
         messages: [
           ...session.messages,
-          {
-            sender: 'User',
-            message: prompt,
-            ...(context.length ? { referenceCount: context.length } : {})
-          },
-          {
-            sender: 'Kisuke',
-            message: res
-          }
+          { sender: 'User', message: prompt },
+          { sender: 'Kisuke', message: res }
         ]
       })
     );

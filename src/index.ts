@@ -5,7 +5,7 @@ import { clientPayloadSchema } from '~/schemas';
 import { writeError } from '~/utils/file-operations';
 import { deleteSessionHandler } from '~/handlers/delete-session';
 import { initializeHandler } from '~/handlers/initialize';
-import { loadSessionsHandler } from '~/handlers/load_sessions';
+import { loadSessionsHandler } from '~/handlers/load-sessions';
 import { newSessionHandler } from '~/handlers/new-session';
 import { nextSessionHandler } from '~/handlers/next-session';
 import { previousSessionHandler } from '~/handlers/previous-session';
