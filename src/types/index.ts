@@ -18,6 +18,7 @@ export type ServerPayload = z.infer<typeof serverPayloadSchema>;
 export type McpServerConfig = z.infer<typeof mcpServerConfigSchema>;
 export type McpConfig = z.infer<typeof mcpConfigSchema>;
 
+export type InitializePayload = Extract<ClientPayload, { type: 'initialize' }>;
 export type PromptPayload = Extract<ClientPayload, { type: 'prompt' }>;
 export type RestoreSessionPayload = Extract<
   ClientPayload,

@@ -4,7 +4,7 @@ fu! kisuke#buffer#open()
   en
 
   if bufexists(g:kisuke.state.buf_nr)
-    cal kisuke#buffer#restore({ 'type': 'initialize' })
+    cal kisuke#buffer#restore({ 'type': 'initialize', 'cwd': getcwd() })
   el
     cal kisuke#buffer#create()
   en
@@ -17,7 +17,7 @@ fu! kisuke#buffer#create()
 
   cal kisuke#buffer#prepare_menu_buffer()
 
-  cal ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode({ 'type': 'initialize' }))
+  cal ch_sendraw(job_getchannel(g:kisuke.state.job), json_encode({ 'type': 'initialize', 'cwd': getcwd() }))
 endfu
 
 fu! kisuke#buffer#restore(payload = v:null)

@@ -9,6 +9,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { jsonSchema, Tool, tool } from 'ai';
 
+import { cwd } from '~/utils/cwd';
 import { writeMcpLog } from '~/utils/file-operations';
 import { requestApproval } from '~/llm/mcp/client/tool-approval';
 
@@ -39,6 +40,11 @@ export const mcpClients = async () => {
     { capabilities: { roots: { listChanged: true } } }
   );
 
+  const gitClient = createClient({
+    name: 'Kisuke MCP Client - Git MCP',
+    version: '0.0.1-development'
+  });
+
   const filesystemTransport = new StdioClientTransport({
     command: 'npx',
     args: ['-y', '@modelcontextprotocol/server-filesystem']
@@ -55,27 +61,34 @@ export const mcpClients = async () => {
     }
   });
 
+  const gitTransport = new StdioClientTransport({
+    command: 'uvx',
+    args: ['mcp-server-git', '--repository', cwd.path]
+  });
+
   await Promise.all([
     filesystemClient.connect(filesystemTransport),
-    memoryClient.connect(memoryTransport)
+    memoryClient.connect(memoryTransport),
+    gitClient.connect(gitTransport)
   ]);
 
   setupRootsHandler(filesystemClient, {
     roots: [
-      {
-        uri: `file://${join(homedir(), '.sandbox/temp/')}`,
-        name: 'Sandbox Temp Path'
-      }
+      // {
+      //   uri: `file://${join(homedir(), '.sandbox/temp/')}`,
+      //   name: 'Sandbox Temp Path'
+      // }
     ]
   });
   await filesystemClient.sendRootsListChanged();
 
   const tools = await convertAndMergeMCPTools({
     filesystemClient,
-    memoryClient
+    memoryClient,
+    gitClient
   });
 
-  return { filesystemClient, memoryClient, tools };
+  return { filesystemClient, memoryClient, gitClient, tools };
 };
 
 const convertAndMergeMCPTools = async (clients: Record<string, Client>) => {

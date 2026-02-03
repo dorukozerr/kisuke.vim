@@ -26,7 +26,7 @@ stdin.on('data', async (data: string) => {
 
     switch (payload.type) {
       case 'initialize':
-        initializeHandler();
+        initializeHandler(payload);
         break;
       case 'prompt':
         promptHandler(payload);

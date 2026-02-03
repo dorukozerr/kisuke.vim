@@ -1,8 +1,11 @@
+import { stdOutput } from '~/index';
+import { InitializePayload } from '~/types';
+import { cwd } from '~/utils/cwd';
 import { getConfig, getHistory } from '~/utils/file-operations';
 
-import { stdOutput } from '..';
+export const initializeHandler = async (payload: InitializePayload) => {
+  cwd.path = payload.cwd;
 
-export const initializeHandler = async () => {
   const [config, history] = await Promise.all([getConfig(), getHistory()]);
 
   if (!config.provider || !config.model) {

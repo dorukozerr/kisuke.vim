@@ -6,8 +6,8 @@ import {
   getConfig,
   getSession,
   writeError,
-  // writeTempJson,
   writeFile
+  // writeTempJson
 } from '~/utils/file-operations';
 import { mcpClients } from '~/llm/mcp/client';
 import { KISUKE_SYSTEM_PROMPT } from '~/llm/prompts/system';
@@ -62,19 +62,15 @@ export const processPrompt = async ({
           break;
 
         case 'tool-call':
-          // await writeTempJson({ [`tool-result-${timestamp}`]: part });
+          // await writeTempJson({ [`tool-call-${timestamp}`]: part });
           stdOutput({
             type: 'response',
-            payload: `[Result: ${part.toolName}]\n`
+            payload: `\n[Using: ${part.toolName}]\n`
           });
           break;
 
         case 'tool-result':
           // await writeTempJson({ [`tool-result-${timestamp}`]: part });
-          stdOutput({
-            type: 'response',
-            payload: `[Result: ${part.toolName}]\n`
-          });
           break;
 
         case 'tool-error':

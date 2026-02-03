@@ -85,7 +85,8 @@ const contextSchema = z.object({
 
 export const clientPayloadSchema = z.discriminatedUnion('type', [
   z.object({
-    type: z.literal('initialize')
+    type: z.literal('initialize'),
+    cwd: z.string()
   }),
   z.object({
     type: z.literal('new_session')
