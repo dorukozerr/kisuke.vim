@@ -12,7 +12,11 @@ const pendingApprovals = new Map<string, PendingApproval>();
 
 const APPROVAL_TIMEOUT_MS = 30 * 1000; // 30 seconds
 
-const requestApproval = (toolCallId: string, toolName: string, args: unknown) =>
+export const requestApproval = (
+  toolCallId: string,
+  toolName: string,
+  args: unknown
+) =>
   new Promise<boolean>((resolve) => {
     const timeout = setTimeout(() => {
       pendingApprovals.delete(toolCallId);
