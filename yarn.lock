@@ -3,35 +3,35 @@
 
 
 "@ai-sdk/anthropic@^3.0.1":
-  version "3.0.31"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/anthropic/-/anthropic-3.0.31.tgz#e7f4413b9fdaef3bd40be2705ea376d82a0abc94"
-  integrity sha512-rcrtOKbmhFKFxifCYjyFFWvBT2XBUfo6VzD2y2GyG6vZ1XJZoJn7JJe5uLy1bDj4mNUz55cottu5NgI6/NhSuQ==
+  version "3.0.35"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/anthropic/-/anthropic-3.0.35.tgz#334bf3f5415ebab77cf23d52f197b8027087821e"
+  integrity sha512-Y3g/5uVj621XSB9lGF7WrD7qR+orhV5xpaYkRF8kfj2j4W7e7BBGIvxcdsCf85FjJbc6tKQdNTZ84ZEqT3Y5TQ==
   dependencies:
-    "@ai-sdk/provider" "3.0.6"
-    "@ai-sdk/provider-utils" "4.0.11"
+    "@ai-sdk/provider" "3.0.7"
+    "@ai-sdk/provider-utils" "4.0.13"
 
-"@ai-sdk/gateway@3.0.29":
-  version "3.0.29"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/gateway/-/gateway-3.0.29.tgz#fd595a3f823363e539f7e0ef8112131cdde085cc"
-  integrity sha512-zf6yXT+7DcVGWG7ntxVCYC48X/opsWlO5ePvgH8W9DaEVUtkemqKUEzBqowQ778PkZo8sqMnRfD0+fi9HamRRQ==
+"@ai-sdk/gateway@3.0.32":
+  version "3.0.32"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/gateway/-/gateway-3.0.32.tgz#4738f75fc2eba7f245f77fd0dc139225a08c9c47"
+  integrity sha512-7clZRr07P9rpur39t1RrbIe7x8jmwnwUWI8tZs+BvAfX3NFgdSVGGIaT7bTz2pb08jmLXzTSDbrOTqAQ7uBkBQ==
   dependencies:
-    "@ai-sdk/provider" "3.0.6"
-    "@ai-sdk/provider-utils" "4.0.11"
+    "@ai-sdk/provider" "3.0.7"
+    "@ai-sdk/provider-utils" "4.0.13"
     "@vercel/oidc" "3.1.0"
 
-"@ai-sdk/provider-utils@4.0.11":
-  version "4.0.11"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/provider-utils/-/provider-utils-4.0.11.tgz#dc25dc1cfb7c3b04d0b9460469859db2e684487b"
-  integrity sha512-y/WOPpcZaBjvNaogy83mBsCRPvbtaK0y1sY9ckRrrbTGMvG2HC/9Y/huqNXKnLAxUIME2PGa2uvF2CDwIsxoXQ==
+"@ai-sdk/provider-utils@4.0.13":
+  version "4.0.13"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/provider-utils/-/provider-utils-4.0.13.tgz#d2240b0c4d701eef8a4273ade71585a691e34e04"
+  integrity sha512-HHG72BN4d+OWTcq2NwTxOm/2qvk1duYsnhCDtsbYwn/h/4zeqURu1S0+Cn0nY2Ysq9a9HGKvrYuMn9bgFhR2Og==
   dependencies:
-    "@ai-sdk/provider" "3.0.6"
+    "@ai-sdk/provider" "3.0.7"
     "@standard-schema/spec" "^1.1.0"
     eventsource-parser "^3.0.6"
 
-"@ai-sdk/provider@3.0.6":
-  version "3.0.6"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/provider/-/provider-3.0.6.tgz#fd5812a82ee678989fa6e852e4a5e86591fa49bd"
-  integrity sha512-hSfoJtLtpMd7YxKM+iTqlJ0ZB+kJ83WESMiWuWrNVey3X8gg97x0OdAAaeAeclZByCX3UdPOTqhvJdK8qYA3ww==
+"@ai-sdk/provider@3.0.7":
+  version "3.0.7"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/provider/-/provider-3.0.7.tgz#470bb8f9e46ec9d8d62b07b4c1f5737b991ebe83"
+  integrity sha512-VkPLrutM6VdA924/mG8OS+5frbVTcu6e046D2bgDo00tehBANR1QBJ/mPcZ9tXMFOsVcm6SQArOregxePzTFPw==
   dependencies:
     json-schema "^0.4.0"
 
@@ -499,9 +499,9 @@
   integrity sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==
 
 "@types/node@*":
-  version "25.1.0"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-25.1.0.tgz#95cc584f1f478301efc86de4f1867e5875e83571"
-  integrity sha512-t7frlewr6+cbx+9Ohpl0NOTKXZNV9xHRmNOvql47BFJKcEG1CxtxlPEEe+gR9uhVWM4DwhnvTF110mIL4yP9RA==
+  version "25.2.0"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-25.2.0.tgz#015b7d228470c1dcbfc17fe9c63039d216b4d782"
+  integrity sha512-DZ8VwRFUNzuqJ5khrvwMXHmvPe+zGayJhr2CDNiKB1WBE1ST8Djl00D0IC4vvNmHMdj6DlbYRIaFE7WHjlDl5w==
   dependencies:
     undici-types "~7.16.0"
 
@@ -657,13 +657,13 @@ acorn@^8.15.0:
   integrity sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg==
 
 ai@^6.0.3:
-  version "6.0.62"
-  resolved "https://registry.yarnpkg.com/ai/-/ai-6.0.62.tgz#524e968f30e8abfe9f2999f5db4c35fa3b6b043f"
-  integrity sha512-0ArQPYmSnwoDG1nQ7GQ2XyEtYEWMSK4pVV9S9nsChRY2D6P2H2ntMEDV/CqTF6GTSwJpBJHAOSvsgEqSc7dx5g==
+  version "6.0.68"
+  resolved "https://registry.yarnpkg.com/ai/-/ai-6.0.68.tgz#599d1332ffd0a22f550df0c6258316652debcc8e"
+  integrity sha512-nrTOAXm+XUhi/NvkUbb5yRebf6+PBkZT8zkR2P57ot1f4IMGWMmBzk9JOSSSGiVeVUaakhOkLq/IUEtb71yWTw==
   dependencies:
-    "@ai-sdk/gateway" "3.0.29"
-    "@ai-sdk/provider" "3.0.6"
-    "@ai-sdk/provider-utils" "4.0.11"
+    "@ai-sdk/gateway" "3.0.32"
+    "@ai-sdk/provider" "3.0.7"
+    "@ai-sdk/provider-utils" "4.0.13"
     "@opentelemetry/api" "1.9.0"
 
 ajv-formats@^3.0.1:
