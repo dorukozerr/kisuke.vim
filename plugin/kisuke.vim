@@ -47,3 +47,4 @@ com! KisukeDeleteSession                          cal kisuke#session#delete_curr
 com! KisukeResumeLastSession                      cal kisuke#buffer#restore({ 'type': 'resume_last_session' })
 com! KisukeNextSession                            cal kisuke#session#go_to_next_session()
 com! KisukePreviousSession                        cal kisuke#session#go_to_previous_session()
+com! KisukeRestart                                cal kisuke#server#restart()

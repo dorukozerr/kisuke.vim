@@ -11,7 +11,8 @@
     "lint": "eslint --fix src",
     "type-check": "tsc --noEmit --pretty",
     "precommit": "yarn && yarn format && yarn lint && yarn type-check",
-    "build": "tsup --format es"
+    "build": "tsup --format esm",
+    "watch": "tsup --format esm --watch"
   },
   "license": "MIT",
   "private": false,

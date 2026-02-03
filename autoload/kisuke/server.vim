@@ -93,6 +93,20 @@ fu! kisuke#server#parse_reply(channel, reply)
   let g:kisuke.state.is_pending = 0
 endfu
 
+fu! kisuke#server#restart()
+  cal kisuke#server#stop()
+  cal kisuke#server#start_process()
+  cal kisuke#buffer#restore({ 'type': 'initialize' })
+  echom 'Kisuke server restarted'
+endfu
+
+fu! kisuke#server#stop()
+  if g:kisuke.state.job != v:null
+    cal job_stop(g:kisuke.state.job)
+    let g:kisuke.state.job = v:null
+  en
+endfu
+
 fu! kisuke#server#load()
   let l:config_file = expand('~/.config/kisuke/config.json')
 

@@ -9,7 +9,7 @@ import {
   writeFile,
   writeTempJson
 } from '~/utils/file-operations';
-import { KISUKE_V030_SYSTEM_PROMPT } from '~/llm/prompts/system';
+import { KISUKE_SYSTEM_PROMPT } from '~/llm/prompts/system';
 import { getAnthropic } from '~/llm/providers';
 
 export const processPrompt = async ({
@@ -31,7 +31,7 @@ export const processPrompt = async ({
       messages: [
         {
           role: 'system',
-          content: KISUKE_V030_SYSTEM_PROMPT
+          content: KISUKE_SYSTEM_PROMPT
         },
         ...session.messages.map(
           ({ sender, message }) =>
