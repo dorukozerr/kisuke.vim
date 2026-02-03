@@ -1,4 +1,4 @@
-import { streamText } from 'ai';
+import { stepCountIs, streamText } from 'ai';
 
 import { stdOutput } from '~/index';
 import { PromptPayload } from '~/types';
@@ -6,9 +6,9 @@ import {
   getConfig,
   getSession,
   writeError,
-  writeFile,
-  writeTempJson
+  writeFile
 } from '~/utils/file-operations';
+import { mcpClient } from '~/llm/mcp/client';
 import { KISUKE_SYSTEM_PROMPT } from '~/llm/prompts/system';
 import { getAnthropic } from '~/llm/providers';
 
@@ -24,10 +24,14 @@ export const processPrompt = async ({
 
     if (!session) throw new Error('Invalid session');
 
+    const tools = await (await mcpClient()).tools();
+
     stdOutput({ type: 'response', payload: 'stream_start' });
 
     const result = streamText({
       model: anthropic('claude-sonnet-4-5-20250929'),
+      tools,
+      stopWhen: stepCountIs(10),
       messages: [
         {
           role: 'system',
@@ -49,12 +53,50 @@ export const processPrompt = async ({
 
     let res = '';
 
-    for await (const textPart of result.textStream) {
-      res += textPart;
-      stdOutput({ type: 'response', payload: textPart });
-    }
+    for await (const part of result.fullStream) {
+      switch (part.type) {
+        case 'text-delta':
+          res += part.text;
+          stdOutput({ type: 'response', payload: part.text });
+          break;
 
-    await writeTempJson({ test: JSON.stringify(result.content) });
+        case 'reasoning-delta':
+          stdOutput({ type: 'response', payload: `[thinking] ${part.text}` });
+          break;
+
+        case 'tool-call':
+          stdOutput({
+            type: 'response',
+            payload: `\n[Tool: ${part.toolName}]\n`
+          });
+          break;
+
+        case 'tool-result':
+          stdOutput({
+            type: 'response',
+            payload: `\n[Result: ${part.toolName}]\n`
+          });
+          break;
+
+        case 'tool-error':
+          stdOutput({
+            type: 'response',
+            payload: `\n[Error: ${part.toolName}] ${part.error}\n`
+          });
+          break;
+
+        case 'error':
+          stdOutput({ type: 'error', payload: String(part.error) });
+          break;
+
+        case 'abort':
+          stdOutput({
+            type: 'response',
+            payload: `\n[Aborted: ${part.reason}]\n`
+          });
+          break;
+      }
+    }
 
     await writeFile(
       `${sessionId}.json`,

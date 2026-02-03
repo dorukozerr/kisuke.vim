@@ -1,13 +1,8 @@
 import { stdOutput } from '~/index';
-import { getHistory, getSession, writeTempJson } from '~/utils/file-operations';
+import { getHistory, getSession } from '~/utils/file-operations';
 
 export const resumeLastSessionHandler = async () => {
   const { sessions } = await getHistory();
-
-  await writeTempJson({
-    label: 'testing 1',
-    type: 'resume_last_session'
-  });
 
   const lastSession = sessions[sessions.length - 1];
   if (!lastSession) {
@@ -15,23 +10,11 @@ export const resumeLastSessionHandler = async () => {
     return;
   }
 
-  await writeTempJson({
-    label: 'testing 2',
-    type: 'resume_last_session',
-    lastSession
-  });
   const session = await getSession(lastSession.id);
   if (!session) {
     stdOutput({ type: 'error', payload: 'Session not found.' });
     return;
   }
-
-  await writeTempJson({
-    label: 'testing 3',
-    type: 'resume_last_session',
-    lastSession,
-    session
-  });
 
   stdOutput({
     type: 'resume_last_session',

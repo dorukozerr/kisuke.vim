@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.1",
-    "@modelcontextprotocol/sdk": "^1.25.1",
+    "@ai-sdk/mcp": "^1.0.18",
     "ai": "^6.0.3",
     "express": "^5.2.1",
     "zod": "^4.2.1"
