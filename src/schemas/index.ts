@@ -117,10 +117,14 @@ export const clientPayloadSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('previous_session'),
     currentSessionId: z.string()
+  }),
+  z.object({
+    type: z.literal('tool_approval_response'),
+    toolCallId: z.string(),
+    approved: z.boolean()
   })
 ]);
 
-// MCP Server config - AI SDK only supports SSE/HTTP transports
 export const mcpServerConfigSchema = z.object({
   url: z.string(),
   enabled: z.boolean().default(true)
@@ -190,5 +194,11 @@ export const serverPayloadSchema = z.discriminatedUnion('type', [
     type: z.literal('mcp_elicitation'),
     message: z.string(),
     schema: z.unknown()
+  }),
+  z.object({
+    type: z.literal('tool_approval_request'),
+    toolCallId: z.string(),
+    toolName: z.string(),
+    args: z.unknown()
   })
 ]);

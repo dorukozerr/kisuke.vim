@@ -81,7 +81,8 @@ fu! kisuke#server#parse_reply(channel, reply)
         \ 'next_session': function('kisuke#handlers#next_session'),
         \ 'previous_session': function('kisuke#handlers#previous_session'),
         \ 'sandbox': function('kisuke#handlers#sandbox'),
-        \ 'error': function('kisuke#handlers#error')
+        \ 'error': function('kisuke#handlers#error'),
+        \ 'tool_approval_request': function('kisuke#handlers#tool_approval_request')
         \ }
 
   if has_key(l:handlers, l:reply.type)

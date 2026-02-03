@@ -35,3 +35,7 @@ export type PreviousSessionPayload = Extract<
   ClientPayload,
   { type: 'previous_session' }
 >;
+export type ToolApprovalResponsePayload = Extract<
+  ClientPayload,
+  { type: 'tool_approval_response' }
+>;

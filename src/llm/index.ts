@@ -1,4 +1,4 @@
-import { stepCountIs, streamText } from 'ai';
+import { ModelMessage, stepCountIs, streamText } from 'ai';
 
 import { stdOutput } from '~/index';
 import { PromptPayload } from '~/types';
@@ -12,6 +12,9 @@ import {
 import { mcpClient } from '~/llm/mcp/client';
 import { KISUKE_SYSTEM_PROMPT } from '~/llm/prompts/system';
 import { getAnthropic } from '~/llm/providers';
+import { withApproval } from '~/llm/tool-approval';
+
+const MAX_TOOL_ITERATIONS = 10;
 
 export const processPrompt = async ({
   sessionId,
@@ -25,82 +28,100 @@ export const processPrompt = async ({
 
     if (!session) throw new Error('Invalid session');
 
-    const tools = await (await mcpClient()).tools();
+    const tools = withApproval(await (await mcpClient()).tools());
 
-    const result = streamText({
-      model: anthropic('claude-sonnet-4-5-20250929'),
-      tools,
-      stopWhen: stepCountIs(5),
-      messages: [
-        {
-          role: 'system',
-          content: KISUKE_SYSTEM_PROMPT
-        },
-        ...session.messages.map(
-          ({ sender, message }) =>
-            ({
-              role: sender === 'Kisuke' ? 'assistant' : 'user',
-              content: message
-            }) as const
-        ),
-        {
-          role: 'user',
-          content: prompt
-        }
-      ]
-    });
+    const messages: ModelMessage[] = [
+      { role: 'system', content: KISUKE_SYSTEM_PROMPT },
+      ...session.messages.map(
+        ({ sender, message }) =>
+          ({
+            role: sender === 'Kisuke' ? 'assistant' : 'user',
+            content: message
+          }) as const
+      ),
+      { role: 'user', content: prompt }
+    ];
 
-    let res = '';
+    let fullResponse = '';
+    let iteration = 0;
 
     stdOutput({ type: 'response', payload: 'stream_start' });
 
-    for await (const part of result.fullStream) {
-      // const timestamp = new Date().toJSON();
-      // await writeTempJson({
-      //   [`${timestamp}-${part.type}`]: part
-      // });
-      switch (part.type) {
-        case 'text-delta':
-          res += part.text;
-          stdOutput({ type: 'response', payload: part.text });
-          break;
+    while (iteration < MAX_TOOL_ITERATIONS) {
+      const result = streamText({
+        model: anthropic('claude-sonnet-4-5-20250929'),
+        stopWhen: stepCountIs(5),
+        tools,
+        messages
+      });
 
-        case 'reasoning-delta':
-          stdOutput({ type: 'response', payload: `[thinking] ${part.text}` });
-          break;
+      for await (const part of result.fullStream) {
+        const timestamp = new Date().toJSON();
+        switch (part.type) {
+          case 'text-delta':
+            fullResponse += part.text;
+            stdOutput({ type: 'response', payload: part.text });
+            break;
 
-        case 'tool-call':
-          stdOutput({
-            type: 'response',
-            payload: `\n[Tool: ${part.toolName}]\n`
-          });
-          break;
+          case 'reasoning-delta':
+            stdOutput({ type: 'response', payload: `[thinking] ${part.text}` });
+            break;
 
-        case 'tool-result':
-          stdOutput({
-            type: 'response',
-            payload: `\n[Result: ${part.toolName}]\n`
-          });
-          break;
+          case 'tool-call':
+            await writeTempJson({ [`tool-call-${timestamp}`]: part });
+            stdOutput({
+              type: 'response',
+              payload: `\n[Tool: ${part.toolName}]\n`
+            });
+            break;
 
-        case 'tool-error':
-          stdOutput({
-            type: 'response',
-            payload: `\n[Error: ${part.toolName}] ${part.error}\n`
-          });
-          break;
+          case 'tool-result':
+            await writeTempJson({ [`tool-result-${timestamp}`]: part });
+            stdOutput({
+              type: 'response',
+              payload: `\n[Result: ${part.toolName}]\n`
+            });
+            break;
 
-        case 'error':
-          stdOutput({ type: 'error', payload: String(part.error) });
-          break;
+          case 'tool-error':
+            stdOutput({
+              type: 'response',
+              payload: `\n[Error: ${part.toolName}] ${part.error}\n`
+            });
+            break;
 
-        case 'abort':
-          stdOutput({
-            type: 'response',
-            payload: `\n[Aborted: ${part.reason}]\n`
-          });
-          break;
+          case 'error':
+            stdOutput({ type: 'error', payload: String(part.error) });
+            break;
+
+          case 'abort':
+            stdOutput({
+              type: 'response',
+              payload: `\n[Aborted: ${part.reason}]\n`
+            });
+            break;
+        }
       }
+
+      const finishReason = await result.finishReason;
+
+      // Done - no more tool calls needed
+      if (finishReason !== 'tool-calls') {
+        break;
+      }
+
+      // Append only tool-related messages for continuation
+      const response = await result.response;
+      messages.push(...(response.messages as ModelMessage[]));
+
+      iteration++;
+    }
+
+    if (iteration >= MAX_TOOL_ITERATIONS) {
+      stdOutput({
+        type: 'response',
+        payload: '\n\n[Iteration limit reached]'
+      });
     }
 
     await writeFile(
@@ -109,7 +130,7 @@ export const processPrompt = async ({
         messages: [
           ...session.messages,
           { sender: 'User', message: prompt },
-          { sender: 'Kisuke', message: res }
+          { sender: 'Kisuke', message: fullResponse }
         ]
       })
     );
