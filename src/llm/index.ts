@@ -6,7 +6,8 @@ import {
   getConfig,
   getSession,
   writeError,
-  writeFile
+  writeFile,
+  writeTempJson
 } from '~/utils/file-operations';
 import { mcpClient } from '~/llm/mcp/client';
 import { KISUKE_SYSTEM_PROMPT } from '~/llm/prompts/system';
@@ -26,12 +27,10 @@ export const processPrompt = async ({
 
     const tools = await (await mcpClient()).tools();
 
-    stdOutput({ type: 'response', payload: 'stream_start' });
-
     const result = streamText({
       model: anthropic('claude-sonnet-4-5-20250929'),
       tools,
-      stopWhen: stepCountIs(10),
+      stopWhen: stepCountIs(5),
       messages: [
         {
           role: 'system',
@@ -53,7 +52,13 @@ export const processPrompt = async ({
 
     let res = '';
 
+    stdOutput({ type: 'response', payload: 'stream_start' });
+
     for await (const part of result.fullStream) {
+      // const timestamp = new Date().toJSON();
+      // await writeTempJson({
+      //   [`${timestamp}-${part.type}`]: part
+      // });
       switch (part.type) {
         case 'text-delta':
           res += part.text;
