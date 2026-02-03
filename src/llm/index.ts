@@ -63,6 +63,10 @@ export const processPrompt = async ({
             stdOutput({ type: 'response', payload: part.text });
             break;
 
+          case 'text-end':
+            stdOutput({ type: 'response', payload: '\n\n' });
+            break;
+
           case 'reasoning-delta':
             stdOutput({ type: 'response', payload: `[thinking] ${part.text}` });
             break;
@@ -71,7 +75,7 @@ export const processPrompt = async ({
             await writeTempJson({ [`tool-call-${timestamp}`]: part });
             stdOutput({
               type: 'response',
-              payload: `\n[Tool: ${part.toolName}]\n`
+              payload: `[Tool: ${part.toolName}]\n`
             });
             break;
 
@@ -79,7 +83,7 @@ export const processPrompt = async ({
             await writeTempJson({ [`tool-result-${timestamp}`]: part });
             stdOutput({
               type: 'response',
-              payload: `\n[Result: ${part.toolName}]\n`
+              payload: `[Result: ${part.toolName}]\n\n`
             });
             break;
 

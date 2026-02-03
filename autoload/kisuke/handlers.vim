@@ -145,13 +145,8 @@ fu! kisuke#handlers#tool_approval_request(reply)
   let l:tool_call_id = a:reply.toolCallId
   let l:args = json_encode(a:reply.args)
 
-  cal appendbufline(g:kisuke.state.buf_nr, line('$'), '[Tool Request] ' . l:tool_name)
-  cal appendbufline(g:kisuke.state.buf_nr, line('$'), 'Args: ' . l:args)
-
-  redraw
-  let l:choice = confirm('Allow tool "' . l:tool_name . '"?', "&Yes\n&No", 2)
+  let l:choice = confirm('Allow tool "' . l:tool_name . ' - ' . 'Args: ' . l:args . '"?', "&Yes\n&No", 2)
   let l:approved = l:choice == 1 ? v:true : v:false
-  echom l:approved
 
   let l:response = {
         \ 'type': 'tool_approval_response',
@@ -160,12 +155,6 @@ fu! kisuke#handlers#tool_approval_request(reply)
         \ }
 
   cal ch_sendraw(g:kisuke.state.job, json_encode(l:response) . "\n")
-
-  if l:approved
-    cal appendbufline(g:kisuke.state.buf_nr, line('$'), '[Approved]')
-  else
-    cal appendbufline(g:kisuke.state.buf_nr, line('$'), '[Denied]')
-  en
 endfu
 
 fu! s:handle_stream(reply)
