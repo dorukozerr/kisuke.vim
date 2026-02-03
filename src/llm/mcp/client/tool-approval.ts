@@ -1,16 +1,15 @@
-import { Tool, ToolExecutionOptions } from 'ai';
-
 import { stdOutput } from '~/index';
 import { ToolApprovalResponsePayload } from '~/types';
 
-type PendingApproval = {
-  resolve: (approved: boolean) => void;
-  timeout: NodeJS.Timeout;
-};
+const pendingApprovals = new Map<
+  string,
+  {
+    resolve: (approved: boolean) => void;
+    timeout: NodeJS.Timeout;
+  }
+>();
 
-const pendingApprovals = new Map<string, PendingApproval>();
-
-const APPROVAL_TIMEOUT_MS = 30 * 1000; // 30 seconds
+const APPROVAL_TIMEOUT_MS = 3 * 1000; // 30 seconds
 
 export const requestApproval = (
   toolCallId: string,
@@ -52,29 +51,9 @@ export const resolveToolApproval = ({
 export const clearPendingApprovals = () => {
   for (const { resolve, timeout } of Array.from(pendingApprovals.values())) {
     clearTimeout(timeout);
+
     resolve(false);
   }
 
   pendingApprovals.clear();
 };
-
-export const withApproval = <T extends Record<string, Tool>>(tools: T): T =>
-  Object.fromEntries(
-    Object.entries(tools).map(([name, tool]) => [
-      name,
-      {
-        ...tool,
-        execute: async (args: unknown, context: ToolExecutionOptions) => {
-          const approved = await requestApproval(
-            context.toolCallId,
-            name,
-            args
-          );
-
-          if (!approved) return '[Tool denied by user]';
-
-          return tool.execute?.(args, context);
-        }
-      }
-    ])
-  ) as unknown as T;

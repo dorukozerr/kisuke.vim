@@ -1,4 +1,4 @@
-import { jsonSchema, stepCountIs, streamText, Tool, tool } from 'ai';
+import { stepCountIs, streamText } from 'ai';
 
 import { stdOutput } from '~/index';
 import { PromptPayload } from '~/types';
@@ -6,13 +6,12 @@ import {
   getConfig,
   getSession,
   writeError,
-  writeFile,
-  writeTempJson
+  // writeTempJson,
+  writeFile
 } from '~/utils/file-operations';
-import { mcpClient as MCP_CLIENT } from '~/llm/mcp/client';
+import { mcpClients } from '~/llm/mcp/client';
 import { KISUKE_SYSTEM_PROMPT } from '~/llm/prompts/system';
 import { getAnthropic } from '~/llm/providers';
-import { withApproval } from '~/llm/tool-approval';
 
 export const processPrompt = async ({
   sessionId,
@@ -26,37 +25,12 @@ export const processPrompt = async ({
 
     if (!session) throw new Error('Invalid session');
 
-    const mcpClient = await MCP_CLIENT();
-    const toolsResult = await mcpClient.listTools();
-
-    const tools: Record<string, Tool> = {};
-
-    for (const mcpTool of toolsResult.tools) {
-      tools[mcpTool.name] = tool({
-        description: mcpTool.description ?? '',
-        inputSchema: jsonSchema(mcpTool.inputSchema),
-        outputSchema: mcpTool.outputSchema
-          ? jsonSchema(mcpTool.outputSchema)
-          : undefined,
-        execute: async (params) => {
-          const result = await mcpClient.callTool({
-            name: mcpTool.name,
-            arguments: params
-          });
-
-          return result.content;
-        }
-      });
-    }
-
-    let res = '';
-
-    stdOutput({ type: 'response', payload: 'stream_start' });
+    const { tools } = await mcpClients();
 
     const result = streamText({
-      model: anthropic('claude-sonnet-4-5-20250929'),
+      model: anthropic('claude-opus-4-5'),
       stopWhen: stepCountIs(10),
-      tools: withApproval(tools),
+      tools,
       messages: [
         { role: 'system', content: KISUKE_SYSTEM_PROMPT },
         ...session.messages.map(
@@ -67,12 +41,15 @@ export const processPrompt = async ({
             }) as const
         ),
         { role: 'user', content: prompt }
-      ],
-      onFinish: () => mcpClient.close()
+      ]
     });
 
+    let res = '';
+
+    stdOutput({ type: 'response', payload: 'stream_start' });
+
     for await (const part of result.fullStream) {
-      const timestamp = new Date().toJSON();
+      // const timestamp = new Date().toJSON();
       // await writeTempJson({ [`${timestamp}`]: part });
       switch (part.type) {
         case 'text-delta':
@@ -80,27 +57,23 @@ export const processPrompt = async ({
           stdOutput({ type: 'response', payload: part.text });
           break;
 
-        case 'text-end':
-          stdOutput({ type: 'response', payload: '\n\n' });
-          break;
-
         case 'reasoning-delta':
           stdOutput({ type: 'response', payload: `[thinking] ${part.text}` });
           break;
 
         case 'tool-call':
-          await writeTempJson({ [`tool-call-${timestamp}`]: part });
+          // await writeTempJson({ [`tool-result-${timestamp}`]: part });
           stdOutput({
             type: 'response',
-            payload: `[Tool: ${part.toolName}]\n`
+            payload: `[Result: ${part.toolName}]\n`
           });
           break;
 
         case 'tool-result':
-          await writeTempJson({ [`tool-result-${timestamp}`]: part });
+          // await writeTempJson({ [`tool-result-${timestamp}`]: part });
           stdOutput({
             type: 'response',
-            payload: `[Result: ${part.toolName}]\n\n`
+            payload: `[Result: ${part.toolName}]\n`
           });
           break;
 

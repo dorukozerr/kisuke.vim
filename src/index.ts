@@ -12,7 +12,7 @@ import { previousSessionHandler } from '~/handlers/previous-session';
 import { promptHandler } from '~/handlers/prompt';
 import { restoreSessionHandler } from '~/handlers/restore-session';
 import { resumeLastSessionHandler } from '~/handlers/resume-last-session';
-import { resolveToolApproval } from '~/llm/tool-approval';
+import { resolveToolApproval } from '~/llm/mcp/client/tool-approval';
 
 const stdin = process.stdin;
 const stdout = process.stdout;
