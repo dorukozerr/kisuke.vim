@@ -10,18 +10,9 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { jsonSchema, Tool, tool } from 'ai';
 
-import { cwd } from '~/utils/cwd';
+import { getMCPClientRootsConfig } from '~/utils/file-operations';
 import { writeMcpLog } from '~/utils/file-operations';
 import { requestApproval } from '~/utils/request-approval';
-
-// Singleton state
-let cachedClients: {
-  filesystemClient: Client;
-  memoryClient: Client;
-  gitClient: Client;
-  tools: Record<string, Tool>;
-} | null = null;
-let initializedCwd: string | null = null;
 
 const createClient = (
   implementation: Implementation = {
@@ -34,26 +25,32 @@ const createClient = (
 const setupRootsHandler = (client: Client, roots: ListRootsResult) =>
   client.setRequestHandler(ListRootsRequestSchema, () => roots);
 
-const initializeClients = async () => {
+export const setupMCPClients = async () => {
   const filesystemClient = createClient(
     {
       name: 'Kisuke MCP Client - Filesystem MCP',
-      version: '0.0.1-development'
+      version: '0.0.1-development',
+      description: 'Experimenting Filesystem MCP Client'
     },
     { capabilities: { roots: { listChanged: true } } }
   );
   const memoryClient = createClient(
     {
       name: 'Kisuke MCP Client - Memory MCP',
-      version: '0.0.1-development'
+      version: '0.0.1-development',
+      description: 'Experimenting Memory MCP Client'
     },
     { capabilities: { roots: { listChanged: true } } }
   );
 
-  const gitClient = createClient({
-    name: 'Kisuke MCP Client - Git MCP',
-    version: '0.0.1-development'
-  });
+  const gitClient = createClient(
+    {
+      name: 'Kisuke MCP Client - Git MCP',
+      version: '0.0.1-development',
+      description: 'Experimenting Git MCP Client'
+    },
+    { capabilities: { roots: { listChanged: true } } }
+  );
 
   const filesystemTransport = new StdioClientTransport({
     command: 'npx',
@@ -71,9 +68,12 @@ const initializeClients = async () => {
     }
   });
 
+  const rootsConfig = await getMCPClientRootsConfig();
+  const roots = rootsConfig.roots.map((path) => ({ uri: `file://${path}` }));
+
   const gitTransport = new StdioClientTransport({
     command: 'uvx',
-    args: ['mcp-server-git', '--repository', cwd.path]
+    args: ['mcp-server-git']
   });
 
   await Promise.all([
@@ -82,15 +82,10 @@ const initializeClients = async () => {
     gitClient.connect(gitTransport)
   ]);
 
-  setupRootsHandler(filesystemClient, {
-    roots: [
-      // {
-      //   uri: `file://${join(homedir(), '.sandbox/temp/')}`,
-      //   name: 'Sandbox Temp Path'
-      // }
-    ]
-  });
+  setupRootsHandler(filesystemClient, { roots });
   await filesystemClient.sendRootsListChanged();
+  setupRootsHandler(gitClient, { roots });
+  await gitClient.sendRootsListChanged();
 
   const tools = await convertAndMergeMCPTools({
     filesystemClient,
@@ -99,39 +94,6 @@ const initializeClients = async () => {
   });
 
   return { filesystemClient, memoryClient, gitClient, tools };
-};
-
-export const closeMcpClients = async () => {
-  if (!cachedClients) return;
-
-  await Promise.all([
-    cachedClients.filesystemClient.close(),
-    cachedClients.memoryClient.close(),
-    cachedClients.gitClient.close()
-  ]);
-
-  cachedClients = null;
-  initializedCwd = null;
-};
-
-export const mcpClients = async () => {
-  const currentCwd = cwd.path;
-
-  // Return cached clients if cwd hasn't changed
-  if (cachedClients && initializedCwd === currentCwd) {
-    return cachedClients;
-  }
-
-  // Close existing clients if cwd changed
-  if (cachedClients && initializedCwd !== currentCwd) {
-    await closeMcpClients();
-  }
-
-  // Initialize new clients
-  cachedClients = await initializeClients();
-  initializedCwd = currentCwd;
-
-  return cachedClients;
 };
 
 const convertAndMergeMCPTools = async (clients: Record<string, Client>) => {

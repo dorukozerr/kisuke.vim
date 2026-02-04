@@ -10,7 +10,7 @@ import {
   writeFile
   // writeTempJson
 } from '~/utils/file-operations';
-import { mcpClients } from '~/llm/mcp/client';
+import { setupMCPClients } from '~/llm/mcp/client';
 import { KISUKE_SYSTEM_PROMPT } from '~/llm/prompts/system';
 import { getXAI } from '~/llm/providers';
 
@@ -26,7 +26,7 @@ export const processPrompt = async ({
 
     if (!session) throw new Error('Invalid session');
 
-    const { tools } = await mcpClients();
+    const { tools } = await setupMCPClients();
 
     const result = streamText({
       model: xai('grok-4-1-fast-reasoning'),
@@ -48,7 +48,6 @@ export const processPrompt = async ({
 
     let res = '';
     let lastBlockType: 'reasoning' | 'text' | 'tool' | null = null;
-    let currentToolInput = '';
 
     const output = (chunk: string) => {
       res += chunk;
@@ -96,19 +95,16 @@ export const processPrompt = async ({
         case 'tool-input-start':
           if (lastBlockType !== 'tool' || lastBlockType !== null) output('\n');
           lastBlockType = 'tool';
-          currentToolInput = '';
           break;
 
         case 'tool-input-delta':
-          currentToolInput += part.delta;
           break;
 
         case 'tool-input-end':
           break;
 
         case 'tool-call':
-          output(`Tool Call => ${part.toolName}(${currentToolInput})`);
-          currentToolInput = '';
+          output(`Tool Call => ${part.toolCallId} - ${part.toolName}`);
           break;
 
         case 'tool-result':
@@ -158,7 +154,7 @@ export const processPrompt = async ({
   } catch (error) {
     const e =
       error instanceof Error
-        ? `${error.name} - ${error.message}`
+        ? `${error.name} - ${error.message} - ${error.stack}`
         : JSON.stringify(error);
 
     await writeError(e, 'stream_error');

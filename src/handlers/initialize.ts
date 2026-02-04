@@ -1,24 +1,20 @@
 import { stdOutput } from '~/index';
 import { InitializePayload } from '~/types';
-import { cwd } from '~/utils/cwd';
+// import { cwd } from '~/utils/cwd';
 import {
   getConfig,
   getHistory,
   getMCPClientRootsConfig,
-  writeTempJson
+  writeFile
 } from '~/utils/file-operations';
+import { requestApproval } from '~/utils/request-approval';
 
-export const initializeHandler = async (payload: InitializePayload) => {
-  cwd.path = payload.cwd;
-
+export const initializeHandler = async ({ cwd }: InitializePayload) => {
   const [config, history, mcpClientRootsConfig] = await Promise.all([
     getConfig(),
     getHistory(),
     getMCPClientRootsConfig()
   ]);
-
-  await writeTempJson(mcpClientRootsConfig);
-  await writeTempJson({ mcpClientRootsConfig });
 
   if (!config.provider || !config.model) {
     stdOutput({
@@ -45,5 +41,25 @@ export const initializeHandler = async (payload: InitializePayload) => {
       model: config.model,
       session_count: history.sessions.length
     });
+
+    let updatedRootsConf = mcpClientRootsConfig;
+
+    if (!mcpClientRootsConfig.roots.includes(cwd)) {
+      const accessGranted = await requestApproval(
+        `Do you allow to give file system permissions for current directory - ${cwd}`
+      );
+
+      updatedRootsConf = {
+        cwd: { dir: cwd, accessGranted },
+        roots: [...mcpClientRootsConfig.roots, ...(accessGranted ? [cwd] : [])]
+      };
+    } else {
+      updatedRootsConf.cwd = { dir: cwd, accessGranted: true };
+    }
+
+    await writeFile(
+      'mcp-client-roots-config.json',
+      JSON.stringify(updatedRootsConf)
+    );
   }
 };

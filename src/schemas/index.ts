@@ -78,7 +78,10 @@ const sessionInfoSchema = z.object({
 });
 
 export const mcpClientRootsConfigSchema = z.object({
-  cwd: z.string().nullable(),
+  cwd: z.object({
+    dir: z.string().nullable(),
+    accessGranted: z.boolean()
+  }),
   roots: z.array(z.string())
 });
 

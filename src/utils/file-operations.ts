@@ -69,7 +69,7 @@ const setupKisuke = async () => {
     ),
     writeFile(
       'mcp-client-roots-config.json',
-      JSON.stringify({ cwd: null, roots: [] })
+      JSON.stringify({ cwd: { dir: null, accessGranted: false }, roots: [] })
     )
   ]);
 
@@ -100,7 +100,9 @@ export const getConfig = async () => {
 export const getMCPClientRootsConfig = async () => {
   try {
     return mcpClientRootsConfigSchema.parse(
-      await readFile(join(configDir, 'mcp-client-roots-config.json'), 'utf-8')
+      JSON.parse(
+        await readFile(join(configDir, 'mcp-client-roots-config.json'), 'utf-8')
+      )
     );
   } catch (error) {
     await writeError(
@@ -114,10 +116,10 @@ export const getMCPClientRootsConfig = async () => {
 
     await writeFile(
       'mcp-client-roots-config.json',
-      JSON.stringify({ cwd: null, roots: [] })
+      JSON.stringify({ cwd: { dir: null, accessGranted: false }, roots: [] })
     );
 
-    return { cwd: null, roots: [] };
+    return { cwd: { dir: null, accessGranted: false }, roots: [] };
   }
 };
 
