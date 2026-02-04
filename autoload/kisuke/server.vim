@@ -97,7 +97,7 @@ endfu
 fu! kisuke#server#restart()
   cal kisuke#server#stop()
   cal kisuke#server#start_process()
-  cal kisuke#buffer#restore({ 'type': 'initialize' })
+  cal kisuke#buffer#restore({ 'type': 'initialize', 'cwd': getcwd() })
   echom 'Kisuke server restarted'
 endfu
 

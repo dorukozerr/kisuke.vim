@@ -9,7 +9,7 @@ const pendingApprovals = new Map<
   }
 >();
 
-const APPROVAL_TIMEOUT_MS = 3 * 1000; // 30 seconds
+const APPROVAL_TIMEOUT_MS = 30 * 1000; // 30 seconds
 
 export const requestApproval = (
   toolCallId: string,

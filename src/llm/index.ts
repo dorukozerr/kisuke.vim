@@ -1,3 +1,4 @@
+import { AnthropicProviderOptions } from '@ai-sdk/anthropic';
 import { stepCountIs, streamText } from 'ai';
 
 import { stdOutput } from '~/index';
@@ -28,9 +29,14 @@ export const processPrompt = async ({
     const { tools } = await mcpClients();
 
     const result = streamText({
-      model: anthropic('claude-opus-4-5'),
+      model: anthropic('claude-3-7-sonnet-latest'),
       stopWhen: stepCountIs(10),
       tools,
+      providerOptions: {
+        anthropic: {
+          thinking: { type: 'enabled', budgetTokens: 6000 }
+        } satisfies AnthropicProviderOptions
+      },
       messages: [
         { role: 'system', content: KISUKE_SYSTEM_PROMPT },
         ...session.messages.map(
@@ -45,50 +51,98 @@ export const processPrompt = async ({
     });
 
     let res = '';
+    let lastBlockType: 'reasoning' | 'text' | 'tool' | null = null;
+    let currentToolInput = '';
+    let consecutiveToolCount = 0;
+
+    const output = (chunk: string) => {
+      res += chunk;
+      stdOutput({ type: 'response', payload: chunk });
+    };
 
     stdOutput({ type: 'response', payload: 'stream_start' });
 
     for await (const part of result.fullStream) {
-      // const timestamp = new Date().toJSON();
-      // await writeTempJson({ [`${timestamp}`]: part });
       switch (part.type) {
-        case 'text-delta':
-          res += part.text;
-          stdOutput({ type: 'response', payload: part.text });
+        case 'reasoning-start':
+          if (lastBlockType !== null) output('\n');
+          lastBlockType = 'reasoning';
+          output('Thinking: ');
           break;
 
         case 'reasoning-delta':
-          stdOutput({ type: 'response', payload: `[thinking] ${part.text}` });
+          output(part.text);
+          break;
+
+        case 'reasoning-end':
+          output('\n');
+          break;
+
+        case 'text-start':
+          if (lastBlockType !== null && lastBlockType !== 'text') output('\n');
+          lastBlockType = 'text';
+          break;
+
+        case 'text-delta':
+          output(part.text);
+          break;
+
+        case 'text-end':
+          output('\n');
+          break;
+
+        case 'tool-approval-request':
+          output(`⏳ Awaiting approval: ${part.toolCall.toolName}\n`);
+          break;
+
+        case 'tool-input-start':
+          if (lastBlockType !== 'tool') {
+            if (lastBlockType !== null) output('\n');
+            consecutiveToolCount = 0;
+          } else if (consecutiveToolCount > 0) output('\n');
+          lastBlockType = 'tool';
+          currentToolInput = '';
+          break;
+
+        case 'tool-input-delta':
+          currentToolInput += part.delta;
+          break;
+
+        case 'tool-input-end':
           break;
 
         case 'tool-call':
-          // await writeTempJson({ [`tool-call-${timestamp}`]: part });
-          stdOutput({
-            type: 'response',
-            payload: `\n[Using: ${part.toolName}]\n`
-          });
+          output(`=> ${part.toolName}(${currentToolInput})\n`);
+          currentToolInput = '';
+          consecutiveToolCount++;
           break;
 
         case 'tool-result':
-          // await writeTempJson({ [`tool-result-${timestamp}`]: part });
           break;
 
         case 'tool-error':
-          stdOutput({
-            type: 'response',
-            payload: `\n[Error: ${part.toolName}] ${part.error}\n`
-          });
+          output(
+            `✗ ${part.toolName}: ${
+              part.error instanceof Error
+                ? part.error.message
+                : JSON.stringify(part.error)
+            }\n`
+          );
           break;
 
         case 'error':
-          stdOutput({ type: 'error', payload: String(part.error) });
+          output(
+            `Error: ${
+              part.error instanceof Error
+                ? `${part.error.name}: ${part.error.message}`
+                : JSON.stringify(part.error)
+            }\n`
+          );
+          await writeError(part.error, 'llm_stream_text');
           break;
 
         case 'abort':
-          stdOutput({
-            type: 'response',
-            payload: `\n[Aborted: ${part.reason}]\n`
-          });
+          output(`\nAborted: ${part.reason}\n`);
           break;
       }
     }
