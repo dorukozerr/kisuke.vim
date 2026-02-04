@@ -12,7 +12,7 @@
     "type-check": "tsc --noEmit --pretty",
     "precommit": "yarn && yarn format && yarn lint && yarn type-check",
     "build": "tsup --format esm",
-    "watch": "tsup src/index.ts --watch"
+    "watch": "tsup --watch"
   },
   "license": "MIT",
   "private": false,
