@@ -47,11 +47,22 @@ export const processPrompt = async ({
     });
 
     let res = '';
-    let lastBlockType: 'reasoning' | 'text' | 'tool' | null = null;
+    let toolCallCount = 0;
+    let toolResultCount = 0;
 
     const output = (chunk: string) => {
       res += chunk;
       stdOutput({ type: 'response', payload: chunk });
+    };
+
+    const outputToolProgress = () => {
+      const prefix = toolCallCount === 1 && toolResultCount === 0 ? '' : '\r';
+      const status =
+        toolResultCount === toolCallCount ? 'Complete' : 'Executing';
+      stdOutput({
+        type: 'response',
+        payload: `${prefix}${toolResultCount}/${toolCallCount} Tools ${status}`
+      });
     };
 
     stdOutput({ type: 'response', payload: 'stream_start' });
@@ -59,8 +70,6 @@ export const processPrompt = async ({
     for await (const part of result.fullStream) {
       switch (part.type) {
         case 'reasoning-start':
-          if (lastBlockType !== null) output('\n');
-          lastBlockType = 'reasoning';
           output('Thinking: ');
           break;
 
@@ -73,11 +82,6 @@ export const processPrompt = async ({
           break;
 
         case 'text-start':
-          if (lastBlockType !== null && lastBlockType !== 'text') {
-            if (lastBlockType === 'tool') output('\n');
-            output('\n');
-          }
-          lastBlockType = 'text';
           break;
 
         case 'text-delta':
@@ -93,8 +97,6 @@ export const processPrompt = async ({
           break;
 
         case 'tool-input-start':
-          if (lastBlockType !== 'tool' || lastBlockType !== null) output('\n');
-          lastBlockType = 'tool';
           break;
 
         case 'tool-input-delta':
@@ -104,20 +106,25 @@ export const processPrompt = async ({
           break;
 
         case 'tool-call':
-          output(`Tool Call => ${part.toolCallId} - ${part.toolName}`);
+          toolCallCount++;
+          outputToolProgress();
           break;
 
         case 'tool-result':
+          toolResultCount++;
+          outputToolProgress();
           break;
 
         case 'tool-error':
-          output(
-            `✗ ${part.toolName}: ${
-              part.error instanceof Error
-                ? part.error.message
-                : JSON.stringify(part.error)
-            }\n`
-          );
+          // output(
+          //   `✗ ${part.toolName}: ${
+          //     part.error instanceof Error
+          //       ? part.error.message
+          //       : JSON.stringify(part.error)
+          //   }\n`
+          // );
+          toolResultCount++;
+          outputToolProgress();
           break;
 
         case 'error':

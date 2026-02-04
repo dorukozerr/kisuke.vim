@@ -161,14 +161,25 @@ fu! s:handle_stream(reply)
   let l:index = 0
 
   for line in split(s:kisuke.state.stream_response, '\n')
+    " Handle \r by keeping only content after the last \r
+    let l:display_line = s:resolve_carriage_return(line)
+
     if l:index ==# 0
-      cal setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, 'Kisuke > ' . line)
+      cal setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, 'Kisuke > ' . l:display_line)
     else
-      cal setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, line)
+      cal setbufline(g:kisuke.state.buf_nr, s:kisuke.state.response_start_line + l:index, l:display_line)
     en
 
     let l:index += 1
   endfo
+endfu
+
+fu! s:resolve_carriage_return(line)
+  if stridx(a:line, "\r") >= 0
+    let l:parts = split(a:line, "\r", 1)
+    return l:parts[-1]
+  en
+  return a:line
 endfu
 
 fu! s:handle_incremental_syntax()
