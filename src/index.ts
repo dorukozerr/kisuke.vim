@@ -1,5 +1,7 @@
 import { LangfuseSpanProcessor } from '@langfuse/otel';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { NodeSDK } from '@opentelemetry/sdk-node';
+import { LangfuseExporter } from 'langfuse-vercel';
 import { z, ZodError } from 'zod';
 
 import { ServerPayload } from '~/types';
@@ -14,8 +16,8 @@ import { previousSessionHandler } from '~/handlers/previous-session';
 import { promptHandler } from '~/handlers/prompt';
 import { restoreSessionHandler } from '~/handlers/restore-session';
 import { resumeLastSessionHandler } from '~/handlers/resume-last-session';
-import { resolveToolApproval } from '~/llm/mcp/client/tool-approval';
 import { closeMcpClients } from '~/llm/mcp/client';
+import { resolveToolApproval } from '~/llm/mcp/client/tool-approval';
 
 import 'dotenv/config';
 
@@ -26,7 +28,9 @@ stdin.resume();
 stdin.setEncoding('utf-8');
 
 const sdk = new NodeSDK({
-  spanProcessors: [new LangfuseSpanProcessor()]
+  spanProcessors: [new LangfuseSpanProcessor()],
+  traceExporter: new LangfuseExporter(),
+  instrumentations: [getNodeAutoInstrumentations()]
 });
 
 sdk.start();
@@ -92,11 +96,8 @@ stdin.on('data', async (data: string) => {
 export const stdOutput = (reply: ServerPayload) =>
   stdout.write(JSON.stringify(reply) + '\n');
 
-// Cleanup on process exit
-const cleanup = async () => {
-  await closeMcpClients();
-  sdk.shutdown();
-};
+export const cleanup = async () =>
+  await Promise.all([closeMcpClients(), sdk.shutdown()]);
 
 process.on('SIGINT', cleanup);
 process.on('SIGTERM', cleanup);

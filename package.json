@@ -37,11 +37,17 @@
     "@langfuse/otel": "^4.5.1",
     "@langfuse/tracing": "^4.5.1",
     "@modelcontextprotocol/sdk": "^1.25.3",
+    "@opentelemetry/api-logs": "^0.211.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.69.0",
+    "@opentelemetry/instrumentation": "^0.211.0",
+    "@opentelemetry/sdk-logs": "^0.211.0",
     "@opentelemetry/sdk-node": "^0.211.0",
+    "@vercel/otel": "^2.1.0",
     "ai": "^6.0.3",
     "ai-sdk-ollama": "^3.3.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "langfuse-vercel": "^3.38.6",
     "zod": "^4.2.1"
   }
 }

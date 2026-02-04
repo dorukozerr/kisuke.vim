@@ -1,6 +1,6 @@
-import { XaiProviderOptions } from '@ai-sdk/xai';
 import { stepCountIs, streamText } from 'ai';
 
+import { cleanup } from '~/index';
 import { stdOutput } from '~/index';
 import { PromptPayload } from '~/types';
 import {
@@ -160,6 +160,8 @@ export const processPrompt = async ({
     );
 
     stdOutput({ type: 'response', payload: 'stream_end' });
+
+    await cleanup();
   } catch (error) {
     const e =
       error instanceof Error
@@ -169,5 +171,7 @@ export const processPrompt = async ({
     await writeError(e, 'stream_error');
 
     stdOutput({ type: 'error', payload: e });
+
+    await cleanup();
   }
 };
