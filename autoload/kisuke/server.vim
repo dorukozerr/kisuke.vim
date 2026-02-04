@@ -82,7 +82,7 @@ fu! kisuke#server#parse_reply(channel, reply)
         \ 'previous_session': function('kisuke#handlers#previous_session'),
         \ 'sandbox': function('kisuke#handlers#sandbox'),
         \ 'error': function('kisuke#handlers#error'),
-        \ 'tool_approval_request': function('kisuke#handlers#tool_approval_request')
+        \ 'request_approval': function('kisuke#handlers#request_approval')
         \ }
 
   if has_key(l:handlers, l:reply.type)

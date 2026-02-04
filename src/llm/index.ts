@@ -49,7 +49,6 @@ export const processPrompt = async ({
     let res = '';
     let lastBlockType: 'reasoning' | 'text' | 'tool' | null = null;
     let currentToolInput = '';
-    let consecutiveToolCount = 0;
 
     const output = (chunk: string) => {
       res += chunk;
@@ -75,7 +74,10 @@ export const processPrompt = async ({
           break;
 
         case 'text-start':
-          if (lastBlockType !== null && lastBlockType !== 'text') output('\n');
+          if (lastBlockType !== null && lastBlockType !== 'text') {
+            if (lastBlockType === 'tool') output('\n');
+            output('\n');
+          }
           lastBlockType = 'text';
           break;
 
@@ -92,12 +94,7 @@ export const processPrompt = async ({
           break;
 
         case 'tool-input-start':
-          if (lastBlockType !== 'tool') {
-            if (lastBlockType !== null)
-              stdOutput({ type: 'response', payload: '\n' });
-            consecutiveToolCount = 0;
-          } else if (consecutiveToolCount > 0)
-            stdOutput({ type: 'response', payload: '\n' });
+          if (lastBlockType !== 'tool' || lastBlockType !== null) output('\n');
           lastBlockType = 'tool';
           currentToolInput = '';
           break;
@@ -110,12 +107,8 @@ export const processPrompt = async ({
           break;
 
         case 'tool-call':
-          stdOutput({
-            type: 'response',
-            payload: `=> ${part.toolName}(${currentToolInput})\n`
-          });
+          output(`Tool Call => ${part.toolName}(${currentToolInput})`);
           currentToolInput = '';
-          consecutiveToolCount++;
           break;
 
         case 'tool-result':

@@ -77,6 +77,11 @@ const sessionInfoSchema = z.object({
   current_index: z.number()
 });
 
+export const mcpClientRootsConfigSchema = z.object({
+  cwd: z.string().nullable(),
+  roots: z.array(z.string())
+});
+
 const contextSchema = z.object({
   file_path: z.string(),
   scope: z.enum(['all', 'block']),
@@ -120,20 +125,11 @@ export const clientPayloadSchema = z.discriminatedUnion('type', [
     currentSessionId: z.string()
   }),
   z.object({
-    type: z.literal('tool_approval_response'),
-    toolCallId: z.string(),
+    type: z.literal('request_approval_response'),
+    requestId: z.string(),
     approved: z.boolean()
   })
 ]);
-
-export const mcpServerConfigSchema = z.object({
-  url: z.string(),
-  enabled: z.boolean().default(true)
-});
-
-export const mcpConfigSchema = z.object({
-  servers: z.record(z.string(), mcpServerConfigSchema).optional()
-});
 
 export const serverPayloadSchema = z.discriminatedUnion('type', [
   z.object({
@@ -197,9 +193,8 @@ export const serverPayloadSchema = z.discriminatedUnion('type', [
     schema: z.unknown()
   }),
   z.object({
-    type: z.literal('tool_approval_request'),
-    toolCallId: z.string(),
-    toolName: z.string(),
-    args: z.unknown()
+    type: z.literal('request_approval'),
+    requestId: z.string(),
+    message: z.string()
   })
 ]);

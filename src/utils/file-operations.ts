@@ -5,11 +5,10 @@ import { join } from 'path';
 
 import { z, ZodError } from 'zod';
 
-import { McpServerConfig } from '~/types';
 import {
   configSchema,
   historySchema,
-  mcpConfigSchema,
+  mcpClientRootsConfigSchema,
   sessionSchema
 } from '~/schemas';
 
@@ -67,6 +66,10 @@ const setupKisuke = async () => {
         model: '',
         apiKeys: { anthropic: '', openai: '', google: '', grok: '' }
       })
+    ),
+    writeFile(
+      'mcp-client-roots-config.json',
+      JSON.stringify({ cwd: null, roots: [] })
     )
   ]);
 
@@ -91,6 +94,30 @@ export const getConfig = async () => {
     await setupKisuke();
 
     return JSON.parse(await readFile(join(configDir, 'config.json'), 'utf-8'));
+  }
+};
+
+export const getMCPClientRootsConfig = async () => {
+  try {
+    return mcpClientRootsConfigSchema.parse(
+      await readFile(join(configDir, 'mcp-client-roots-config.json'), 'utf-8')
+    );
+  } catch (error) {
+    await writeError(
+      error instanceof ZodError
+        ? z.treeifyError(error)
+        : error instanceof Error
+          ? `${error.name} - ${error.message}`
+          : error,
+      'get_mcp_client_roots_config'
+    );
+
+    await writeFile(
+      'mcp-client-roots-config.json',
+      JSON.stringify({ cwd: null, roots: [] })
+    );
+
+    return { cwd: null, roots: [] };
   }
 };
 
@@ -195,28 +222,4 @@ export const writeMcpLog = async (operation: string, data: unknown) => {
   } catch (error) {
     await writeError(error, 'writeMcpLog');
   }
-};
-
-export const getMcpConfig = async () => {
-  try {
-    const mcpConfigPath = join(configDir, 'mcp-config.json');
-
-    if (!existsSync(mcpConfigPath)) return { servers: {} };
-
-    return mcpConfigSchema.parse(
-      JSON.parse(await readFile(mcpConfigPath, 'utf-8'))
-    );
-  } catch {
-    return { servers: {} };
-  }
-};
-
-export const getEnabledMcpServers = async (): Promise<McpServerConfig[]> => {
-  const config = await getMcpConfig();
-
-  if (!config.servers) return [];
-
-  return Object.values(config.servers).filter(
-    (serverConfig) => serverConfig.enabled
-  );
 };

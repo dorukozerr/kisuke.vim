@@ -7,6 +7,7 @@ import { z, ZodError } from 'zod';
 import { ServerPayload } from '~/types';
 import { clientPayloadSchema } from '~/schemas';
 import { writeError } from '~/utils/file-operations';
+import { resolveRequestApproval } from '~/utils/request-approval';
 import { deleteSessionHandler } from '~/handlers/delete-session';
 import { initializeHandler } from '~/handlers/initialize';
 import { loadSessionsHandler } from '~/handlers/load-sessions';
@@ -17,7 +18,6 @@ import { promptHandler } from '~/handlers/prompt';
 import { restoreSessionHandler } from '~/handlers/restore-session';
 import { resumeLastSessionHandler } from '~/handlers/resume-last-session';
 import { closeMcpClients } from '~/llm/mcp/client';
-import { resolveToolApproval } from '~/llm/mcp/client/tool-approval';
 
 import 'dotenv/config';
 
@@ -67,8 +67,8 @@ stdin.on('data', async (data: string) => {
       case 'previous_session':
         previousSessionHandler(payload);
         break;
-      case 'tool_approval_response':
-        resolveToolApproval(payload);
+      case 'request_approval_response':
+        resolveRequestApproval(payload);
         break;
     }
   } catch (error) {

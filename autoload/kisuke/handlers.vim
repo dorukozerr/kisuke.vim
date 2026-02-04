@@ -140,17 +140,16 @@ fu! kisuke#handlers#sandbox(reply)
   cal appendbufline(g:kisuke.state.buf_nr, '$', '> ' . 'sandbox ' . a:reply.qweqwe)
 endfu
 
-fu! kisuke#handlers#tool_approval_request(reply)
-  let l:tool_name = a:reply.toolName
-  let l:tool_call_id = a:reply.toolCallId
-  let l:args = json_encode(a:reply.args)
+fu! kisuke#handlers#request_approval(reply)
+  let l:message = a:reply.message
+  let l:request_id = a:reply.requestId
 
-  let l:choice = confirm('Allow tool "' . l:tool_name . ' - ' . 'Args: ' . l:args . '"?', "&Yes\n&No", 2)
+  let l:choice = confirm('Request Approval "' . l:message . '"?', "&Yes\n&No", 2)
   let l:approved = l:choice == 1 ? v:true : v:false
 
   let l:response = {
-        \ 'type': 'tool_approval_response',
-        \ 'toolCallId': l:tool_call_id,
+        \ 'type': 'request_approval_response',
+        \ 'requestId': l:request_id,
         \ 'approved': l:approved
         \ }
 

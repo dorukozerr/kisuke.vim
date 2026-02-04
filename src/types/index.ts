@@ -4,8 +4,7 @@ import {
   clientPayloadSchema,
   configSchema,
   historySchema,
-  mcpConfigSchema,
-  mcpServerConfigSchema,
+  mcpClientRootsConfigSchema,
   serverPayloadSchema,
   sessionSchema
 } from '~/schemas';
@@ -15,8 +14,7 @@ export type History = z.infer<typeof historySchema>;
 export type Session = z.infer<typeof sessionSchema>;
 export type ClientPayload = z.infer<typeof clientPayloadSchema>;
 export type ServerPayload = z.infer<typeof serverPayloadSchema>;
-export type McpServerConfig = z.infer<typeof mcpServerConfigSchema>;
-export type McpConfig = z.infer<typeof mcpConfigSchema>;
+export type MCPClientRootsConfig = z.infer<typeof mcpClientRootsConfigSchema>;
 
 export type InitializePayload = Extract<ClientPayload, { type: 'initialize' }>;
 export type PromptPayload = Extract<ClientPayload, { type: 'prompt' }>;
@@ -36,7 +34,7 @@ export type PreviousSessionPayload = Extract<
   ClientPayload,
   { type: 'previous_session' }
 >;
-export type ToolApprovalResponsePayload = Extract<
+export type RequestApprovalResponsePayload = Extract<
   ClientPayload,
-  { type: 'tool_approval_response' }
+  { type: 'request_approval_response' }
 >;

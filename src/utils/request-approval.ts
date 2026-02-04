@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 
 import { stdOutput } from '~/index';
-import { ToolApprovalResponsePayload } from '~/types';
+import { RequestApprovalResponsePayload } from '~/types';
 
 const pendingApprovals = new Map<
   string,
@@ -13,57 +13,50 @@ const pendingApprovals = new Map<
 
 const APPROVAL_TIMEOUT_MS = 30 * 1000; // 30 seconds
 
-// Queue system to serialize approval requests
 let approvalQueue: Promise<boolean> = Promise.resolve(true);
 
-const requestApprovalInternal = (toolName: string, args: unknown) =>
+const requestApprovalInternal = (message: string) =>
   new Promise<boolean>((resolve) => {
-    const toolCallId = `${toolName}-${Date.now()}-${randomUUID()}`;
+    const requestId = `${Date.now()}-${randomUUID()}`;
 
     const timeout = setTimeout(() => {
-      pendingApprovals.delete(toolCallId);
+      pendingApprovals.delete(requestId);
       resolve(false);
     }, APPROVAL_TIMEOUT_MS);
 
-    pendingApprovals.set(toolCallId, { resolve, timeout });
+    pendingApprovals.set(requestId, { resolve, timeout });
 
     stdOutput({
-      type: 'tool_approval_request',
-      toolCallId,
-      toolName,
-      args
+      type: 'request_approval',
+      requestId,
+      message
     });
   });
 
-export const requestApproval = (toolName: string, args: unknown) => {
-  // Chain approval requests to process one at a time
+export const requestApproval = (message: string) => {
   approvalQueue = approvalQueue
     .catch(() => false)
-    .then(() => requestApprovalInternal(toolName, args));
+    .then(() => requestApprovalInternal(message));
 
   return approvalQueue;
 };
 
-export const resolveToolApproval = ({
-  toolCallId,
+export const resolveRequestApproval = ({
+  requestId,
   approved
-}: ToolApprovalResponsePayload) => {
-  const pending = pendingApprovals.get(toolCallId);
-
-  if (!pending) return false;
+}: RequestApprovalResponsePayload) => {
+  const pending = pendingApprovals.get(requestId);
+  if (!pending) return;
 
   clearTimeout(pending.timeout);
 
   pending.resolve(approved);
-  pendingApprovals.delete(toolCallId);
-
-  return true;
+  pendingApprovals.delete(requestId);
 };
 
 export const clearPendingApprovals = () => {
   for (const { resolve, timeout } of Array.from(pendingApprovals.values())) {
     clearTimeout(timeout);
-
     resolve(false);
   }
 

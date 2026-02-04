@@ -12,7 +12,7 @@ import { jsonSchema, Tool, tool } from 'ai';
 
 import { cwd } from '~/utils/cwd';
 import { writeMcpLog } from '~/utils/file-operations';
-import { requestApproval } from '~/llm/mcp/client/tool-approval';
+import { requestApproval } from '~/utils/request-approval';
 
 // Singleton state
 let cachedClients: {
@@ -156,7 +156,11 @@ const convertAndMergeMCPTools = async (clients: Record<string, Client>) => {
           : undefined,
         execute: async (args) => {
           if (RESTRICTED_TOOLS.includes(mcpTool.name) || k === 'gitClient')
-            if (!(await requestApproval(mcpTool.name, args)))
+            if (
+              !(await requestApproval(
+                `${mcpTool.name} - ${JSON.stringify(args)}`
+              ))
+            )
               return ['User did not approved tool execution'];
 
           const result = await v.callTool({
