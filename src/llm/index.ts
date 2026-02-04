@@ -1,11 +1,10 @@
-// import { AnthropicProviderOptions } from '@ai-sdk/anthropic';
+import { XaiProviderOptions } from '@ai-sdk/xai';
 import { stepCountIs, streamText } from 'ai';
-import { ollama } from 'ai-sdk-ollama';
 
 import { stdOutput } from '~/index';
 import { PromptPayload } from '~/types';
 import {
-  // getConfig,
+  getConfig,
   getSession,
   writeError,
   writeFile
@@ -13,7 +12,7 @@ import {
 } from '~/utils/file-operations';
 import { mcpClients } from '~/llm/mcp/client';
 import { KISUKE_SYSTEM_PROMPT } from '~/llm/prompts/system';
-// import { getAnthropic } from '~/llm/providers';
+import { getXAI } from '~/llm/providers';
 
 export const processPrompt = async ({
   sessionId,
@@ -21,30 +20,18 @@ export const processPrompt = async ({
   context: _
 }: PromptPayload) => {
   try {
-    // const config = await getConfig();
+    const config = await getConfig();
     const session = await getSession(sessionId);
-    // const anthropic = getAnthropic({ apiKey: config.apiKeys.anthropic });
+    const xai = getXAI({ apiKey: config.apiKeys.grok });
 
     if (!session) throw new Error('Invalid session');
 
     const { tools } = await mcpClients();
 
     const result = streamText({
-      // model: anthropic('claude-3-7-sonnet-latest'),
-      model: ollama('qwen2.5:latest', {
-        options: {
-          seed: 123,
-          num_gpu: 999,
-          num_ctx: 8192,
-          num_thread: 8,
-          temperature: 0.5,
-          repeat_penalty: 1.1,
-          top_p: 0.9,
-          min_p: 0.1,
-          top_k: 40
-        }
-      }),
+      model: xai('grok-4-1-fast-reasoning'),
       stopWhen: stepCountIs(10),
+      experimental_telemetry: { isEnabled: true },
       tools,
       messages: [
         { role: 'system', content: KISUKE_SYSTEM_PROMPT },
@@ -106,9 +93,11 @@ export const processPrompt = async ({
 
         case 'tool-input-start':
           if (lastBlockType !== 'tool') {
-            if (lastBlockType !== null) output('\n');
+            if (lastBlockType !== null)
+              stdOutput({ type: 'response', payload: '\n' });
             consecutiveToolCount = 0;
-          } else if (consecutiveToolCount > 0) output('\n');
+          } else if (consecutiveToolCount > 0)
+            stdOutput({ type: 'response', payload: '\n' });
           lastBlockType = 'tool';
           currentToolInput = '';
           break;
@@ -121,7 +110,10 @@ export const processPrompt = async ({
           break;
 
         case 'tool-call':
-          output(`=> ${part.toolName}(${currentToolInput})\n`);
+          stdOutput({
+            type: 'response',
+            payload: `=> ${part.toolName}(${currentToolInput})\n`
+          });
           currentToolInput = '';
           consecutiveToolCount++;
           break;

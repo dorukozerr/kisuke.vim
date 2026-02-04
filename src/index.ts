@@ -1,3 +1,5 @@
+import { LangfuseSpanProcessor } from '@langfuse/otel';
+import { NodeSDK } from '@opentelemetry/sdk-node';
 import { z, ZodError } from 'zod';
 
 import { ServerPayload } from '~/types';
@@ -13,12 +15,21 @@ import { promptHandler } from '~/handlers/prompt';
 import { restoreSessionHandler } from '~/handlers/restore-session';
 import { resumeLastSessionHandler } from '~/handlers/resume-last-session';
 import { resolveToolApproval } from '~/llm/mcp/client/tool-approval';
+import { closeMcpClients } from '~/llm/mcp/client';
+
+import 'dotenv/config';
 
 const stdin = process.stdin;
 const stdout = process.stdout;
 
 stdin.resume();
 stdin.setEncoding('utf-8');
+
+const sdk = new NodeSDK({
+  spanProcessors: [new LangfuseSpanProcessor()]
+});
+
+sdk.start();
 
 stdin.on('data', async (data: string) => {
   try {
@@ -80,3 +91,13 @@ stdin.on('data', async (data: string) => {
 
 export const stdOutput = (reply: ServerPayload) =>
   stdout.write(JSON.stringify(reply) + '\n');
+
+// Cleanup on process exit
+const cleanup = async () => {
+  await closeMcpClients();
+  sdk.shutdown();
+};
+
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
+process.on('exit', cleanup);
