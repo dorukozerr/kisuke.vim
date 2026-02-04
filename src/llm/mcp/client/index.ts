@@ -62,6 +62,7 @@ export const mcpClients = async () => {
     }
   });
 
+  await writeTempJson({ test: cwd });
   const gitTransport = new StdioClientTransport({
     command: 'uvx',
     args: ['mcp-server-git', '--repository', cwd.path]
