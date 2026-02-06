@@ -13,7 +13,12 @@ import {
 } from '~/utils/file-operations';
 import { setupMCPClients } from '~/llm/mcp/client';
 import { KISUKE_SYSTEM_PROMPT } from '~/llm/prompts/system';
-import { getXAI } from '~/llm/providers';
+import {
+  getAnthropicProdiver,
+  getGoogleProdiver,
+  getOpenAIProdiver,
+  getXAIProdiver
+} from '~/llm/providers';
 
 export const processPrompt = async ({
   sessionId,
@@ -21,16 +26,26 @@ export const processPrompt = async ({
   context: _
 }: PromptPayload) => {
   try {
-    const config = await getConfig();
-    const session = await getSession(sessionId);
-    const xai = getXAI({ apiKey: config.apiKeys.grok });
+    const [config, session] = await Promise.all([
+      getConfig(),
+      getSession(sessionId)
+    ]);
 
     if (!session) throw new Error('Invalid session');
+
+    const providerConfig = { apiKey: config.apiKeys[config.provider] };
+
+    const model = {
+      anthropic: getAnthropicProdiver(providerConfig),
+      google: getGoogleProdiver(providerConfig),
+      openai: getOpenAIProdiver(providerConfig),
+      xai: getXAIProdiver(providerConfig)
+    }[config.provider](config.model);
 
     const { tools } = await setupMCPClients();
 
     const result = streamText({
-      model: xai('grok-4-1-fast-reasoning'),
+      model,
       stopWhen: stepCountIs(10),
       experimental_telemetry: { isEnabled: true },
       tools,

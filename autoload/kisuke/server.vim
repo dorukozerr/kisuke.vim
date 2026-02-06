@@ -54,7 +54,7 @@ fu! kisuke#server#configure(provider, model)
 
     cal writefile([json_encode(l:config)], l:config_file, 'w')
 
-    cal kisuke#buffer#restore({ 'type': 'initialize' })
+    cal kisuke#buffer#restore({ 'type': 'initialize', 'cwd': getcwd() })
 
     redr!
 

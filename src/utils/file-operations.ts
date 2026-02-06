@@ -5,12 +5,14 @@ import { join } from 'path';
 
 import { z, ZodError } from 'zod';
 
+import { Config } from '~/types';
 import {
   configSchema,
   historySchema,
   mcpClientRootsConfigSchema,
   sessionSchema
 } from '~/schemas';
+import { requestApproval } from '~/utils/request-approval';
 
 const configDir = join(homedir(), '.config', 'kisuke');
 
@@ -19,6 +21,7 @@ if (!existsSync(configDir)) mkdir(configDir, { recursive: true });
 export const writeFile = async (fileName: string, content: string) =>
   await fsWriteFile(join(configDir, fileName), content);
 
+// FIXME: wtf is this function
 export const writeError = async (error: unknown, operation: string) => {
   const errorFilePath = join(configDir, 'errors.json');
 
@@ -64,7 +67,7 @@ const setupKisuke = async () => {
       JSON.stringify({
         provider: '',
         model: '',
-        apiKeys: { anthropic: '', openai: '', google: '', grok: '' }
+        apiKeys: { anthropic: '', openai: '', google: '', xai: '' }
       })
     ),
     writeFile(
@@ -77,10 +80,11 @@ const setupKisuke = async () => {
   return historySchema.parse(JSON.parse(fileContent));
 };
 
-export const getConfig = async () => {
+export const getConfig = async (): Promise<Config | { error: string }> => {
   try {
-    const fileContent = await readFile(join(configDir, 'config.json'), 'utf-8');
-    return configSchema.parse(JSON.parse(fileContent));
+    return configSchema.parse(
+      JSON.parse(await readFile(join(configDir, 'config.json'), 'utf-8'))
+    );
   } catch (error) {
     await writeError(
       error instanceof ZodError
@@ -91,9 +95,13 @@ export const getConfig = async () => {
       'get_config'
     );
 
-    await setupKisuke();
+    if (
+      await requestApproval('Config file malformed, reset to initial state?')
+    ) {
+      await setupKisuke();
 
-    return JSON.parse(await readFile(join(configDir, 'config.json'), 'utf-8'));
+      return await getConfig();
+    } else return { error: 'Config file malformed' };
   }
 };
 
@@ -114,22 +122,15 @@ export const getMCPClientRootsConfig = async () => {
       'get_mcp_client_roots_config'
     );
 
-    await writeFile(
-      'mcp-client-roots-config.json',
-      JSON.stringify({ cwd: { dir: null, accessGranted: false }, roots: [] })
-    );
-
-    return { cwd: { dir: null, accessGranted: false }, roots: [] };
+    return { error: 'MCP client roots config file malformed' };
   }
 };
 
 export const getHistory = async () => {
   try {
-    const fileContent = await readFile(
-      join(configDir, 'history.json'),
-      'utf-8'
+    return historySchema.parse(
+      JSON.parse(await readFile(join(configDir, 'history.json'), 'utf-8'))
     );
-    return historySchema.parse(JSON.parse(fileContent));
   } catch (error) {
     await writeError(
       error instanceof ZodError
@@ -139,16 +140,8 @@ export const getHistory = async () => {
           : error,
       'getHistory'
     );
-    try {
-      await setupKisuke();
-      const fileContent = await readFile(
-        join(configDir, 'history.json'),
-        'utf-8'
-      );
-      return historySchema.parse(JSON.parse(fileContent));
-    } catch {
-      return { sessions: [] };
-    }
+
+    return { error: 'History file malformed' };
   }
 };
 
@@ -168,7 +161,7 @@ export const getSession = async (sessionId: string) => {
           : error,
       `getSession => ${sessionId}`
     );
-    return null;
+    return { error: 'Session file malformed' };
   }
 };
 

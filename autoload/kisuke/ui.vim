@@ -13,7 +13,7 @@ fu! kisuke#ui#render_buffer_menu(state, ...) abort
 
   silent! %delete
 
-  let s:providers = kisuke#llm#get_options()
+  let s:providers = kisuke#llm#get_providers()
 
   let g:kisuke.state.menu_items = []
   let g:kisuke.state.menu_actions = {}
@@ -22,7 +22,7 @@ fu! kisuke#ui#render_buffer_menu(state, ...) abort
   cal appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
 
   if a:state ==# "not_configured"
-    cal s:add_menu_item('Configure the plugin', 'kisuke#ui#render_buffer_menu', 'configure_plugin')
+    cal s:add_menu_item('Configuration', 'kisuke#ui#render_buffer_menu', 'configure_plugin')
   elsei a:state ==# "missing_api_key"
     let s:kisuke.state.current_provider = a:1
     let s:kisuke.state.current_model = a:2
@@ -66,7 +66,7 @@ fu! kisuke#ui#render_buffer_menu(state, ...) abort
     endfo
 
     cal appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
-    cal s:add_menu_item('Go back to main menu', 'kisuke#buffer#restore', { 'type': 'initialize' })
+    cal s:add_menu_item('Go back to main menu', 'kisuke#buffer#restore', { 'type': 'initialize', 'cwd': getcwd() })
   elsei a:state ==# 'select_model'
     let l:models = []
 
@@ -86,7 +86,7 @@ fu! kisuke#ui#render_buffer_menu(state, ...) abort
     endfo
 
     cal appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
-    cal s:add_menu_item('Go back to main menu', 'kisuke#buffer#restore', { 'type': 'initialize' })
+    cal s:add_menu_item('Go back to provider selection', 'kisuke#ui#render_buffer_menu', 'configure_plugin')
   elsei a:state ==# 'render_sessions'
     let l:sessions = a:1
 
@@ -100,7 +100,7 @@ fu! kisuke#ui#render_buffer_menu(state, ...) abort
     endfo
 
     cal appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
-    cal s:add_menu_item('Go back to main menu', 'kisuke#buffer#restore', { 'type': 'initialize' })
+    cal s:add_menu_item('Go back to main menu', 'kisuke#buffer#restore', { 'type': 'initialize', 'cwd': getcwd() })
   en
 
   cal appendbufline(g:kisuke.state.buf_nr, line('$'), ' ')
@@ -136,6 +136,8 @@ fu! kisuke#ui#select_menu_option() abort
   en
 
   if has_key(g:kisuke.state.menu_actions, line)
+    cal kisuke#buffer#prepare_menu_buffer()
+
     let Action = function(g:kisuke.state.menu_actions[line])
 
     if has_key(g:kisuke.state.menu_actions, line . '_data')
@@ -151,11 +153,13 @@ endfu
 fu! kisuke#ui#select_provider(provider) abort
   let s:kisuke.state.current_provider = a:provider
 
+  cal kisuke#buffer#prepare_menu_buffer()
   cal kisuke#ui#render_buffer_menu('select_model')
 endfu
 
 fu! kisuke#ui#select_model(model) abort
   let s:kisuke.state.current_model = a:model
 
+  cal kisuke#buffer#prepare_menu_buffer()
   cal kisuke#server#configure(s:kisuke.state.current_provider, s:kisuke.state.current_model)
 endfu
