@@ -7,7 +7,8 @@ import {
   getConfig,
   getSession,
   writeError,
-  writeFile
+  writeFile,
+  writeMcpLog
   // writeTempJson
 } from '~/utils/file-operations';
 import { setupMCPClients } from '~/llm/mcp/client';
@@ -123,6 +124,7 @@ export const processPrompt = async ({
           //       : JSON.stringify(part.error)
           //   }\n`
           // );
+          await writeMcpLog('tool-error', part);
           toolResultCount++;
           outputToolProgress();
           break;

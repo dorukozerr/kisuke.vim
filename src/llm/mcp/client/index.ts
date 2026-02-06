@@ -83,9 +83,12 @@ export const setupMCPClients = async () => {
   ]);
 
   setupRootsHandler(filesystemClient, { roots });
-  await filesystemClient.sendRootsListChanged();
   setupRootsHandler(gitClient, { roots });
-  await gitClient.sendRootsListChanged();
+
+  await Promise.all([
+    filesystemClient.sendRootsListChanged(),
+    gitClient.sendRootsListChanged()
+  ]);
 
   const tools = await convertAndMergeMCPTools({
     filesystemClient,
@@ -130,7 +133,7 @@ const convertAndMergeMCPTools = async (clients: Record<string, Client>) => {
             arguments: args
           });
 
-          await writeMcpLog(mcpTool.name, result);
+          await writeMcpLog(`${k}-${mcpTool.name}`, { result, args });
 
           return result.content;
         }
