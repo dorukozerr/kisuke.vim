@@ -3,15 +3,15 @@ import { mkdir, readFile, writeFile as fsWriteFile } from 'fs/promises';
 import { homedir } from 'os';
 import { join } from 'path';
 
-import { z, ZodError } from 'zod';
-
-import { Config } from '~/types';
+import { stdOutput } from '~/index';
+import { Config, History, MCPClientRootsConfig, Session } from '~/types';
 import {
   configSchema,
   historySchema,
   mcpClientRootsConfigSchema,
   sessionSchema
 } from '~/schemas';
+import { formatError } from '~/utils/format-error';
 import { requestApproval } from '~/utils/request-approval';
 
 const configDir = join(homedir(), '.config', 'kisuke');
@@ -21,7 +21,6 @@ if (!existsSync(configDir)) mkdir(configDir, { recursive: true });
 export const writeFile = async (fileName: string, content: string) =>
   await fsWriteFile(join(configDir, fileName), content);
 
-// FIXME: wtf is this function
 export const writeError = async (error: unknown, operation: string) => {
   const errorFilePath = join(configDir, 'errors.json');
 
@@ -34,10 +33,7 @@ export const writeError = async (error: unknown, operation: string) => {
     if (Array.isArray(parsedContent)) {
       currentErrors = parsedContent;
     } else {
-      await fsWriteFile(
-        errorFilePath,
-        JSON.stringify([parsedContent], null, 2)
-      );
+      await writeFile('errors.json', JSON.stringify([parsedContent], null, 2));
 
       currentErrors = [parsedContent];
     }
@@ -47,127 +43,131 @@ export const writeError = async (error: unknown, operation: string) => {
 
   const errorEntry = { timestamp: new Date().toISOString(), operation, error };
 
-  currentErrors.push(errorEntry);
+  currentErrors.push({ timestamp: new Date().toISOString(), operation, error });
 
   try {
-    await fsWriteFile(errorFilePath, JSON.stringify(currentErrors, null, 2));
+    await writeFile('errors.json', JSON.stringify(currentErrors, null, 2));
   } catch (error) {
-    await fsWriteFile(
-      join(configDir, `errors-${new Date().toISOString()}.json`),
+    await writeFile(
+      `errors-${new Date().toISOString()}.json`,
       JSON.stringify([errorEntry, error], null, 2)
     );
   }
 };
 
-const setupKisuke = async () => {
-  await Promise.all([
-    writeFile('history.json', JSON.stringify({ sessions: [] })),
-    writeFile(
-      'config.json',
-      JSON.stringify({
-        provider: '',
-        model: '',
-        apiKeys: { anthropic: '', openai: '', google: '', xai: '' }
-      })
-    ),
-    writeFile(
-      'mcp-client-roots-config.json',
-      JSON.stringify({ cwd: { dir: null, accessGranted: false }, roots: [] })
-    )
-  ]);
-
-  const fileContent = await readFile(join(configDir, 'history.json'), 'utf-8');
-  return historySchema.parse(JSON.parse(fileContent));
-};
-
-export const getConfig = async (): Promise<Config | { error: string }> => {
+export const getConfig = async (): Promise<Config | object> => {
   try {
     return configSchema.parse(
       JSON.parse(await readFile(join(configDir, 'config.json'), 'utf-8'))
     );
-  } catch (error) {
-    await writeError(
-      error instanceof ZodError
-        ? z.treeifyError(error)
-        : error instanceof Error
-          ? `${error.name} - ${error.message}`
-          : error,
-      'get_config'
-    );
+  } catch (e) {
+    const error = formatError(e);
+    await writeError(error, 'get_config');
 
     if (
       await requestApproval('Config file malformed, reset to initial state?')
     ) {
-      await setupKisuke();
+      await writeFile(
+        'config.json',
+        JSON.stringify({
+          provider: '',
+          model: '',
+          apiKeys: { anthropic: '', openai: '', google: '', xai: '' }
+        })
+      );
 
       return await getConfig();
-    } else return { error: 'Config file malformed' };
+    } else {
+      stdOutput({ type: 'error', payload: 'Config file malformed' });
+
+      return {};
+    }
   }
 };
 
-export const getMCPClientRootsConfig = async () => {
+export const getMCPClientRootsConfig = async (): Promise<
+  MCPClientRootsConfig | object
+> => {
   try {
     return mcpClientRootsConfigSchema.parse(
       JSON.parse(
         await readFile(join(configDir, 'mcp-client-roots-config.json'), 'utf-8')
       )
     );
-  } catch (error) {
-    await writeError(
-      error instanceof ZodError
-        ? z.treeifyError(error)
-        : error instanceof Error
-          ? `${error.name} - ${error.message}`
-          : error,
-      'get_mcp_client_roots_config'
-    );
+  } catch (e) {
+    const error = formatError(e);
+    await writeError(error, 'getMCPClientRootsConfig');
 
-    return { error: 'MCP client roots config file malformed' };
+    if (
+      await requestApproval(
+        'MCP client roots config file malformed, reset to initial state?'
+      )
+    ) {
+      await writeFile(
+        'mcp-client-roots-config.json',
+        JSON.stringify({
+          cwd: { dir: null, accessGranted: false },
+          roots: []
+        })
+      );
+
+      return await getMCPClientRootsConfig();
+    } else
+      stdOutput({
+        type: 'error',
+        payload: 'MCP client roots config file malformed'
+      });
   }
 };
 
-export const getHistory = async () => {
+export const getHistory = async (): Promise<History | object> => {
   try {
     return historySchema.parse(
       JSON.parse(await readFile(join(configDir, 'history.json'), 'utf-8'))
     );
-  } catch (error) {
-    await writeError(
-      error instanceof ZodError
-        ? z.treeifyError(error)
-        : error instanceof Error
-          ? `${error.name} - ${error.message}`
-          : error,
-      'getHistory'
-    );
+  } catch (e) {
+    const error = formatError(e);
+    await writeError(error, 'getHistory');
 
-    return { error: 'History file malformed' };
+    if (
+      await requestApproval(
+        'History config file malformed, reset to initial state?'
+      )
+    ) {
+      await writeFile('history.json', JSON.stringify({ sessions: [] }));
+
+      return await getHistory();
+    } else {
+      stdOutput({ type: 'error', payload: 'History config file malformed' });
+
+      return {};
+    }
   }
 };
 
-export const getSession = async (sessionId: string) => {
+export const getSession = async (
+  sessionId: string
+): Promise<Session | object> => {
   try {
-    const fileContent = await readFile(
-      join(configDir, `${sessionId}.json`),
-      'utf-8'
+    return sessionSchema.parse(
+      JSON.parse(await readFile(join(configDir, `${sessionId}.json`), 'utf-8'))
     );
-    return sessionSchema.parse(JSON.parse(fileContent));
-  } catch (error) {
-    await writeError(
-      error instanceof ZodError
-        ? z.treeifyError(error)
-        : error instanceof Error
-          ? `${error.name} - ${error.message}`
-          : error,
-      `getSession => ${sessionId}`
-    );
-    return { error: 'Session file malformed' };
+  } catch (e) {
+    const error = formatError(e);
+
+    await writeError(error, `getSesssion => ${sessionId}`);
+
+    stdOutput({ type: 'error', payload: 'Session file malformed' });
+
+    return {};
   }
 };
 
 export const writeTempJson = async (data: object) => {
   const tempFilePath = join(configDir, 'temp.json');
+
   let currentArray: object[] = [];
+
   try {
     const fileContent = await readFile(tempFilePath, 'utf-8');
     const parsedContent = JSON.parse(fileContent);
@@ -183,9 +183,9 @@ export const writeTempJson = async (data: object) => {
     await writeError(error, 'writeTempJson - Read/Parse Failure');
   }
   currentArray.push(data);
+
   try {
-    const contentToWrite = JSON.stringify(currentArray, null, 2);
-    await writeFile('temp.json', contentToWrite);
+    await writeFile('temp.json', JSON.stringify(currentArray, null, 2));
   } catch (error) {
     await writeError(error, 'writeTempJson - Write Appended Data');
   }

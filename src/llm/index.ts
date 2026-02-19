@@ -32,6 +32,8 @@ export const processPrompt = async ({
     ]);
 
     if (!session) throw new Error('Invalid session');
+    if (!('provider' in config)) throw new Error('Invalid config');
+    if (!('messages' in session)) throw new Error('Invalid session');
 
     const providerConfig = { apiKey: config.apiKeys[config.provider] };
 
