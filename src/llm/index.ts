@@ -1,17 +1,19 @@
-import { stepCountIs, streamText } from 'ai';
+import { generateText, stepCountIs, streamText } from 'ai';
 
-import { cleanup } from '~/index';
+// import { cleanup } from '~/index';
 import { stdOutput } from '~/index';
 import { PromptPayload } from '~/types';
 import {
   getConfig,
+  getHistory,
   getSession,
   writeError,
   writeFile,
   writeMcpLog
   // writeTempJson
 } from '~/utils/file-operations';
-import { setupMCPClients } from '~/llm/mcp/client';
+import { SESSION_MAME_GENERATION_SYSTEM_PROMPT } from '~/utils/initials';
+// import { setupMCPClients } from '~/llm/mcp/client';
 import { KISUKE_SYSTEM_PROMPT } from '~/llm/prompts/system';
 import {
   getAnthropicProdiver,
@@ -32,7 +34,8 @@ export const processPrompt = async ({
     ]);
 
     if (!session) throw new Error('Invalid session');
-    if (!('provider' in config)) throw new Error('Invalid config');
+    if (!config || !('provider' in config) || !('model' in config))
+      throw new Error('Invalid config');
     if (!('messages' in session)) throw new Error('Invalid session');
 
     const providerConfig = { apiKey: config.apiKeys[config.provider] };
@@ -44,13 +47,13 @@ export const processPrompt = async ({
       xai: getXAIProdiver(providerConfig)
     }[config.provider](config.model);
 
-    const { tools } = await setupMCPClients();
+    // const { tools } = await setupMCPClients();
 
     const result = streamText({
       model,
       stopWhen: stepCountIs(10),
-      experimental_telemetry: { isEnabled: true },
-      tools,
+      // experimental_telemetry: { isEnabled: true },
+      // tools,
       messages: [
         { role: 'system', content: KISUKE_SYSTEM_PROMPT },
         ...session.messages.map(
@@ -176,7 +179,34 @@ export const processPrompt = async ({
 
     stdOutput({ type: 'response', payload: 'stream_end' });
 
-    await cleanup();
+    if (session.messages.length === 1) {
+      const history = await getHistory();
+
+      if (history) {
+        const { text: sessionName } = await generateText({
+          model,
+          messages: [
+            { role: 'system', content: SESSION_MAME_GENERATION_SYSTEM_PROMPT },
+            { role: 'user', content: prompt }
+          ]
+        });
+
+        const updatedHistory = history.sessions.map((s) =>
+          s.id === sessionId
+            ? {
+                ...s,
+                name: `${new Date().toLocaleDateString()} - ${sessionName}`
+              }
+            : session
+        );
+
+        await writeFile(
+          'history.json',
+          JSON.stringify({ sessions: updatedHistory })
+        );
+      }
+    }
+    // await cleanup();
   } catch (error) {
     const e =
       error instanceof Error
@@ -187,6 +217,6 @@ export const processPrompt = async ({
 
     stdOutput({ type: 'error', payload: e });
 
-    await cleanup();
+    // await cleanup();
   }
 };

@@ -1,6 +1,6 @@
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { NodeSDK } from '@opentelemetry/sdk-node';
-import { LangfuseExporter } from 'langfuse-vercel';
+// import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+// import { NodeSDK } from '@opentelemetry/sdk-node';
+// import { LangfuseExporter } from 'langfuse-vercel';
 import { z, ZodError } from 'zod';
 
 import { ServerPayload } from '~/types';
@@ -25,12 +25,12 @@ const stdout = process.stdout;
 stdin.resume();
 stdin.setEncoding('utf-8');
 
-const sdk = new NodeSDK({
-  traceExporter: new LangfuseExporter(),
-  instrumentations: [getNodeAutoInstrumentations()]
-});
-
-sdk.start();
+// const sdk = new NodeSDK({
+//   traceExporter: new LangfuseExporter(),
+//   instrumentations: [getNodeAutoInstrumentations()]
+// });
+//
+// sdk.start();
 
 stdin.on('data', async (data: string) => {
   try {
@@ -38,7 +38,7 @@ stdin.on('data', async (data: string) => {
 
     switch (payload.type) {
       case 'initialize':
-        initializeHandler(payload);
+        initializeHandler();
         break;
       case 'prompt':
         promptHandler(payload);
@@ -93,8 +93,8 @@ stdin.on('data', async (data: string) => {
 export const stdOutput = (reply: ServerPayload) =>
   stdout.write(JSON.stringify(reply) + '\n');
 
-export const cleanup = async () => await Promise.all([sdk.shutdown()]);
+// export const cleanup = async () => await Promise.all([sdk.shutdown()]);
 
-process.on('SIGINT', cleanup);
-process.on('SIGTERM', cleanup);
-process.on('exit', cleanup);
+// process.on('SIGINT', cleanup);
+// process.on('SIGTERM', cleanup);
+// process.on('exit', cleanup);

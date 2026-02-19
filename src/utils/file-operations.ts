@@ -55,17 +55,16 @@ export const writeError = async (error: unknown, operation: string) => {
   }
 };
 
-export const getConfig = async (): Promise<Config | object> => {
+export const getConfig = async (): Promise<Config | null> => {
   try {
     return configSchema.parse(
       JSON.parse(await readFile(join(configDir, 'config.json'), 'utf-8'))
     );
   } catch (e) {
-    const error = formatError(e);
-    await writeError(error, 'get_config');
-
     if (
-      await requestApproval('Config file malformed, reset to initial state?')
+      await requestApproval(
+        'Config file parsing failed, reset to initial state?'
+      )
     ) {
       await writeFile(
         'config.json',
@@ -78,49 +77,57 @@ export const getConfig = async (): Promise<Config | object> => {
 
       return await getConfig();
     } else {
-      stdOutput({ type: 'error', payload: 'Config file malformed' });
+      stdOutput({ type: 'error', payload: 'Config file parsing failed' });
 
-      return {};
+      const error = formatError(e);
+      await writeError(error, 'get_config');
+
+      return null;
     }
   }
 };
 
-export const getMCPClientRootsConfig = async (): Promise<
-  MCPClientRootsConfig | object
-> => {
-  try {
-    return mcpClientRootsConfigSchema.parse(
-      JSON.parse(
-        await readFile(join(configDir, 'mcp-client-roots-config.json'), 'utf-8')
-      )
-    );
-  } catch (e) {
-    const error = formatError(e);
-    await writeError(error, 'getMCPClientRootsConfig');
-
-    if (
-      await requestApproval(
-        'MCP client roots config file malformed, reset to initial state?'
-      )
-    ) {
-      await writeFile(
-        'mcp-client-roots-config.json',
-        JSON.stringify({
-          cwd: { dir: null, accessGranted: false },
-          roots: []
-        })
+export const getMCPClientRootsConfig =
+  async (): Promise<MCPClientRootsConfig | null> => {
+    try {
+      return mcpClientRootsConfigSchema.parse(
+        JSON.parse(
+          await readFile(
+            join(configDir, 'mcp-client-roots-config.json'),
+            'utf-8'
+          )
+        )
       );
+    } catch (e) {
+      const error = formatError(e);
+      await writeError(error, 'getMCPClientRootsConfig');
 
-      return await getMCPClientRootsConfig();
-    } else
-      stdOutput({
-        type: 'error',
-        payload: 'MCP client roots config file malformed'
-      });
-  }
-};
+      if (
+        await requestApproval(
+          'MCP client roots config file parsing failed, reset to initial state?'
+        )
+      ) {
+        await writeFile(
+          'mcp-client-roots-config.json',
+          JSON.stringify({
+            cwd: { dir: null, accessGranted: false },
+            roots: []
+          })
+        );
 
-export const getHistory = async (): Promise<History | object> => {
+        return await getMCPClientRootsConfig();
+      } else {
+        stdOutput({
+          type: 'error',
+          payload: 'MCP client roots config file parsing failed'
+        });
+
+        return null;
+      }
+    }
+  };
+
+export const getHistory = async (): Promise<History | null> => {
   try {
     return historySchema.parse(
       JSON.parse(await readFile(join(configDir, 'history.json'), 'utf-8'))
@@ -131,23 +138,26 @@ export const getHistory = async (): Promise<History | object> => {
 
     if (
       await requestApproval(
-        'History config file malformed, reset to initial state?'
+        'History config file parsing failed, reset to initial state?'
       )
     ) {
       await writeFile('history.json', JSON.stringify({ sessions: [] }));
 
       return await getHistory();
     } else {
-      stdOutput({ type: 'error', payload: 'History config file malformed' });
+      stdOutput({
+        type: 'error',
+        payload: 'History config file parsing failed'
+      });
 
-      return {};
+      return null;
     }
   }
 };
 
 export const getSession = async (
   sessionId: string
-): Promise<Session | object> => {
+): Promise<Session | null> => {
   try {
     return sessionSchema.parse(
       JSON.parse(await readFile(join(configDir, `${sessionId}.json`), 'utf-8'))
@@ -157,9 +167,9 @@ export const getSession = async (
 
     await writeError(error, `getSesssion => ${sessionId}`);
 
-    stdOutput({ type: 'error', payload: 'Session file malformed' });
+    stdOutput({ type: 'error', payload: 'Session file parsing failed' });
 
-    return {};
+    return null;
   }
 };
 

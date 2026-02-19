@@ -2,7 +2,8 @@ import { stdOutput } from '~/index';
 import { getHistory } from '~/utils/file-operations';
 
 export const loadSessionsHandler = async () => {
-  const { sessions } = await getHistory();
+  const history = await getHistory();
 
-  stdOutput({ type: 'load_sessions', payload: sessions.reverse() });
+  if (history)
+    stdOutput({ type: 'load_sessions', payload: history.sessions.reverse() });
 };
