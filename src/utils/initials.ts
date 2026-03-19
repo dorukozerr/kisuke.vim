@@ -1,10 +1,5 @@
 export const INITIAL_SESSION_DATA = {
-  messages: [
-    {
-      sender: 'Kisuke' as const,
-      message: 'How can I help you?'
-    }
-  ]
+  messages: [{ sender: 'Kisuke' as const, message: 'How can I help you?' }]
 };
 
 export const SESSION_MAME_GENERATION_SYSTEM_PROMPT =

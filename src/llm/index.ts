@@ -177,8 +177,6 @@ export const processPrompt = async ({
       })
     );
 
-    stdOutput({ type: 'response', payload: 'stream_end' });
-
     if (session.messages.length === 1) {
       const history = await getHistory();
 
@@ -206,6 +204,8 @@ export const processPrompt = async ({
         );
       }
     }
+
+    stdOutput({ type: 'response', payload: 'stream_end' });
     // await cleanup();
   } catch (error) {
     const e =
