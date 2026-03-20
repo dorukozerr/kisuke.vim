@@ -13,7 +13,7 @@ import {
   // writeTempJson
 } from '~/utils/file-operations';
 import { SESSION_MAME_GENERATION_SYSTEM_PROMPT } from '~/utils/initials';
-// import { setupMCPClients } from '~/llm/mcp/client';
+import { setupMCPClients } from '~/llm/mcp/client';
 import { KISUKE_SYSTEM_PROMPT } from '~/llm/prompts/system';
 import {
   getAnthropicProdiver,
@@ -47,13 +47,13 @@ export const processPrompt = async ({
       xai: getXAIProdiver(providerConfig)
     }[config.provider](config.model);
 
-    // const { tools } = await setupMCPClients();
+    const { tools } = await setupMCPClients();
 
     const result = streamText({
       model,
       stopWhen: stepCountIs(10),
       // experimental_telemetry: { isEnabled: true },
-      // tools,
+      tools,
       messages: [
         { role: 'system', content: KISUKE_SYSTEM_PROMPT },
         ...session.messages.map(
