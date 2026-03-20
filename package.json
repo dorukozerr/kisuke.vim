@@ -13,20 +13,20 @@
   "license": "MIT",
   "private": false,
   "devDependencies": {
-    "@eslint/js": "^9.37.0",
-    "@types/node": "^24.7.2",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.5.0",
     "concurrently": "^9.2.1",
-    "eslint": "^9.37.0",
-    "eslint-plugin-prettier": "^5.5.4",
-    "globals": "^16.4.0",
-    "nodemon": "^3.1.10",
-    "prettier": "^3.6.2",
+    "eslint": "^10.1.0",
+    "eslint-plugin-prettier": "^5.5.5",
+    "globals": "^17.4.0",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.8.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.0"
+    "typescript-eslint": "^8.57.1"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.65.0",
-    "@google/genai": "^1.24.0",
-    "openai": "^6.3.0"
+    "@anthropic-ai/sdk": "^0.80.0",
+    "@google/genai": "^1.46.0",
+    "openai": "^6.32.0"
   }
 }

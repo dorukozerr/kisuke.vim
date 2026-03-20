@@ -14,6 +14,7 @@ export const writeFile = async (fileName: string, content: string) =>
 
 export const writeError = async (error: unknown, operation: string) => {
   const errorFilePath = join(configDir, 'errors.json');
+  // eslint-disable-next-line no-useless-assignment
   let currentErrors: object[] = [];
   try {
     const fileContent = await readFile(errorFilePath, 'utf-8');
