@@ -18,8 +18,8 @@
 " ============================================================================= "
 
 if exists('g:kisuke_initialized')
-  fini
-en
+  finish
+endif
 
 let g:kisuke_initialized = 1
 let g:kisuke = {}
@@ -35,13 +35,13 @@ let g:kisuke.state = {
       \ 'marked_code_blocks': []
       \ }
 
-com! KisukeOpen                                   cal kisuke#buffer#open()
-com! KisukeMarkFocusedFile                        cal kisuke#buffer#mark_focused_file()
-com! -range KisukeMarkHighlighted <line1>,<line2> cal kisuke#buffer#mark_highlighted_code()
-com! KisukeRemoveLastMarkedCodeBlock              cal kisuke#buffer#remove_last_marked_code_block()
-com! KisukeCreateNewSession                       cal kisuke#session#create_new_session()
-com! KisukeDeleteSession                          cal kisuke#session#delete_current_session()
-com! KisukeResumeLastSession                      cal kisuke#buffer#restore({ 'type': 'resume_last_session' })
-com! KisukeNextSession                            cal kisuke#session#go_to_next_session()
-com! KisukePreviousSession                        cal kisuke#session#go_to_previous_session()
-com! KisukeRestart                                cal kisuke#server#restart()
+command! KisukeOpen                                   call kisuke#buffer#open()
+command! KisukeMarkFocusedFile                        call kisuke#buffer#mark_focused_file()
+command! -range KisukeMarkHighlighted <line1>,<line2> call kisuke#buffer#mark_highlighted_code()
+command! KisukeRemoveLastMarkedCodeBlock              call kisuke#buffer#remove_last_marked_code_block()
+command! KisukeCreateNewSession                       call kisuke#session#create_new_session()
+command! KisukeDeleteSession                          call kisuke#session#delete_current_session()
+command! KisukeResumeLastSession                      call kisuke#buffer#restore({ 'type': 'resume_last_session' })
+command! KisukeNextSession                            call kisuke#session#go_to_next_session()
+command! KisukePreviousSession                        call kisuke#session#go_to_previous_session()
+command! KisukeRestart                                call kisuke#server#restart()

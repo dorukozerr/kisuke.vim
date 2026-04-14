@@ -3,16 +3,16 @@ import { mkdir, readFile, writeFile as fsWriteFile } from 'fs/promises';
 import { homedir } from 'os';
 import { join } from 'path';
 
-import { stdOutput } from '~/index';
-import { Config, History, MCPClientRootsConfig, Session } from '~/types';
+import { stdOutput } from '#/index';
 import {
   configSchema,
   historySchema,
   mcpClientRootsConfigSchema,
   sessionSchema
-} from '~/schemas';
-import { formatError } from '~/utils/format-error';
-import { requestApproval } from '~/utils/request-approval';
+} from '#/schemas';
+import type { Config, History, MCPClientRootsConfig, Session } from '#/types';
+import { formatError } from '#/utils/format-error';
+import { requestApproval } from '#/utils/request-approval';
 
 const configDir = join(homedir(), '.config', 'kisuke');
 
@@ -24,6 +24,7 @@ export const writeFile = async (fileName: string, content: string) =>
 export const writeError = async (error: unknown, operation: string) => {
   const errorFilePath = join(configDir, 'errors.json');
 
+  // eslint-disable-next-line no-useless-assignment
   let currentErrors: object[] = [];
 
   try {
@@ -203,6 +204,7 @@ export const writeTempJson = async (data: object) => {
 
 export const writeMcpLog = async (operation: string, data: unknown) => {
   const mcpLogPath = join(configDir, 'mcp-logs.json');
+  // eslint-disable-next-line no-useless-assignment
   let currentLogs: object[] = [];
 
   try {

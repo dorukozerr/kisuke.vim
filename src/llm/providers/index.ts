@@ -1,10 +1,13 @@
-import { AnthropicProviderSettings, createAnthropic } from '@ai-sdk/anthropic';
+import {
+  type AnthropicProviderSettings,
+  createAnthropic
+} from '@ai-sdk/anthropic';
 import {
   createGoogleGenerativeAI,
-  GoogleGenerativeAIProviderSettings
+  type GoogleGenerativeAIProviderSettings
 } from '@ai-sdk/google';
-import { createOpenAI, OpenAIProviderSettings } from '@ai-sdk/openai';
-import { createXai, XaiProviderSettings } from '@ai-sdk/xai';
+import { createOpenAI, type OpenAIProviderSettings } from '@ai-sdk/openai';
+import { createXai, type XaiProviderSettings } from '@ai-sdk/xai';
 
 export const getAnthropicProdiver = (config: AnthropicProviderSettings) =>
   createAnthropic(config);

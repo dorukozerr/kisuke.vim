@@ -1,25 +1,24 @@
-fu! kisuke#server#start_process()
+function! kisuke#server#start_process()
   let l:paths = split(&runtimepath, ',')
   let l:plugin_root = ''
 
   for path in l:paths
     if path =~ 'kisuke\.vim$'
       let l:plugin_root = path
+      break
+    endif
+  endfor
 
-      brea
-    en
-  endfo
 
   if empty(l:plugin_root)
-    echoe 'could not find kisuke.vim in runtimepath'
-
-    retu
-  en
+    echoerr 'could not find kisuke.vim in runtimepath'
+    return
+  endif
 
   let g:kisuke.state.job = job_start(['sh', '-c', 'node ' . plugin_root . '/dist/index.js'], { 'out_cb': function('kisuke#server#parse_reply') })
-endfu
+endfunction
 
-fu! kisuke#server#configure(provider, model)
+function! kisuke#server#configure(provider, model)
   let l:config_file = expand('~/.config/kisuke/config.json')
   let l:config = kisuke#server#load()
   let l:lower_provider = tolower(a:provider)
@@ -30,11 +29,10 @@ fu! kisuke#server#configure(provider, model)
         \ && !empty(l:config.apiKeys[l:lower_provider])
 
     let l:api_key = l:config.apiKeys[l:lower_provider]
-
-    echom 'Using existing API key for ' . a:provider
-  el
+    echomsg 'Using existing API key for ' . a:provider
+  else
     let l:api_key = input('Enter your ' . a:provider . ' API key: ')
-  en
+  endif
 
   let l:checks = [
         \ { 'condition': g:kisuke.state.job == v:null, 'message': 'Please run :KisukeOpen first, or press <leader>ko' },
@@ -46,25 +44,24 @@ fu! kisuke#server#configure(provider, model)
   if kisuke#utils#validate(l:checks)
     if !has_key(l:config, 'apiKeys')
       let l:config.apiKeys = {}
-    en
+    endif
 
     let l:config.provider = l:lower_provider
     let l:config.model = tolower(tolower(a:model))
     let l:config.apiKeys[l:lower_provider] = l:api_key
 
-    cal writefile([json_encode(l:config)], l:config_file, 'w')
+    call writefile([json_encode(l:config)], l:config_file, 'w')
+    call kisuke#buffer#restore({ 'type': 'initialize', 'cwd': getcwd() })
 
-    cal kisuke#buffer#restore({ 'type': 'initialize', 'cwd': getcwd() })
+    redraw!
 
-    redr!
+    echomsg a:provider . ' configuration updated using model ' . a:model . '.'
+  else
+    echohl WarningMsg | echomsg 'Configuration aborted due to validation errors.' | echohl None
+  endif
+endfunction
 
-    echom a:provider . ' configuration updated using model ' . a:model . '.'
-  el
-    echohl WarningMsg | echom 'Configuration aborted due to validation errors.' | echohl None
-  en
-endfu
-
-fu! kisuke#server#parse_reply(channel, reply)
+function! kisuke#server#parse_reply(channel, reply)
   let l:reply = json_decode(a:reply)
 
   let g:kisuke.state.marked_files = []
@@ -86,38 +83,38 @@ fu! kisuke#server#parse_reply(channel, reply)
         \ }
 
   if has_key(l:handlers, l:reply.type)
-    cal l:handlers[l:reply.type](l:reply)
-  el
-    echoe 'Unknown message type'
-  en
+    call l:handlers[l:reply.type](l:reply)
+  else
+    echoerr 'Unknown message type'
+  endif
 
   let g:kisuke.state.is_pending = 0
-endfu
+endfunction
 
-fu! kisuke#server#restart()
-  cal kisuke#server#stop()
-  cal kisuke#server#start_process()
-  cal kisuke#buffer#restore({ 'type': 'initialize', 'cwd': getcwd() })
-  echom 'Kisuke server restarted'
-endfu
+function! kisuke#server#restart()
+  call kisuke#server#stop()
+  call kisuke#server#start_process()
+  call kisuke#buffer#restore({ 'type': 'initialize', 'cwd': getcwd() })
+  echomsg 'Kisuke server restarted'
+endfunction
 
-fu! kisuke#server#stop()
+function! kisuke#server#stop()
   if g:kisuke.state.job != v:null
-    cal job_stop(g:kisuke.state.job)
+    call job_stop(g:kisuke.state.job)
     let g:kisuke.state.job = v:null
-  en
-endfu
+  endif
+endfunction
 
-fu! kisuke#server#load()
+function! kisuke#server#load()
   let l:config_file = expand('~/.config/kisuke/config.json')
 
   if filereadable(l:config_file)
-    retu json_decode(join(readfile(l:config_file), "\n"))
-  en
+    return json_decode(join(readfile(l:config_file), "\n"))
+  endif
 
-  retu {
+  return {
         \ 'provider': '',
         \ 'model': '',
         \ 'apiKeys': {}
         \ }
-endfu
+endfunction

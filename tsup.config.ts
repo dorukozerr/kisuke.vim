@@ -20,7 +20,7 @@ export default defineConfig((_options) => ({
 **/`
   },
   outDir: 'dist',
-  target: 'esnext',
+  target: 'node25',
   platform: 'node',
   clean: true,
   sourcemap: 'inline'

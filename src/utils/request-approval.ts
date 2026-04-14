@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 
-import { stdOutput } from '~/index';
-import { RequestApprovalResponsePayload } from '~/types';
+import { stdOutput } from '#/index';
+import type { RequestApprovalResponsePayload } from '#/types';
 
 const pendingApprovals = new Map<
   string,

@@ -1,18 +1,18 @@
 import { homedir } from 'os';
 import { join } from 'path';
 
-import { Client, ClientOptions } from '@modelcontextprotocol/sdk/client';
+import { Client, type ClientOptions } from '@modelcontextprotocol/sdk/client';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import {
-  Implementation,
+  type Implementation,
   ListRootsRequestSchema,
-  ListRootsResult
+  type ListRootsResult
 } from '@modelcontextprotocol/sdk/types.js';
-import { jsonSchema, Tool, tool } from 'ai';
+import { jsonSchema, type Tool, tool } from 'ai';
 
-import { getMCPClientRootsConfig } from '~/utils/file-operations';
-import { writeMcpLog } from '~/utils/file-operations';
-import { requestApproval } from '~/utils/request-approval';
+import { getMCPClientRootsConfig } from '#/utils/file-operations';
+import { writeMcpLog } from '#/utils/file-operations';
+import { requestApproval } from '#/utils/request-approval';
 
 const createClient = (
   implementation: Implementation = {

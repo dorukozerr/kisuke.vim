@@ -1,6 +1,6 @@
-import { stdOutput } from '~/index';
-import { PreviousSessionPayload } from '~/types';
-import { getHistory, getSession } from '~/utils/file-operations';
+import { stdOutput } from '#/index';
+import type { PreviousSessionPayload } from '#/types';
+import { getHistory, getSession } from '#/utils/file-operations';
 
 export const previousSessionHandler = async ({
   currentSessionId

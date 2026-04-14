@@ -1,4 +1,4 @@
-fu! s:check_conditions()
+function! s:check_conditions()
   let l:checks = [
         \ { 'condition': g:kisuke.state.init_response !=# 'eligible', 'message': 'Not eligible for this action' },
         \ { 'condition': g:kisuke.state.job ==# v:null, 'message': 'Please run :KisukeOpen first' },
@@ -11,32 +11,32 @@ fu! s:check_conditions()
     let g:kisuke.state.marked_files = []
     let g:kisuke.state.marked_code_blocks = []
 
-    retu 1
+    return 1
   else
-    retu 0
-  en
-endfu
+    return 0
+  endif
+endfunction
 
-fu! kisuke#session#create_new_session()
+function! kisuke#session#create_new_session()
   if s:check_conditions()
     cal kisuke#buffer#restore({ 'type': 'new_session' })
-  en
-endfu
+  endif
+endfunction
 
-fu! kisuke#session#delete_current_session()
+function! kisuke#session#delete_current_session()
   if s:check_conditions()
     cal kisuke#buffer#restore({ 'type': 'delete_session', 'payload': g:kisuke.state.session_id })
-  en
-endfu
+  endif
+endfunction
 
-fu! kisuke#session#go_to_next_session()
+function! kisuke#session#go_to_next_session()
   if s:check_conditions()
     cal kisuke#buffer#restore({ 'type': 'next_session', 'currentSessionId': g:kisuke.state.session_id })
-  en
-endfu
+  endif
+endfunction
 
-fu! kisuke#session#go_to_previous_session()
+function! kisuke#session#go_to_previous_session()
   if s:check_conditions()
     cal kisuke#buffer#restore({ 'type': 'previous_session', 'currentSessionId': g:kisuke.state.session_id })
-  en
-endfu
+  endif
+endfunction

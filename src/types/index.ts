@@ -7,7 +7,7 @@ import {
   mcpClientRootsConfigSchema,
   serverPayloadSchema,
   sessionSchema
-} from '~/schemas';
+} from '#/schemas';
 
 export type Config = z.infer<typeof configSchema>;
 export type History = z.infer<typeof historySchema>;

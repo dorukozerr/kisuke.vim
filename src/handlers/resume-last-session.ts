@@ -1,5 +1,5 @@
-import { stdOutput } from '~/index';
-import { getHistory, getSession } from '~/utils/file-operations';
+import { stdOutput } from '#/index';
+import { getHistory, getSession } from '#/utils/file-operations';
 
 export const resumeLastSessionHandler = async () => {
   const history = await getHistory();

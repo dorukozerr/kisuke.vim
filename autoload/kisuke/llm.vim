@@ -1,5 +1,5 @@
-fu! kisuke#llm#get_providers()
-  retu [
+function! kisuke#llm#get_providers()
+  return [
         \ {
         \   'name': 'Anthropic',
         \   'models': [
@@ -139,4 +139,4 @@ fu! kisuke#llm#get_providers()
         \   ]
         \ }
         \ ]
-endfu
+endfunction

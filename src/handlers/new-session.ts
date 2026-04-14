@@ -1,8 +1,8 @@
 import { randomBytes } from 'crypto';
 
-import { stdOutput } from '~/index';
-import { getHistory, writeFile } from '~/utils/file-operations';
-import { INITIAL_SESSION_DATA } from '~/utils/initials';
+import { stdOutput } from '#/index';
+import { getHistory, writeFile } from '#/utils/file-operations';
+import { INITIAL_SESSION_DATA } from '#/utils/initials';
 
 export const newSessionHandler = async () => {
   const history = await getHistory();

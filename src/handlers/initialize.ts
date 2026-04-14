@@ -1,23 +1,18 @@
-import { stdOutput } from '~/index';
-// import { InitializePayload } from '~/types';
-// import { cwd } from '~/utils/cwd';
+import { stdOutput } from '#/index';
+import { cwd } from '#/utils/cwd';
 import {
   getConfig,
-  getHistory
-  // getMCPClientRootsConfig,
-  // writeFile
-} from '~/utils/file-operations';
-// import { requestApproval } from '~/utils/request-approval';
+  getHistory,
+  getMCPClientRootsConfig,
+  writeFile
+} from '#/utils/file-operations';
+import { requestApproval } from '#/utils/request-approval';
 
 export const initializeHandler = async () => {
-  const [
-    config,
-    history
-    // mcpClientRootsConfig
-  ] = await Promise.all([
+  const [config, history, mcpClientRootsConfig] = await Promise.all([
     getConfig(),
-    getHistory()
-    // getMCPClientRootsConfig()
+    getHistory(),
+    getMCPClientRootsConfig()
   ]);
 
   if (!config || !history || !('provider' in config) || !('model' in config)) {
@@ -46,27 +41,30 @@ export const initializeHandler = async () => {
       session_count: history.sessions.length
     });
 
-    // if (!('roots' in mcpClientRootsConfig))
-    //   throw new Error('Invalid MCP Roots config');
+    if (!('roots' in (mcpClientRootsConfig ?? {})))
+      throw new Error('Invalid MCP Roots config');
 
-    // let updatedRootsConf = mcpClientRootsConfig;
+    let updatedRootsConf = mcpClientRootsConfig ?? {};
 
-    // if (!mcpClientRootsConfig.roots.includes(cwd)) {
-    //   const accessGranted = await requestApproval(
-    //     `Do you allow to give file system permissions for current directory - ${cwd}`
-    //   );
+    if (!mcpClientRootsConfig?.roots.includes(cwd.path)) {
+      const accessGranted = await requestApproval(
+        `Do you allow to give file system permissions for current directory - ${cwd}`
+      );
 
-    //   updatedRootsConf = {
-    //     cwd: { dir: cwd, accessGranted },
-    //     roots: [...mcpClientRootsConfig.roots, ...(accessGranted ? [cwd] : [])]
-    //   };
-    // } else {
-    //   updatedRootsConf.cwd = { dir: cwd, accessGranted: true };
-    // }
+      updatedRootsConf = {
+        cwd: { dir: cwd.path, accessGranted },
+        roots: [
+          ...(mcpClientRootsConfig?.roots ?? []),
+          ...(accessGranted ? [cwd.path] : [])
+        ]
+      };
+    } else if ('cwd' in updatedRootsConf) {
+      updatedRootsConf.cwd = { dir: cwd.path, accessGranted: false };
+    }
 
-    // await writeFile(
-    //   'mcp-client-roots-config.json',
-    //   JSON.stringify(updatedRootsConf)
-    // );
+    await writeFile(
+      'mcp-client-roots-config.json',
+      JSON.stringify(updatedRootsConf)
+    );
   }
 };

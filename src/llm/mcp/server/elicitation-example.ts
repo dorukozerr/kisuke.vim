@@ -3,7 +3,7 @@
 // import { ElicitRequestFormParams } from '@modelcontextprotocol/sdk/types.js';
 // import { z } from 'zod';
 //
-// import { writeMcpLog } from '~/utils/file-operations';
+// import { writeMcpLog } from '#/utils/file-operations';
 //
 // const mcpServer = new McpServer(
 //   {

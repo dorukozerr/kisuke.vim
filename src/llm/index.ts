@@ -1,8 +1,17 @@
 import { generateText, stepCountIs, streamText } from 'ai';
 
-// import { cleanup } from '~/index';
-import { stdOutput } from '~/index';
-import { PromptPayload } from '~/types';
+import { stdOutput } from '#/index';
+import { setupMCPClients } from '#/llm/mcp/client';
+// import { cleanup } from '#/index';
+import { fileContentsPrompt } from '#/llm/prompts/file-contents-prompt';
+import { KISUKE_SYSTEM_PROMPT } from '#/llm/prompts/system';
+import {
+  getAnthropicProdiver,
+  getGoogleProdiver,
+  getOpenAIProdiver,
+  getXAIProdiver
+} from '#/llm/providers';
+import type { PromptPayload } from '#/types';
 import {
   getConfig,
   getHistory,
@@ -11,21 +20,13 @@ import {
   writeFile,
   writeMcpLog
   // writeTempJson
-} from '~/utils/file-operations';
-import { SESSION_MAME_GENERATION_SYSTEM_PROMPT } from '~/utils/initials';
-import { setupMCPClients } from '~/llm/mcp/client';
-import { KISUKE_SYSTEM_PROMPT } from '~/llm/prompts/system';
-import {
-  getAnthropicProdiver,
-  getGoogleProdiver,
-  getOpenAIProdiver,
-  getXAIProdiver
-} from '~/llm/providers';
+} from '#/utils/file-operations';
+import { SESSION_MAME_GENERATION_SYSTEM_PROMPT } from '#/utils/initials';
 
 export const processPrompt = async ({
   sessionId,
   prompt,
-  context: _
+  context = undefined
 }: PromptPayload) => {
   try {
     const [config, session] = await Promise.all([
@@ -63,7 +64,12 @@ export const processPrompt = async ({
               content: message
             }) as const
         ),
-        { role: 'user', content: prompt }
+        {
+          role: 'user',
+          content: context
+            ? fileContentsPrompt(JSON.stringify(context), prompt)
+            : prompt
+        }
       ]
     });
 
@@ -195,7 +201,7 @@ export const processPrompt = async ({
                 ...s,
                 name: `${new Date().toLocaleDateString()} - ${sessionName}`
               }
-            : session
+            : s
         );
 
         await writeFile(
