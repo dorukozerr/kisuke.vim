@@ -1,8 +1,8 @@
-import { getHistory } from '../utils/file-operations';
-import { stdOutput } from '..';
+import { stdOutput } from "#/";
+import { getHistory } from "#/utils/file-operations";
 
 export const loadSessionsHandler = async () => {
   const { sessions } = await getHistory();
 
-  stdOutput({ type: 'load_sessions', payload: sessions.reverse() });
+  stdOutput({ type: "load_sessions", payload: sessions.reverse() });
 };

@@ -1,9 +1,9 @@
-import { readFile } from 'fs/promises';
+import { readFile } from "fs/promises";
 
-import { PromptEvent } from '../types';
-import { stdOutput } from '..';
-import { getSession, writeFile, getHistory } from '../utils/file-operations';
-import { sendStreamResponse, generateSessionName } from '../lib/ai-operations';
+import { stdOutput } from "#/";
+import { sendStreamResponse, generateSessionName } from "#/lib/ai-operations";
+import type { PromptEvent } from "#/types";
+import { getSession, writeFile, getHistory } from "#/utils/file-operations";
 
 export const promptHandler = async (event: PromptEvent) => {
   const history = await getHistory();
@@ -12,11 +12,11 @@ export const promptHandler = async (event: PromptEvent) => {
   const context: {
     fileName: string;
     content: string;
-    type: 'all' | 'block';
+    type: "all" | "block";
   }[] = [];
 
   if (!session) {
-    stdOutput({ type: 'error', payload: 'Session not found.' });
+    stdOutput({ type: "error", payload: "Session not found." });
 
     return;
   }
@@ -24,31 +24,26 @@ export const promptHandler = async (event: PromptEvent) => {
   if (event.context) {
     await Promise.all(
       event.context.map(async (entry) => {
-        if (entry.scope === 'all') {
-          const fileContent = await readFile(entry.file_path, 'utf-8');
+        if (entry.scope === "all") {
+          const fileContent = await readFile(entry.file_path, "utf-8");
 
           context.push({
             fileName: entry.file_path,
             content: fileContent,
-            type: 'all'
+            type: "all",
           });
-        } else if (entry.scope === 'block') {
+        } else if (entry.scope === "block") {
           context.push({
             fileName: entry.file_path,
-            content: entry.highlighted_code ?? '',
-            type: 'block'
+            content: entry.highlighted_code ?? "",
+            type: "block",
           });
         }
-      })
+      }),
     );
   }
 
-  const isSuccess = await sendStreamResponse(
-    context,
-    event.payload,
-    session,
-    event.sessionId
-  );
+  const isSuccess = await sendStreamResponse(context, event.payload, session, event.sessionId);
 
   if (session.messages.length === 1 && isSuccess) {
     const sessionName = await generateSessionName(event.payload);
@@ -57,11 +52,11 @@ export const promptHandler = async (event: PromptEvent) => {
       session.id === event.sessionId
         ? {
             ...session,
-            name: `${new Date().toLocaleDateString()} - ${sessionName}`
+            name: `${new Date().toLocaleDateString()} - ${sessionName}`,
           }
-        : session
+        : session,
     );
 
-    await writeFile('history.json', JSON.stringify(history));
+    await writeFile("history.json", JSON.stringify(history));
   }
 };

@@ -1,5 +1,5 @@
-import { getHistory, getSession } from '../utils/file-operations';
-import { stdOutput } from '..';
+import { stdOutput } from "#/";
+import { getHistory, getSession } from "#/utils/file-operations";
 
 export const resumeLastSessionHandler = async () => {
   const { sessions } = await getHistory();
@@ -9,19 +9,19 @@ export const resumeLastSessionHandler = async () => {
   const session = await getSession(lastSession.id);
 
   if (!session) {
-    stdOutput({ type: 'error', payload: 'Session not found.' });
+    stdOutput({ type: "error", payload: "Session not found." });
 
     return;
   }
 
   stdOutput({
-    type: 'resume_last_session',
+    type: "resume_last_session",
     session_info: {
       id: lastSession.id,
       name: lastSession.name,
       total_count: sessions.length,
-      current_index: sessions.length - 1
+      current_index: sessions.length - 1,
     },
-    payload: session
+    payload: session,
   });
 };

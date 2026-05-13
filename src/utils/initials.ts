@@ -1,11 +1,11 @@
 export const initialSessionData = {
   messages: [
     {
-      sender: 'Kisuke',
+      sender: "Kisuke",
       message:
-        "Welcome to Urahara candy shop, how can I help you today? By the way don't forget that longer sessions burn more tokens, try to use new sessions for every distinguished prompt."
-    }
-  ]
+        "Welcome to Urahara candy shop, how can I help you today? By the way don't forget that longer sessions burn more tokens, try to use new sessions for every distinguished prompt.",
+    },
+  ],
 };
 
 export const BaseAIInstruction = `
@@ -89,10 +89,7 @@ Remember:
 export const sessionHistoryForStream = (sessionHistory: string) =>
   `Session context to maintain conversation continuity => ${sessionHistory}`;
 
-export const fileContextsProcessingInstructionsForStream = (
-  context: string,
-  prompt: string
-) =>
+export const fileContextsProcessingInstructionsForStream = (context: string, prompt: string) =>
   `Contextual information for this request:
 File contexts (type 'all' = complete file, type 'block' = code snippet): ${context}
 User's request: ${prompt}`;
