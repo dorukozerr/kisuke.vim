@@ -40,11 +40,7 @@ If you want a small, predictable AI chat that lives in a Vim split, this plugin 
 
 ### Prerequisites
 
-`node` and `yarn` installed globally.
-
-```bash
-npm i -g yarn@latest
-```
+`bun` installed globally.
 
 ### Using Vim packages (recommended)
 
@@ -53,13 +49,13 @@ mkdir -p ~/.vim/pack/plugins/start
 cd ~/.vim/pack/plugins/start
 git clone https://github.com/dorukozerr/kisuke.vim.git
 cd kisuke.vim
-yarn build
+bun run build
 ```
 
 ### Using vim-plug
 
 ```vim
-Plug 'dorukozerr/kisuke.vim', { 'do': 'yarn build' }
+Plug 'dorukozerr/kisuke.vim', { 'do': 'bun run build' }
 ```
 
 Then run `:PlugInstall`.
@@ -70,7 +66,7 @@ Then run `:PlugInstall`.
 Plugin 'dorukozerr/kisuke.vim'
 ```
 
-Then run `:PluginInstall`, then `cd ~/.vim/bundle/kisuke.vim && yarn build`.
+Then run `:PluginInstall`, then `cd ~/.vim/bundle/kisuke.vim && bun run build`.
 
 ### Using Pathogen
 
@@ -78,7 +74,7 @@ Then run `:PluginInstall`, then `cd ~/.vim/bundle/kisuke.vim && yarn build`.
 cd ~/.vim/bundle
 git clone https://github.com/dorukozerr/kisuke.vim.git
 cd kisuke.vim
-yarn build
+bun run build
 ```
 
 ## Configuration
