@@ -30,25 +30,20 @@ export const sendStreamResponse = async (
       const client = new Anthropic({ apiKey: config.apiKeys.anthropic });
 
       const models = {
-        "opus-4-1": "claude-opus-4-1-20250805",
-        "opus-4": "claude-4-opus-20250514",
+        "opus-4-8": "claude-opus-4-8",
+        "sonnet-4-6": "claude-sonnet-4-6",
         "sonnet-4-5": "claude-sonnet-4-5-20250929",
-        "sonnet-4": "claude-sonnet-4-20250514",
-        "sonnet-3.7": "claude-3-7-sonnet-latest",
-        "haiku-3.7": "claude-3-5-haiku-latest",
-        "opus-3.7": "claude-3-opus-latest",
+        "haiku-4-5": "claude-haiku-4-5-20251001",
       };
 
       const stream = client.messages.stream({
         model: models[config.model],
         max_tokens:
-          config.model === "opus-3.7"
-            ? 4096
-            : config.model === "haiku-3.7"
-              ? 8192
-              : config.model === "opus-4" || config.model === "opus-4-1"
-                ? 32000
-                : 64000,
+          config.model === "haiku-4-5"
+            ? 8192
+            : config.model === "opus-4-8"
+              ? 32000
+              : 64000,
         system: BaseAIInstruction + sessionHistoryForStream(JSON.stringify(session)),
         messages: [
           {
@@ -423,19 +418,15 @@ export const generateSessionName = async (prompt: string) => {
       const client = new Anthropic({ apiKey: config.apiKeys.anthropic });
 
       const models = {
-        "opus-4-1": "claude-opus-4-1-20250805",
-        "opus-4": "claude-4-opus-20250514",
+        "opus-4-8": "claude-opus-4-8",
+        "sonnet-4-6": "claude-sonnet-4-6",
         "sonnet-4-5": "claude-sonnet-4-5-20250929",
-        "sonnet-4": "claude-sonnet-4-20250514",
-        "sonnet-3.7": "claude-3-7-sonnet-latest",
-        "haiku-3.7": "claude-3-5-haiku-latest",
-        "opus-3.7": "claude-3-opus-latest",
+        "haiku-4-5": "claude-haiku-4-5-20251001",
       };
 
       const aiResponse = await client.messages.create({
         model: models[config.model],
         max_tokens: 30,
-        temperature: 0.3,
         system: sessionNameGenerationInstructions,
         messages: [{ role: "user", content: prompt }],
       });

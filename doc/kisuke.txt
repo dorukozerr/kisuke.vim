@@ -83,11 +83,10 @@ you use it. All configuration is stored in:
 Supported AI Providers and Models:
 
 Anthropic:
-  - sonnect (Claude 4 Sonnet)
-  - opus (Claude 4 Opus)
-  - sonnet (Claude 3.7 Sonnet)
-  - haiku (Claude 3.5 Haiku)
-  - opus (Claude 3 Opus)
+  - opus-4-8 (Claude Opus 4.8)
+  - sonnet-4-6 (Claude Sonnet 4.6)
+  - sonnet-4-5 (Claude Sonnet 4.5)
+  - haiku-4-5 (Claude Haiku 4.5)
 
 Google:
   - pro-2.5-exp

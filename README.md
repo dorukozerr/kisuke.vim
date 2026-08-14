@@ -28,7 +28,7 @@ If you want a small, predictable AI chat that lives in a Vim split, this plugin 
 
 ## Supported Providers and Models
 
-**Anthropic:** sonnet-4.5, sonnet-4, opus-4.1, opus-4, sonnet-3.7, haiku-3.7, opus-3.7
+**Anthropic:** opus-4-8, sonnet-4-6, sonnet-4-5, haiku-4-5
 
 **OpenAI:** gpt-4.1, gpt-4.1-mini, gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-4, gpt-3.5-turbo
 
