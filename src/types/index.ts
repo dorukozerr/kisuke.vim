@@ -9,14 +9,7 @@ interface BaseConfig {
 
 interface AnthropicConfig extends BaseConfig {
   provider: "anthropic";
-  model:
-    | "opus-4-1"
-    | "opus-4"
-    | "sonnet-4-5"
-    | "sonnet-4"
-    | "sonnet-3.7"
-    | "haiku-3.7"
-    | "opus-3.7";
+  model: "opus-4-8" | "sonnet-4-6" | "sonnet-4-5" | "haiku-4-5";
 }
 
 interface GoogleConfig extends BaseConfig {
