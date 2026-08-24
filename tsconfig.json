@@ -15,7 +15,7 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
-    "paths": { "#/*": ["./src/*"] }
+    "paths": { "#/": ["./src/index.ts"], "#/*": ["./src/*"] }
   },
   "include": ["src/**/*", "*.config.ts"]
 }
